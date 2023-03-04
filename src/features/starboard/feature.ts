@@ -14,7 +14,7 @@ const extension = (attachment: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Startboard');
+    private logger = globalLogger.scope('Starboard');
 
     constructor() {
         this.logger.success('Feature initialized');
@@ -23,6 +23,8 @@ export class Feature {
     @On({ event: 'messageReactionAdd' })
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) return;
+
+        this.logger.debug('Reaction added to message', { messageId: reaction.message.id, emoji: reaction.emoji.name, userId: user.id });
 
         const { message } = reaction;
         if (!message.author) return;
