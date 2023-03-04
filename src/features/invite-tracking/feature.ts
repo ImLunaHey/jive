@@ -22,7 +22,9 @@ export class Feature {
             if (!await isFeatureEnabled('invite-tracking', guildId)) return;
 
             // Fetch the invites
+            this.logger.debug(`Fetching invites for guild ${guildId}...`);
             const invites = await client.guilds.cache.get(guildId)?.invites.fetch();
+            this.logger.debug(`Fetched ${invites?.size} invites for guild ${guildId}`);
 
             // Update the invite uses
             for (const invite of invites?.values() ?? []) {
@@ -34,7 +36,7 @@ export class Feature {
     @On({ event: 'inviteCreate' })
     async inviteCreate([invite]: ArgsOf<'inviteCreate'>): Promise<void> {
         // Update the invite uses
-        this.setInviteUses(invite.guild?.id, invite.code, invite.uses ?? 1);
+        await this.setInviteUses(invite.guild?.id, invite.code, invite.uses ?? 1);
     }
 
     @On({ event: 'guildMemberAdd' })
