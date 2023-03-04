@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, GuildMember, VoiceChannel } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, GuildMember, PermissionFlagsBits, VoiceChannel } from 'discord.js';
 import { ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { prisma } from '@app/common/prisma-client';
@@ -178,7 +178,21 @@ export class Feature {
     async importMee6(
         interaction: CommandInteraction
     ) {
+        // Don't handle users with weird permissions
+        if (typeof interaction.member?.permissions === 'string') return;
+
+        // Don't handle DMs
         if (!interaction.guild?.id) return;
+
+        // Check if the user has the MANAGE_GUILD permission
+        if (!interaction.member?.permissions.has(PermissionFlagsBits.ManageGuild)) {
+            await interaction.reply({
+                embeds: [{
+                    description: 'You do not have the `MANAGE_GUILD` permission.'
+                }]
+            });
+            return;
+        }
 
         // Defer the reply so the user doesn't get a "This interaction failed" message
         await interaction.deferReply({ ephemeral: false });
