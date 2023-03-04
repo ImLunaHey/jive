@@ -3,6 +3,7 @@ import { Signale } from 'signale';
 
 export const globalLogger = new Signale({
     scope: 'app',
+    logLevel: env.LOG_LEVEL ?? 'info',
     disabled: env.NODE_ENV === 'test',
     config: {
         displayTimestamp: true,
