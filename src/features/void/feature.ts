@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { logger } from '@app/logger';
+import { globalLogger } from '@app/logger';
 import { TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 
@@ -7,8 +7,10 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 @Discord()
 export class Feature {
+    private logger = globalLogger.scope('Void');
+
     constructor() {
-        logger.success('Void feature initialized');
+        this.logger.success('Feature initialized');
     }
 
     @On({ event: 'ready' })
@@ -24,30 +26,42 @@ export class Feature {
 
         // Delete all the messages in the channel
         for (const message of messages.values()) {
-            // Skip the bot's messages
-            if (message.author.bot) continue;
-            await message.delete();
+            // Skip the bot's message if it's the void embed
+            if (message.author.bot && message.embeds[0].title === 'Void') return;
+
+            // Wait 30 seconds and then delete the message
+            void sleep(30_000).then(async () => {
+                await message.delete().catch(() => {
+                    this.logger.warn('Failed to delete message %s', message.id);
+                });
+            });
         }
+
+        // Create the embed
+        const embed = {
+            title: 'Void',
+            description: 'This channel is a void. Anything you say here will be deleted after 1 minute, please keep in mind unverified members can access this channel.',
+            color: 0x000000,
+        };
 
         // Check if the channel is already a void
         const lastMessage = messages.last();
-        if (lastMessage?.embeds[0]?.title === 'Void') return;
+        if (lastMessage?.embeds[0]?.title === embed.title) return;
+        if (lastMessage?.embeds[0]?.description === embed.description) return;
 
         // Send the embed
         await voidChannel.send({
-            embeds: [{
-                title: 'Void',
-                description: 'This channel is a void. Anything you say here will be deleted after 2 seconds, please keep in mind unverified members can access this channel.',
-                color: 0x000000,
-            }]
+            embeds: [embed]
         });
     }
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
         if (message.channel.id !== '1081483175202660403') return;
-        if (message.author.bot) return;
-        await sleep(2_000);
-        await message.delete();
+        if (message.author.bot && message.embeds[0].title === 'Void') return;
+        await sleep(60_000);
+        await message.delete().catch(() => {
+            this.logger.warn('Failed to delete message %s', message.id);
+        });
     }
 }

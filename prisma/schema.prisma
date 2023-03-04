@@ -6,21 +6,27 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db?connection_limit=1"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
+model GuildMember {
   id String @id @unique
 
   xp    Int @default(0)
   coins Int @default(0)
+
+  guild      Guild       @relation(fields: [guildId], references: [id])
+  guildId    String
+  rateLimits RateLimit[]
 }
 
 model Guild {
   id String @id @unique
 
-  invites Invite[]
+  invites  Invite[]
+  members  GuildMember[]
+  features Feature[]
 }
 
 model Invite {
@@ -30,4 +36,26 @@ model Invite {
 
   guild   Guild  @relation(fields: [guildId], references: [id])
   guildId String
+}
+
+model Feature {
+  id String @id @unique
+
+  enabled Boolean @default(false)
+
+  data String?
+
+  guild   Guild  @relation(fields: [guildId], references: [id])
+  guildId String
+}
+
+model RateLimit {
+  id String @id @unique
+
+  count Int @default(0)
+
+  lastReset DateTime @default(now())
+
+  guildMember   GuildMember @relation(fields: [guildMemberId], references: [id])
+  guildMemberId String
 }

@@ -8,16 +8,18 @@ import { z } from 'zod';
 const schema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']),
     BOT_TOKEN: z.string().min(55).max(80),
+    MAINTENCE_MODE: z.boolean().optional(),
 });
 
 const processEnv = {
     NODE_ENV: process.env.NODE_ENV,
     BOT_TOKEN: process.env.BOT_TOKEN,
-} satisfies Record<keyof z.infer<typeof schema>, string | undefined>;
+    MAINTENCE_MODE: !!process.env.MAINTENCE_MODE,
+} satisfies Parameters<typeof schema.safeParse>[0];
 
+// --------------------------
 // Don't touch the part below
 // --------------------------
-
 if (!!process.env.SKIP_ENV_VALIDATION == false) {
     const parsed = schema.safeParse(processEnv);
 
@@ -34,4 +36,7 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
     }
 }
 
-export const env = process.env as z.infer<typeof schema>;
+export const env = process.env as unknown as z.infer<typeof schema>;
+// --------------------------
+// Don't touch the part above
+// --------------------------

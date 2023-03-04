@@ -1,6 +1,6 @@
 import { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
-import { logger } from '@app/logger';
+import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
 
 const clients = new Map<string, Client>();
@@ -33,7 +33,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         // init all application commands
         await client.initApplicationCommands();
 
-        logger.info('%s is ready', client.user?.username);
+        globalLogger.info('%s is ready', client.user?.username);
     });
 
     client.on('interactionCreate', (interaction: Interaction) => {

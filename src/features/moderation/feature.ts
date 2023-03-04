@@ -1,11 +1,13 @@
-import { logger } from '@app/logger';
+import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits, TextChannel } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
 export class Feature {
+    private logger = globalLogger.scope('Moderation');
+
     constructor() {
-        logger.success('Moderation feature initialized');
+        this.logger.success('Feature initialized');
     }
 
     @Slash({
@@ -51,7 +53,7 @@ export class Feature {
             });
         } catch (error: unknown) {
             if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
-            logger.error('Failed to clear messages', error);
+            this.logger.error('Failed to clear messages', error);
             await interaction.editReply({
                 content: 'Failed to clear messages, please let a member of staff know.'
             });

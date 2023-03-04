@@ -3,15 +3,16 @@ import { prisma } from '@app/common/prisma-client';
 import { TextChannel } from 'discord.js';
 
 class Service {
-    private readonly LEVEL_MODIFIER = 0.02;
+    public readonly DEFAULT_XP = 100;
+    private readonly LEVEL_MODIFIER = 0.075;
 
     public convertXpToLevel(xp: number): number {
-        // Level = 0.02 * sqrt(xp)
+        // Level = 0.075 * sqrt(xp)
         return Math.floor(this.LEVEL_MODIFIER * Math.sqrt(xp));
     }
 
     public convertLevelToXp(level: number): number {
-        // XP = (Level / 0.02) ^ 2
+        // XP = (Level / 0.075) ^ 2
         return Math.floor(Math.pow(level / this.LEVEL_MODIFIER, 2));
     }
 
@@ -33,14 +34,19 @@ class Service {
         const guild = client.guilds.cache.get('927461441051701280');
         if (!guild) return;
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        await prisma.user.upsert({
+        const user = await prisma.guildMember.findUnique({ where: { id: userId } });
+        await prisma.guildMember.upsert({
             where: {
                 id: userId
             },
             create: {
                 id: userId,
-                xp
+                xp,
+                guild: {
+                    connect: {
+                        id: guild.id
+                    }
+                }
             },
             update: {
                 xp: {

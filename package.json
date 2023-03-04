@@ -1,14 +1,18 @@
 {
-  "name": "b-bot",
+  "name": "jive",
   "scripts": {
-    "dev": "npx tsup ./src/main.ts --onSuccess=\"node dist/main.js\" --watch"
+    "build": "npx tsup ./src/main.ts",
+    "dev": "npm run build -- --onSuccess=\"MAINTENCE_MODE=true node dist/main.js\" --watch",
+    "start": "node dist/main.js"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
     "@types/signale": "^1.4.4",
     "discord.js": "^14.7.1",
+    "eslint": "^8.35.0",
     "jest": "^29.4.3",
     "nodemon": "^2.0.21",
+    "prexit": "^2.0.2",
     "prisma": "^4.11.0",
     "ts-jest": "^29.0.5",
     "tsup": "^6.6.3",
@@ -21,6 +25,7 @@
     "@swc/core": "^1.3.37",
     "discordx": "^11.7.1",
     "dotenv": "^16.0.3",
+    "mee6-levels-api": "^1.3.1",
     "outdent": "^0.8.0",
     "signale": "^1.4.0",
     "ts-node": "^10.9.1",

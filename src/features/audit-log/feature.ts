@@ -1,17 +1,22 @@
 import { client } from '@app/client';
-import { logger } from '@app/logger';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { globalLogger } from '@app/logger';
 import { ChannelType, MessageCreateOptions, MessagePayload, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {
+    private logger = globalLogger.scope('AuditLog');
+
     constructor() {
-        logger.success('AuditLog feature initialized');
+        this.logger.success('Feature initialized');
     }
 
     @On({ event: 'messageDelete' })
     async messageDelete([message]: ArgsOf<'messageDelete'>) {
+        if (!await isFeatureEnabled('audit-log', message.guild?.id)) return;
+
         // Skip bot messages
         if (message.author?.bot) return;
 
@@ -47,7 +52,9 @@ export class Feature {
 
     @On({ event: 'guildMemberRemove' })
     async guildMemberRemove([member]: ArgsOf<'guildMemberRemove'>) {
-        this.sendAuditLogMessage(member.guild.id, {
+        if (!await isFeatureEnabled('audit-log', member.guild?.id)) return;
+
+        await this.sendAuditLogMessage(member.guild.id, {
             embeds: [{
                 author: {
                     name: member.user.username,

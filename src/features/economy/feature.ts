@@ -1,13 +1,15 @@
 import { prisma } from '@app/common/prisma-client';
-import { logger } from '@app/logger';
+import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction, GuildMember } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {
+    private logger = globalLogger.scope('Economy');
+
     constructor() {
-        logger.success('Debug feature initialized');
+        this.logger.success('Feature initialized');
     }
 
     @Slash({
@@ -21,7 +23,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's balance
-        const user = await prisma.user.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
         const balance = user?.coins ?? 0;
 
         // Send the balance
@@ -44,7 +46,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's balance
-        const user = await prisma.user.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
         const balance = user?.coins ?? 0;
 
         // If the user has too much money, don't let them beg
@@ -61,7 +63,7 @@ export class Feature {
         const random = Math.floor(Math.random() * 100);
 
         // Otherwise, let them beg
-        await prisma.user.update({
+        await prisma.guildMember.update({
             where: { id: interaction.member?.user.id },
             data: {
                 coins: {
@@ -89,22 +91,34 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the user's balance
-        const user = await prisma.user.findUnique({ where: { id: interaction.member?.user.id } });
-        const balance = user?.coins ?? 0;
+        // Check if the user has already claimed their daily
+        const daily = await prisma.rateLimit.findFirst({ where: { id: 'economy:daily', guildMember: { id: interaction.member?.user.id } } });
 
-        // If the user has too much money, don't let them beg
-        if (balance >= 100) {
+        // Only allow them to claim their daily once per 24 hours
+        if (daily && daily.lastReset.getTime() > (Date.now() - 86_400_000)) {
             await interaction.editReply({
                 embeds: [{
                     title: 'Daily',
-                    description: 'You try to get your daily coins, but you\'re too rich for that.'
+                    description: 'You have already claimed your daily coins today.'
                 }]
             });
+            return;
         }
 
-        // Otherwise, let them beg
-        await prisma.user.update({
+        // Mark the daily as claimed for this user in this guild
+        await prisma.rateLimit.create({
+            data: {
+                id: 'economy:daily',
+                guildMember: {
+                    connect: {
+                        id: interaction.member?.user.id
+                    }
+                }
+            }
+        });
+
+        // Give them their daily coins
+        const guildMember = await prisma.guildMember.update({
             where: { id: interaction.member?.user.id },
             data: {
                 coins: {
@@ -117,7 +131,7 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 title: 'Daily',
-                description: `You get your daily coins and get \`${100}\` coins. You now have \`${balance + 100}\` coins.`
+                description: `You get your daily coins and get \`${100}\` coins. You now have \`${guildMember.coins + 100}\` coins.`
             }]
         });
     }
@@ -141,12 +155,14 @@ export class Feature {
         }) amount: number,
         interaction: CommandInteraction
     ) {
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         try {
             // Get the user's balance
-            const userBalance = await prisma.user.findUnique({ where: { id: interaction.member?.user.id } }).then(user => user?.coins ?? 0);
+            const userBalance = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } }).then(user => user?.coins ?? 0);
 
             // If the user doesn't have enough money, don't let them give
             if (userBalance < amount) {
@@ -164,7 +180,7 @@ export class Feature {
 
             // Transfer the coins
             await prisma.$transaction([
-                prisma.user.update({
+                prisma.guildMember.update({
                     where: { id: interaction.member?.user.id },
                     data: {
                         coins: {
@@ -172,11 +188,16 @@ export class Feature {
                         }
                     }
                 }),
-                prisma.user.upsert({
+                prisma.guildMember.upsert({
                     where: { id: target.id },
                     create: {
                         id: target.id,
-                        coins: amount
+                        coins: amount,
+                        guild: {
+                            connect: {
+                                id: interaction.guild.id
+                            }
+                        }
                     },
                     update: {
                         coins: {
@@ -195,7 +216,7 @@ export class Feature {
             });
         } catch (error: unknown) {
             if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
-            logger.error('Failed to transfer coins', error);
+            this.logger.error('Failed to transfer coins', error);
             await interaction.editReply({
                 content: 'Failed to transfer coins, please let a member of staff know.'
             });
