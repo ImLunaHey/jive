@@ -20,6 +20,7 @@ const main = async () => {
     await import('./features/invite-tracking');
     await import('./features/leveling');
     await import('./features/moderation');
+    await import('./features/nsfw');
     await import('./features/starboard');
     await import('./features/void');
     await import('./features/welcome');
