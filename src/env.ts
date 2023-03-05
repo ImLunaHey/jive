@@ -14,7 +14,7 @@ const schema = z.object({
 
 const processEnv = {
     NODE_ENV: process.env.NODE_ENV,
-    LOG_LEVEL: process.env.LOG_LEVEL ?? 'error',
+    LOG_LEVEL: process.env.LOG_LEVEL ?? 'info',
     BOT_TOKEN: process.env.BOT_TOKEN,
     MAINTENCE_MODE: !!process.env.MAINTENCE_MODE,
 } satisfies Parameters<typeof schema.safeParse>[0];
