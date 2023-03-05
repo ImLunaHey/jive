@@ -49,6 +49,10 @@ export class Feature {
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
 
+        // Skip embeds
+        // @TODO: Add support for embeds
+        if (reaction.message.embeds.length > 0) return;
+
         // Check if the reaction is a partial
         if (reaction.partial) {
             // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
@@ -140,6 +144,10 @@ export class Feature {
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
+
+        // Skip embeds
+        // @TODO: Add support for embeds
+        if (reaction.message.embeds.length > 0) return;
 
         // Check if the reaction is a partial
         if (reaction.partial) {
