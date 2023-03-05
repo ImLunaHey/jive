@@ -136,7 +136,7 @@ export class Feature {
                 .setDescription(outdent`
                     **[Jump to message](${reaction.message.url})**
 
-                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? resolveMedia(reaction.message.cleanContent) : reaction.message.content}
+                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? await resolveMedia(reaction.message.cleanContent) : reaction.message.content}
                 `)
                 .setAuthor({
                     name: reaction.message.author.tag,
