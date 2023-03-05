@@ -24,7 +24,19 @@ export class Feature {
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) return;
 
-        this.logger.debug('Reaction added to message', { messageId: reaction.message.id, emoji: reaction.emoji.name, userId: user.id });
+        // Check if the reaction is a partial
+        if (reaction.partial) {
+            // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
+            try {
+                await reaction.fetch();
+            } catch (error) {
+                this.logger.error('Something went wrong when fetching the message:', error);
+                // Return as `reaction.message.author` may be undefined/null
+                return;
+            }
+        }
+
+        this.logger.info('Reaction added to message', { messageId: reaction.message.id, emoji: reaction.emoji.name, userId: user.id });
 
         const { message } = reaction;
         if (!message.author) return;

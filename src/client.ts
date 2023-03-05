@@ -14,11 +14,13 @@ export const client = createDiscordClient(name, {
         IntentsBitField.Flags.MessageContent,
     ],
     partials: [
-        Partials.Message,
         Partials.Channel,
-        Partials.Reaction,
         Partials.GuildMember,
-        Partials.User
+        Partials.GuildScheduledEvent,
+        Partials.Message,
+        Partials.Reaction,
+        Partials.ThreadMember,
+        Partials.User,
     ],
     prefix: `$${name}`
 });
