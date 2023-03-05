@@ -1,10 +1,13 @@
 import { prisma } from '@app/common/prisma-client';
+import { globalLogger } from '@app/logger';
 
 type Autocomplete<Keys extends string> = Keys | Omit<string, Keys>;
 
 const globallyEnabled: string[] = [];
 
 export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>, guildId?: string) => {
+    globalLogger.debug('Checking if feature is enabled', { id, guildId });
+
     if (!guildId) return false;
 
     // If the feature is enabled globally, return true

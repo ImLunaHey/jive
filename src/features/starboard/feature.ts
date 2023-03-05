@@ -22,9 +22,7 @@ export class Feature {
 
     @On({ event: 'messageReactionAdd' })
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
-        this.logger.info('Reaction added to message', { messageId: reaction.message.id, emoji: reaction.emoji.name, userId: user.id });
-
-        if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) return;
+        this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // Check if the reaction is a partial
         if (reaction.partial) {
@@ -37,6 +35,9 @@ export class Feature {
                 return;
             }
         }
+
+        // Check if the starboard feature is enabled
+        if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) return;
 
         const { message } = reaction;
         if (!message.author) return;
