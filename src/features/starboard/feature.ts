@@ -1,7 +1,7 @@
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ChannelType, EmbedBuilder, MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
+import { ChannelFlags, ChannelType, EmbedBuilder, MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 
 const extension = (attachment: string) => {
@@ -35,6 +35,13 @@ export class Feature {
         // Ignore bots
         if (reaction.message.author?.bot) return false;
 
+        // Skip embeds
+        // @TODO: Add support for embeds
+        if (reaction.message.embeds.length > 0) return;
+
+        // Skip private threads
+        if (reaction.message.channel.type === ChannelType.PrivateThread) return false;
+
         // Reaction is valid
         return true;
     }
@@ -48,10 +55,6 @@ export class Feature {
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
-
-        // Skip embeds
-        // @TODO: Add support for embeds
-        if (reaction.message.embeds.length > 0) return;
 
         // Check if the reaction is a partial
         if (reaction.partial) {
@@ -144,10 +147,6 @@ export class Feature {
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
-
-        // Skip embeds
-        // @TODO: Add support for embeds
-        if (reaction.message.embeds.length > 0) return;
 
         // Check if the reaction is a partial
         if (reaction.partial) {
