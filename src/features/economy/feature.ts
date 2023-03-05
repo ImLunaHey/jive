@@ -42,6 +42,9 @@ export class Feature {
     async beg(
         interaction: CommandInteraction
     ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
@@ -63,11 +66,20 @@ export class Feature {
         const random = Math.floor(Math.random() * 100);
 
         // Otherwise, let them beg
-        await prisma.guildMember.update({
+        await prisma.guildMember.upsert({
             where: { id: interaction.member?.user.id },
-            data: {
+            update: {
                 coins: {
                     increment: random
+                }
+            },
+            create: {
+                id: interaction.member?.user.id,
+                coins: random,
+                guild: {
+                    connect: {
+                        id: interaction.guild.id
+                    }
                 }
             }
         });
