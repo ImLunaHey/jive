@@ -58,13 +58,16 @@ export class Feature {
         await interaction.deferReply({ ephemeral });
 
         // Get a random post
-        const redditResponse = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
-        const redditPosts = redditResponse[0].data.children.map(post => post.data).filter(post => {
+        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
+        const redditPosts = redditResponses.filter(response => {
+            const post = response.data.children.find(child => child.kind === 't3')?.data;
+            if (!post) return false;
+
             // Check if we got an image/gif/video post
             const isGifOrVideo = (post.post_hint === 'link' && (!post.url.endsWith('gif') || post.url.endsWith('gifv') || post.url.endsWith('mp4')));
             const isImage = post.post_hint === 'image';
             return isGifOrVideo || isImage;
-        });
+        }).map(response => response.data.children.find(child => child.kind === 't3')?.data);
         const post = redditPosts[0];
 
         // If we didn't get a post, show an error

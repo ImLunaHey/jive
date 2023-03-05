@@ -119,7 +119,7 @@ export type Preview = {
     enabled: boolean;
 }
 
-export type Data2 = {
+export type T3 = {
     author_flair_background_color: string;
     approved_at_utc?: any;
     subreddit: string;
@@ -255,8 +255,8 @@ export type Data2 = {
 }
 
 export type Child = {
-    kind: string;
-    data: Data2;
+    kind: 't3' | 't5';
+    data: T3;
 }
 
 export type Data = {
