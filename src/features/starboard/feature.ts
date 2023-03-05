@@ -102,13 +102,19 @@ export class Feature {
 
         // Fetch the messages in the starboard channel
         const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
-        const stars = fetchedMessages.find(m => m.embeds[0]?.footer?.text.startsWith("⭐") && m.embeds[0]?.footer.text.endsWith(reaction.message.id));
+
+        // Find the starboard message
+        const starboardMessage = fetchedMessages.find(message =>
+            message.author.id === client.user!.id &&
+            message.content.startsWith("⭐") &&
+            message.embeds[0].description?.includes(`**[Jump to message](${reaction.message.url})**`)
+        );
 
         // If there's already a starboard message, edit it
-        if (stars) {
-            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer?.text ?? '');
+        if (starboardMessage) {
+            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(starboardMessage.embeds[0].footer?.text ?? '');
             const starCount = parseInt(star![1], 10) + 1;
-            const foundStar = stars.embeds[0];
+            const foundStar = starboardMessage.embeds[0];
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
             const embed = new EmbedBuilder()
                 .setColor(foundStar.color)
@@ -122,12 +128,11 @@ export class Feature {
                     text: reaction.message.id,
                 });
             if (image) embed.setImage(image);
-            const starboardMessage = await starChannel.messages.fetch(stars.id);
             await starboardMessage.edit({ content: `**⭐ ${starCount}** | <#${reaction.message.channel.id}>`, embeds: [embed] });
         }
 
         // If there's no starboard message, create one
-        if (!stars) {
+        if (!starboardMessage) {
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
             const embed = new EmbedBuilder()
                 .setColor(15844367)
@@ -200,14 +205,18 @@ export class Feature {
         // Fetch the messages in the starboard channel
         const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
 
-        // Find all of the starboard messages
-        const stars = fetchedMessages.find(message => message.content.startsWith('⭐') && message.author.id === client.user?.id);
+        // Find the starboard message
+        const starboardMessage = fetchedMessages.find(message =>
+            message.author.id === client.user!.id &&
+            message.content.startsWith("⭐") &&
+            message.embeds[0].description?.includes(`**[Jump to message](${reaction.message.url})**`)
+        );
 
         // If there's already a starboard message, edit it
-        if (stars) {
-            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.content);
+        if (starboardMessage) {
+            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(starboardMessage.content);
             const starCount = parseInt(star![1]) - 1;
-            const foundStar = stars.embeds[0];
+            const foundStar = starboardMessage.embeds[0];
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : null;
             const embed = new EmbedBuilder()
                 .setColor(foundStar.color)
@@ -221,7 +230,6 @@ export class Feature {
                     text: reaction.message.id,
                 });
             if (image) embed.setImage(image);
-            const starboardMessage = await starChannel.messages.fetch(stars.id);
             await starboardMessage.edit({ content: `⭐ ${starCount} | <#${reaction.message.channel.id}>`, embeds: [embed] });
             if (star?.[1] && parseInt(star[1]) - 1 == 0) setTimeout(() => {
                 starboardMessage.delete().catch(() => {
