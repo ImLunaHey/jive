@@ -22,7 +22,9 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
         },
         select: {
             leveling: true,
-            welcome: true
+            welcome: true,
+            autoRoles: true,
+            starboard: true,
         }
     });
 
