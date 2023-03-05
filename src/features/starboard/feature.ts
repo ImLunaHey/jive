@@ -180,7 +180,10 @@ export class Feature {
         if (!reaction.message.author) return;
 
         // Check if the reaction is valid
-        if (!await this.isReactionValid(reaction, user)) return;
+        if (!await this.isReactionValid(reaction, user)) {
+            this.logger.debug('Reaction is not valid', reaction.emoji.name);
+            return;
+        }
 
         // Skip if the starboard isn't setup
         const features = await prisma.features.findFirst({
@@ -195,7 +198,10 @@ export class Feature {
             }
         });
         if (!features) return;
-        if (!features.starboard.starboardChannelId) return;
+        if (!features.starboard.starboardChannelId) {
+            this.logger.debug('Starboard is not setup for %s', reaction.message.guild.name);
+            return;
+        }
 
         // Get the starboard channel
         const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
