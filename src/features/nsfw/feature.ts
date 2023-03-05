@@ -59,7 +59,7 @@ export class Feature {
 
         // Get a random post
         const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
-        const redditPosts = redditResponses.filter(response => {
+        const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
             if (!post) return false;
 
