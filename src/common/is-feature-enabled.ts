@@ -30,5 +30,7 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
         return features?.[id as keyof typeof features].enabled ?? false;
     };
 
-    globalLogger.debug('Checking feature enabled', { id, guildId, enabled: await check() });
+    const enabled = await check();
+    globalLogger.debug('Checking feature enabled', { id, guildId, enabled });
+    return enabled;
 };
