@@ -1,5 +1,4 @@
 import { prisma } from '@app/common/prisma-client';
-import { globalLogger } from '@app/logger';
 
 type Autocomplete<Keys extends string> = Keys | Omit<string, Keys>;
 
@@ -34,7 +33,5 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
         }
     };
 
-    const enabled = await check();
-    globalLogger.debug('Checking feature enabled', { id, guildId, enabled });
-    return enabled;
+    return await check();
 };

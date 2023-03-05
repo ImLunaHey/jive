@@ -1,12 +1,11 @@
 import { client } from '@app/client';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
+import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
 import { TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 @Discord()
 export class Feature {

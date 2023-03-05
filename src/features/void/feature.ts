@@ -1,9 +1,8 @@
 import { client } from '@app/client';
+import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
 import { TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 @Discord()
 export class Feature {
