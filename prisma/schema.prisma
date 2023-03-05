@@ -48,10 +48,10 @@ model WelcomeFeature {
 
   // The channel where the rules are sent
   // This is where the user must send the rulesCommand to accept the rules
-  rulesChannelId String
+  rulesChannelId String?
 
   // The message the user must send to accept the rules
-  rulesCommand String
+  rulesCommand String?
 
   // Roles are given to the user once they accept the rules
   addRoles String[]
@@ -60,10 +60,10 @@ model WelcomeFeature {
   removeRoles String[]
 
   // The channel where the welcome message is sent
-  welcomeChannelId String
+  welcomeChannelId String?
 
   // The message sent to the user when they accept the rules
-  welcomeMessage String
+  welcomeMessage String?
 
   feature Features?
 }

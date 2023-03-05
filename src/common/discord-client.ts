@@ -2,6 +2,7 @@ import { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
+import { prisma } from '@app/common/prisma-client';
 
 const clients = new Map<string, Client>();
 
@@ -29,6 +30,38 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     client.once('ready', async () => {
         // Make sure all guilds are in cache
         await client.guilds.fetch();
+
+        // Add all guilds to the database
+        for (const guild of client.guilds.cache.values()) {
+            await prisma.guild.upsert({
+                where: {
+                    id: guild.id,
+                },
+                update: {},
+                create: {
+                    id: guild.id,
+                    features: {
+                        create: {
+                            autoRoles: {
+                                create: {}
+                            },
+                            inviteTracking: {
+                                create: {}
+                            },
+                            leveling: {
+                                create: {}
+                            },
+                            starboard: {
+                                create: {}
+                            },
+                            welcome: {
+                                create: {}
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // init all application commands
         await client.initApplicationCommands();

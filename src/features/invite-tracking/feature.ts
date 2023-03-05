@@ -91,32 +91,8 @@ export class Feature {
                 code,
                 uses: uses ?? 1,
                 guild: {
-                    connectOrCreate: {
-                        where: {
-                            id: guildId
-                        },
-                        create: {
-                            id: guildId,
-                            features: {
-                                create: {
-                                    autoRoles: {
-                                        create: {}
-                                    },
-                                    inviteTracking: {
-                                        create: {}
-                                    },
-                                    leveling: {
-                                        create: {}
-                                    },
-                                    starboard: {
-                                        create: {}
-                                    },
-                                    welcome: {
-                                        create: {}
-                                    }
-                                }
-                            }
-                        }
+                    connect: {
+                        id: guildId
                     }
                 },
             }
