@@ -57,7 +57,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
                             welcome: {
                                 create: {}
                             },
-                            customCommands: {
+                            customCommand: {
                                 create: {}
                             },
                         }
