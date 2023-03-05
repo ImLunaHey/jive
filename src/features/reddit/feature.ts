@@ -49,9 +49,12 @@ export class Feature {
         }) ephemeral: boolean = false,
         interaction: CommandInteraction
     ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral });
+
         // Check if the subreddit is just plain text
         if (subreddit && !SubredditName.safeParse(subreddit).success) {
-            await interaction.reply({
+            await interaction.followUp({
                 embeds: [{
                     title: 'Invalid subreddit',
                 }]
@@ -59,15 +62,12 @@ export class Feature {
             return;
         }
 
-        // Show the bot thinking
-        await interaction.deferReply({ ephemeral });
-
         // Get a random post, try 3 times
         const post = await this.getRandomRedditPost(3, subreddit);
 
         // If this is a nsfw post and the channel is not nsfw, show an error
         if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
-            await interaction.reply({
+            await interaction.followUp({
                 embeds: [{
                     title: 'This is not a NSFW channel',
                     description: 'Please use this command in a NSFW channel',
