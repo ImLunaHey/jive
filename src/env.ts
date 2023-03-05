@@ -7,14 +7,14 @@ import { z } from 'zod';
  */
 const schema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']),
-    LOG_LEVEL: z.enum(['info', 'timer', 'debug', 'warn', 'error']),
+    LOG_LEVEL: z.enum(['info', 'timer', 'debug', 'warn', 'error']).optional(),
     BOT_TOKEN: z.string().min(55).max(80),
     MAINTENCE_MODE: z.boolean().optional(),
 });
 
 const processEnv = {
     NODE_ENV: process.env.NODE_ENV,
-    LOG_LEVEL: process.env.LOG_LEVEL,
+    LOG_LEVEL: process.env.LOG_LEVEL ?? 'error',
     BOT_TOKEN: process.env.BOT_TOKEN,
     MAINTENCE_MODE: !!process.env.MAINTENCE_MODE,
 } satisfies Parameters<typeof schema.safeParse>[0];

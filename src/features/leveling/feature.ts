@@ -19,14 +19,22 @@ export class Feature {
 
     @On({ event: 'ready' })
     async ready(): Promise<void> {
+        // Fetch each guild that has this feature enabled
         const guilds = await prisma.guild.findMany({
             where: {
                 features: {
-                    some: {
-                        id: 'leveling',
-                    },
-                },
+                    leveling: {
+                        enabled: true
+                    }
+                }
             },
+            include: {
+                features: {
+                    include: {
+                        leveling: true
+                    }
+                }
+            }
         });
 
         for (const guild of guilds) {

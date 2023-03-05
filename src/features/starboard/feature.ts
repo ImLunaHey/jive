@@ -43,17 +43,20 @@ export class Feature {
 
         if (!message.guild?.id) return;
 
-        const starboard = await prisma.feature.findFirst({
+        const features = await prisma.features.findFirst({
             where: {
-                guildId: message.guild.id,
-                id: 'starboard',
-                enabled: true
-            },
-        });
-        if (!starboard) return;
+                guild: {
+                    id: message.guild.id
+                },
 
-        const featureData = JSON.parse(starboard.data ?? '{}');
-        const starChannel = message.guild.channels.cache.get(featureData.channelId) as TextChannel;
+            },
+            include: {
+                starboard: true
+            }
+        });
+        if (!features) return;
+
+        const starChannel = message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
         if (starChannel.type !== ChannelType.GuildText) return;
 

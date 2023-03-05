@@ -24,9 +24,10 @@ model GuildMember {
 model Guild {
   id String @id @unique
 
-  invites  Invite[]
-  members  GuildMember[]
-  features Feature[]
+  invites    Invite[]
+  members    GuildMember[]
+  features   Features      @relation(fields: [featuresId], references: [id])
+  featuresId String        @unique
 }
 
 model Invite {
@@ -38,15 +39,93 @@ model Invite {
   guildId String
 }
 
-model Feature {
+// Joins -> Accepts Rules -> Welcome Message
+model WelcomeFeature {
   id String @id @unique
 
+  // Whether the feature is enabled or not
   enabled Boolean @default(false)
 
-  data String?
+  // The channel where the rules are sent
+  // This is where the user must send the rulesCommand to accept the rules
+  rulesChannelId String
 
-  guild   Guild  @relation(fields: [guildId], references: [id])
-  guildId String
+  // The message the user must send to accept the rules
+  rulesCommand String
+
+  // Roles are given to the user once they accept the rules
+  addRoles String[]
+
+  // Roles are removed from the user once they accept the rules
+  removeRoles String[]
+
+  // The channel where the welcome message is sent
+  welcomeChannelId String
+
+  // The message sent to the user when they accept the rules
+  welcomeMessage String
+
+  feature Features?
+}
+
+model LevelingFeature {
+  id String @id @unique
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  // The channel where the leveling messages are sent
+  levelingChannelId String
+
+  // The message sent to the user when they level up
+  levelingMessage String
+
+  feature Features?
+}
+
+model AutoRolesFeature {
+  id String @id @unique
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  // Roles are given to the user when they join the server
+  addRoles String[]
+
+  feature Features?
+}
+
+model StarboardFeature {
+  id String @id @unique
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  // The channel where the starboard messages are sent
+  starboardChannelId String
+
+  // The minimum amount of stars required to send a message to the starboard
+  minimumStars Int
+
+  feature Features?
+}
+
+model Features {
+  id String @id @unique
+
+  autoRoles          AutoRolesFeature @relation(fields: [autoRolesFeatureId], references: [id])
+  autoRolesFeatureId String           @unique
+
+  welcome          WelcomeFeature @relation(fields: [welcomeFeatureId], references: [id])
+  welcomeFeatureId String         @unique
+
+  leveling          LevelingFeature @relation(fields: [levelingFeatureId], references: [id])
+  levelingFeatureId String          @unique
+
+  starboard          StarboardFeature @relation(fields: [starboardFeatureId], references: [id])
+  starboardFeatureId String           @unique
+
+  guild Guild?
 }
 
 model RateLimit {

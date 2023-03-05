@@ -22,25 +22,28 @@ export class Feature {
         const guilds = await prisma.guild.findMany({
             where: {
                 features: {
-                    some: {
-                        id: 'welcome',
-                    },
+                    welcome: {
+                        enabled: true
+                    }
                 }
             },
             include: {
-                features: true,
+                features: {
+                    include: {
+                        welcome: true
+                    }
+                }
             }
         });
 
         for (const guild of guilds) {
-            // Fetch the welcome channel
+            // Fetch the rules channel
             const channels = await client.guilds.cache.get(guild.id)?.channels.fetch();
-            const channelId = JSON.parse(guild.features.find(feature => feature.id === 'welcome')?.data ?? '{}').channelId;
-            const welcomeChannel = channels?.find(channel => channel?.id === channelId) as TextChannel | null;
-            if (!welcomeChannel) return;
+            const rulesChannel = channels?.find(channel => channel?.id === guild.features.welcome.rulesChannelId) as TextChannel | null;
+            if (!rulesChannel) return;
 
             // Fetch all the messages in the channel
-            const messages = await welcomeChannel?.messages.fetch();
+            const messages = await rulesChannel?.messages.fetch();
             if (!messages) return;
 
             // Delete all the messages in the channel
@@ -52,12 +55,12 @@ export class Feature {
                 });
             }
 
-            // Check if the channel already has it's welcome message
+            // Check if the channel already has it's rules message
             const lastMessage = messages.last();
             if (lastMessage?.embeds[0]?.title === 'Server Rules') return;
 
             // Send the embed
-            await welcomeChannel.send({
+            await rulesChannel.send({
                 embeds: [{
                     title: 'Server Rules',
                     description: outdent`
@@ -86,22 +89,25 @@ export class Feature {
         if (!message.guild) return;
 
         // Skip if the feature is disabled
-        if (!isFeatureEnabled(message.guild?.id, 'welcome')) return;
+        if (!isFeatureEnabled('welcome', message.guild?.id)) return;
 
-        // Fetch the welcome channel
+        // Fetch the rules channel
         const channels = await client.guilds.cache.get(message.guild.id)?.channels.fetch();
-        const feature = await prisma.feature.findFirst({
+        const features = await prisma.features.findFirst({
             where: {
-                guildId: message.guild.id,
-                id: 'welcome',
-            }
+                guild: {
+                    id: message.guild.id,
+                },
+            },
+            select: {
+                welcome: true,
+            },
         });
-        const channelId = JSON.parse(feature?.data ?? '{}').channelId;
-        const welcomeChannel = channels?.find(channel => channel?.id === channelId) as TextChannel | null;
-        if (!welcomeChannel) return;
+        const rulesChannel = channels?.find(channel => channel?.id === features?.welcome.rulesChannelId) as TextChannel | null;
+        if (!rulesChannel) return;
 
-        // Skip if the message isn't in the welcome channel
-        if (message.channel.id !== welcomeChannel.id) return;
+        // Skip if the message isn't in the rules channel
+        if (message.channel.id !== rulesChannel.id) return;
         if (message.author.bot) return;
 
         // If this isn't !agree tell the user

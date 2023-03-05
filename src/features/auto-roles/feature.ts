@@ -15,18 +15,34 @@ export class Feature {
 
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
-        if (!await isFeatureEnabled('auto-roles', newMember.guild.id)) return;
+        if (!await isFeatureEnabled('welcome', newMember.guild.id)) return;
 
-        // Check if the member has agreed to the rules
+        // Check if the member has passed the guild's membership screening requirements
         if (oldMember.pending && !newMember.pending) {
-            // Give the member their roles
-            // @TODO: implement this
+            // Ping them in the rules channel to let them know to agree to the rules
+            const features = await prisma.features.findFirst({
+                where: {
+                    guild: {
+                        id: newMember.guild.id
+                    }
+                },
+                select: {
+                    welcome: true
+                }
+            });
+
+            if (!features?.welcome.rulesChannelId) return;
+
+            const rulesChannel = client.guilds.cache.get(newMember.guild.id)?.channels.cache.get(features.welcome.rulesChannelId) as TextChannel;
+            if (!rulesChannel) return;
+
+            await rulesChannel.send(`<@${newMember.user.id}> please agree to the rules by typing \`!agree\` in this channel.`);
         }
     }
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled('auto-roles', message.guild?.id)) return;
+        if (!await isFeatureEnabled('welcome', message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -38,25 +54,28 @@ export class Feature {
         if (message.author.bot) return;
 
         // Fetch the channel's feature data
-        const feature = await prisma.feature.findFirst({
+        const features = await prisma.features.findFirst({
             where: {
-                guildId: message.guild.id,
-                id: 'auto-roles',
+                guild: {
+                    id: message.guild.id
+                }
+            },
+            include: {
+                welcome: true
             }
         });
 
-        const featureData = JSON.parse(feature?.data ?? '{}');
-        const joinChannelId = featureData.joinChannelId as string;
-        const welcomeChannelId = featureData.welcomeChannelId as string;
-        const addRoles = featureData.addRoles as string[] ?? [];
-        const removeRoles = featureData.removeRoles ?? [];
+        // Check if the feature is enabled
+        if (!features?.welcome.enabled) return;
+
+        const { addRoles, removeRoles, rulesChannelId, welcomeChannelId } = features.welcome;
 
         // Check if the join channel exists
-        const joinChannel = client.guilds.cache.get(message.guild.id)?.channels.cache.get(joinChannelId);
-        if (!joinChannel) return;
+        const rulesChannel = client.guilds.cache.get(message.guild.id)?.channels.cache.get(rulesChannelId);
+        if (!rulesChannel) return;
 
         // Check if the message was sent in the join channel
-        if (message.channel.id !== joinChannel.id) return;
+        if (message.channel.id !== rulesChannel.id) return;
 
         // If they sent !agree add/remove their roles
         if (message.content.toLowerCase().trim() === '!agree') {
