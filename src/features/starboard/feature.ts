@@ -39,9 +39,9 @@ export class Feature {
         // Ignore bots
         if (reaction.message.author?.bot) return false;
 
-        // Skip embeds
+        // Skip non gifv embeds
         // @TODO: Add support for embeds
-        if (reaction.message.embeds.length > 0) return false;
+        if (reaction.message.embeds.length > 0 && reaction.message.embeds[0].data.type !== 'gifv') return false;
 
         // Skip private threads
         if (reaction.message.channel.type === ChannelType.PrivateThread) return false;
@@ -131,12 +131,13 @@ export class Feature {
         // If there's no starboard message, create one
         if (!starboardMessage) {
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
+            const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com') ?? false;
             const embed = new EmbedBuilder()
                 .setColor(15844367)
                 .setDescription(outdent`
                     **[Jump to message](${reaction.message.url})**
 
-                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? await resolveMedia(reaction.message.cleanContent) : reaction.message.content}
+                    ${tenorGif ? '' : reaction.message.content}
                 `)
                 .setAuthor({
                     name: reaction.message.author.tag,
@@ -144,6 +145,7 @@ export class Feature {
                 })
                 .setTimestamp(new Date());
             if (image) embed.setImage(image);
+            if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
             await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
         }
     }
@@ -185,6 +187,7 @@ export class Feature {
         // Check if the reaction is valid
         if (!await this.isReactionValid(reaction, user)) {
             this.logger.info('Reaction is not valid', reaction.emoji.name);
+            this.logger.info(reaction.message.embeds[0]);
             return;
         }
 
