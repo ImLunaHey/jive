@@ -47,7 +47,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral });
 
         // Get a random post
-        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'all'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
+        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'cats'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
         const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
             if (!post) return false;
