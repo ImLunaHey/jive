@@ -58,16 +58,17 @@ export class Feature {
         await interaction.deferReply({ ephemeral });
 
         // Get a random post
-        const redditResponse = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
-        const redditPosts = redditResponse[0].data.children.map(post => post.data);
+        const redditResponse = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
+        const redditPosts = redditResponse[0].data.children.map(post => post.data).filter(post => {
+            // Check if we got an image/gif/video post
+            const isGifOrVideo = (post.post_hint === 'link' && (!post.url.endsWith('gif') || post.url.endsWith('gifv') || post.url.endsWith('mp4')));
+            const isImage = post.post_hint === 'image';
+            return isGifOrVideo || isImage;
+        });
         const post = redditPosts[0];
 
-        // Check if we got an image/gif/video post
-        const isGifOrVideo = (post.post_hint === 'link' && (!post.url.endsWith('gif') || post.url.endsWith('gifv') || post.url.endsWith('mp4')));
-        const isCorrectType = post.post_hint === 'image' || isGifOrVideo;
-
-        // If we didn't get a post or the post is not an image/gif/video, show an error
-        if (!post || !isCorrectType) {
+        // If we didn't get a post, show an error
+        if (!post) {
             await interaction.followUp({
                 embeds: [{
                     title: 'No posts found',
