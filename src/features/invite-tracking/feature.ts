@@ -60,18 +60,29 @@ export class Feature {
         // Update the invite uses, skip if the invite is a DM invite
         if (inviteUsed) this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
 
-        // Send a message to the invite creator
-        // const inviteCreator = await client.users.fetch(inviteUsed.inviter?.id ?? '');
-        // inviteCreator.send(`Someone joined using your invite: ${inviteUsed.url}`);
+        // Skip if the feature is disabled
+        const features = await prisma.features.findFirst({
+            where: {
+                guild: {
+                    id: member.guild.id
+                },
 
-        // Post a message in the welcome channel
-        const welcomeChannel = member.guild.channels.cache.get('1042598577156919376');
-        if (welcomeChannel?.type !== ChannelType.GuildText) return;
+            },
+            include: {
+                inviteTracking: true
+            }
+        });
+        if (!features) return;
+        if (!features.inviteTracking.inviteTrackingChannelId) return;
+
+        // Post a message in the invite tracking channel
+        const inviteTrackingChannel = member.guild.channels.cache.get(features.inviteTracking.inviteTrackingChannelId);
+        if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
         if (!inviteUsed) {
-            await welcomeChannel?.send(`${member} joined but we couldn't find the invite that was used`);
+            await inviteTrackingChannel?.send(`${member} joined but we couldn't find the invite that was used`);
         } else {
-            await welcomeChannel?.send(`${member} was invited by <@${inviteUsed.inviter?.id}> [${inviteUsed.uses} uses]`);
+            await inviteTrackingChannel?.send(`${member} was invited by <@${inviteUsed.inviter?.id}> [${inviteUsed.uses} uses]`);
         }
     }
 

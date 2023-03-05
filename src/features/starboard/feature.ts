@@ -43,6 +43,7 @@ export class Feature {
 
         if (!message.guild?.id) return;
 
+        // Skip if the starboard feature is disabled
         const features = await prisma.features.findFirst({
             where: {
                 guild: {
@@ -55,6 +56,7 @@ export class Feature {
             }
         });
         if (!features) return;
+        if (!features.starboard.starboardChannelId) return;
 
         const starChannel = message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
