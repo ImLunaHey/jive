@@ -75,7 +75,7 @@ export class Feature {
         if (!reaction.message.author) return;
 
         // Check if the reaction is valid
-        if (!this.isReactionValid(reaction, user)) return;
+        if (!await this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
         const features = await prisma.features.findFirst({
