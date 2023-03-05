@@ -30,9 +30,6 @@ export class Feature {
         // Don't count the user's own reaction
         if (reaction.message.author?.id === user.id) return false;
 
-        // Only count ⭐ reactions
-        if (reaction.emoji.name !== "⭐") return false;
-
         // Skip if the message is in a DM
         if (reaction.message.channel.type === ChannelType.DM) return false;
 
@@ -93,8 +90,11 @@ export class Feature {
         if (!features) return;
         if (!features.starboard.starboardChannelId) return;
 
-        // Skip if this post doesn't have enough stars
-        if ((reaction.count ?? 0) < features.starboard.minimumStars) return;
+        // Skip if this post doesn't have enough reactions
+        if ((reaction.count ?? 0) < features.starboard.minimumReactions) return;
+
+        // Check if this is a valid emoji reaction
+        if (reaction.emoji.name && features.starboard.reactions.length >= 1 && !features.starboard.reactions.includes(reaction.emoji.name)) return;
 
         // Get the starboard channel
         const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
@@ -222,6 +222,9 @@ export class Feature {
             this.logger.debug('Starboard is not setup for %s', reaction.message.guild.name);
             return;
         }
+
+        // Check if this is a valid emoji reaction
+        if (reaction.emoji.name && features.starboard.reactions.length >= 1 && !features.starboard.reactions.includes(reaction.emoji.name)) return;
 
         // Get the starboard channel
         const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;

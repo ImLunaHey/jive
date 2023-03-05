@@ -104,8 +104,12 @@ model StarboardFeature {
   // The channel where the starboard messages are sent
   starboardChannelId String?
 
-  // The minimum amount of stars required to send a message to the starboard
-  minimumStars Int @default(3)
+  // The minimum amount of reactions required to send a message to the starboard
+  minimumReactions Int @default(3)
+
+  // The reactions that needs to be used
+  // If this is empty then any reaction can be used
+  reactions String[]
 
   feature Features?
 }
