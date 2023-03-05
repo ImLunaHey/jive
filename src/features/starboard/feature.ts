@@ -107,7 +107,7 @@ export class Feature {
         const starboardMessage = fetchedMessages.find(message =>
             message.author.id === client.user!.id &&
             message.content.startsWith("⭐") &&
-            message.embeds[0].description?.includes(`**[Jump to message](${reaction.message.url})**`)
+            message.embeds[0].description?.includes(reaction.message.url)
         );
 
         // If there's already a starboard message, edit it
@@ -209,7 +209,7 @@ export class Feature {
         const starboardMessage = fetchedMessages.find(message =>
             message.author.id === client.user!.id &&
             message.content.startsWith("⭐") &&
-            message.embeds[0].description?.includes(`**[Jump to message](${reaction.message.url})**`)
+            message.embeds[0].description?.includes(reaction.message.url)
         );
 
         // If there's already a starboard message, edit it
