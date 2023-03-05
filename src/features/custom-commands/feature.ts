@@ -1,9 +1,9 @@
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { ChannelType, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { replaceVariables } from '@app/common/replace-variables';
+import { prisma } from '@app/common/prisma-client';
 
 @Discord()
 export class Feature {
@@ -15,7 +15,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled('custom-commands', message.guild?.id)) return;
+        if (!await isFeatureEnabled('customCommand', message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -47,6 +47,9 @@ export class Feature {
             }
         });
         if (!customCommand) return;
+
+        // Log that we ran a custom command
+        this.logger.info('Ran custom command "%s" for %s in %s', customCommand.triggerMessage, message.member.user.tag, message.guild.name);
 
         // Delete the message
         if (customCommand.deleteTrigger) await message.delete().catch(() => {

@@ -1,10 +1,8 @@
 import { prisma } from '@app/common/prisma-client';
 
-type Autocomplete<Keys extends string> = Keys | Omit<string, Keys>;
-
 const globallyEnabled: string[] = [];
 
-export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>, guildId?: string) => {
+export const isFeatureEnabled = async (id: 'leveling' | 'welcome' | 'starboard' | 'autoRoles' | 'customCommand', guildId?: string) => {
     const check = async () => {
         if (!guildId) return false;
 
@@ -23,12 +21,16 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
                 welcome: true,
                 autoRoles: true,
                 starboard: true,
+                customCommand: true
             }
         });
 
         try {
-            return features?.[id as keyof typeof features].enabled;
-        } catch {
+            const feature = features?.[id as keyof typeof features];
+            return feature?.enabled ?? false;
+        } catch (error) {
+            console.log(error);
+
             return false;
         }
     };
