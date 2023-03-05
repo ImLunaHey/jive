@@ -39,7 +39,7 @@ export class Feature {
 
         // Skip embeds
         // @TODO: Add support for embeds
-        if (reaction.message.embeds.length > 0) return;
+        if (reaction.message.embeds.length > 0) return false;
 
         // Skip private threads
         if (reaction.message.channel.type === ChannelType.PrivateThread) return false;
@@ -95,6 +95,9 @@ export class Feature {
         const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
         if (starChannel.type !== ChannelType.GuildText) return;
+
+        // Log
+        this.logger.info('Adding a starboard message for %s with a reaction of %s', reaction.message.id, reaction.emoji.name);
 
         // Fetch the messages in the starboard channel
         const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
