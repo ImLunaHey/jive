@@ -89,7 +89,7 @@ export class Feature {
 
         // Fetch the messages in the starboard channel
         const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
-        const stars = fetchedMessages.find(m => m.embeds[0].footer?.text.startsWith("⭐") && m.embeds[0].footer.text.endsWith(reaction.message.id));
+        const stars = fetchedMessages.find(m => m.embeds[0]?.footer?.text.startsWith("⭐") && m.embeds[0]?.footer.text.endsWith(reaction.message.id));
 
         // If there's already a starboard message, edit it
         if (stars) {
@@ -106,8 +106,8 @@ export class Feature {
                 .setTimestamp()
                 .setFooter({
                     text: `⭐ ${parseInt(star![1], 10) + 1} | ${reaction.message.id}`,
-                })
-                .setImage(image);
+                });
+            if (image) embed.setImage(image);
             const starMsg = await starChannel.messages.fetch(stars.id);
             await starMsg.edit({ embeds: [embed] });
         }
@@ -117,7 +117,7 @@ export class Feature {
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
             const embed = new EmbedBuilder()
                 .setColor(15844367)
-                .setDescription(reaction.message.cleanContent)
+                .setDescription(reaction.message.cleanContent?.trim() || '_ADD_DESCRIPTION_HERE_')
                 .setAuthor({
                     name: reaction.message.author.tag,
                     iconURL: reaction.message.author.displayAvatarURL(),
@@ -125,8 +125,8 @@ export class Feature {
                 .setTimestamp(new Date())
                 .setFooter({
                     text: `⭐ 1 | ${reaction.message.id}`,
-                })
-                .setImage(image);
+                });
+            if (image) embed.setImage(image);
             await starChannel.send({ embeds: [embed] });
         }
     }
@@ -181,16 +181,16 @@ export class Feature {
 
         // Fetch the messages in the starboard channel
         const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
-        const stars = fetchedMessages.find(m => m.embeds[0].footer?.text.startsWith("⭐") && m.embeds[0].footer.text.endsWith(reaction.message.id));
+        const stars = fetchedMessages.find(m => m.embeds[0]?.footer?.text.startsWith("⭐") && m.embeds[0]?.footer?.text.endsWith(reaction.message.id));
 
         // If there's already a starboard message, edit it
         if (stars) {
-            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0].footer?.text ?? '');
+            const star = /^\⭐\s([0-9]{1,3})\s\|\s([0-9]{17,20})/.exec(stars.embeds[0]?.footer?.text ?? '');
             const foundStar = stars.embeds[0];
             const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
             const embed = new EmbedBuilder()
                 .setColor(foundStar.color)
-                .setDescription(foundStar.description)
+                .setDescription(foundStar.description?.trim() || '_ADD_DESCRIPTION_HERE_')
                 .setAuthor({
                     name: reaction.message.author.tag,
                     iconURL: reaction.message.author.displayAvatarURL(),
@@ -198,10 +198,15 @@ export class Feature {
                 .setTimestamp()
                 .setFooter({
                     text: `⭐ ${parseInt(star![1], 10) + 1} | ${reaction.message.id}`,
-                })
-                .setImage(image);
-            const starMsg = await starChannel.messages.fetch(stars.id);
-            await starMsg.edit({ embeds: [embed] });
+                });
+            if (image) embed.setImage(image);
+            const starboardMessage = await starChannel.messages.fetch(stars.id);
+            await starboardMessage.edit({ embeds: [embed] });
+            if (star?.[1] && parseInt(star[1]) - 1 == 0) setTimeout(() => {
+                starboardMessage.delete().catch(() => {
+                    this.logger.error('Failed to delete starboard message', starboardMessage.id);
+                });
+            }, 1000);
         }
     }
 }
