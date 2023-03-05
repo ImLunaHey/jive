@@ -1,4 +1,4 @@
-import { RedditResponse } from '@app/features/nsfw/types';
+import { RedditResponse } from '@app/features/reddit/types';
 import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction, TextChannel } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
@@ -8,20 +8,20 @@ const SubredditName = z.string().regex(/^[a-zA-Z0-9_]+$/).min(3).max(21);
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('NSFW');
+    private logger = globalLogger.scope('Reddit');
 
     constructor() {
         this.logger.success('Feature initialized');
     }
 
     @Slash({
-        name: 'nsfw',
-        description: 'Get a random NSFW image',
+        name: 'reddit',
+        description: 'Get a random reddit post',
     })
-    async nsfw(
+    async reddit(
         @SlashOption({
             name: 'subreddit',
-            description: 'The subreddit to get the image from',
+            description: 'The subreddit to get the post from',
             required: false,
             type: ApplicationCommandOptionType.String,
         }) subreddit: string | undefined,
@@ -33,17 +33,6 @@ export class Feature {
         }) ephemeral: boolean = false,
         interaction: CommandInteraction
     ) {
-        // Check if this is a NSFW channel
-        if (!(interaction.channel as TextChannel)?.nsfw) {
-            await interaction.reply({
-                embeds: [{
-                    title: 'This is not a NSFW channel',
-                    description: 'Please use this command in a NSFW channel',
-                }]
-            });
-            return;
-        }
-
         // Check if the subreddit is just plain text
         if (subreddit && !SubredditName.safeParse(subreddit).success) {
             await interaction.reply({
@@ -58,7 +47,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral });
 
         // Get a random post
-        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'horny'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
+        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'all'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
         const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
             if (!post) return false;
@@ -69,6 +58,17 @@ export class Feature {
             return isGifOrVideo || isImage;
         }).map(response => response.data.children.find(child => child.kind === 't3')?.data);
         const post = redditPosts[0];
+
+        // If this is a nsfw post and the channel is not nsfw, show an error
+        if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
+            await interaction.reply({
+                embeds: [{
+                    title: 'This is not a NSFW channel',
+                    description: 'Please use this command in a NSFW channel',
+                }]
+            });
+            return;
+        }
 
         // If we didn't get a post, show an error
         if (!post) {
