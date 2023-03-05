@@ -27,7 +27,11 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
             }
         });
 
-        return features?.[id as keyof typeof features].enabled ?? false;
+        try {
+            return features?.[id as keyof typeof features].enabled;
+        } catch {
+            return false;
+        }
     };
 
     const enabled = await check();
