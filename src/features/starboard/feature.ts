@@ -93,6 +93,9 @@ export class Feature {
         if (!features) return;
         if (!features.starboard.starboardChannelId) return;
 
+        // Skip if this post doesn't have enough stars
+        if ((reaction.count ?? 0) < features.starboard.minimumStars) return;
+
         // Get the starboard channel
         const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
