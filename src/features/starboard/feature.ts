@@ -146,7 +146,18 @@ export class Feature {
                 .setTimestamp(new Date());
             if (image) embed.setImage(image);
             if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
-            await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
+            const starboardMessage = await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
+
+            // Ping the user if the feature is enabled
+            // if (features.starboard.pingUser) {
+            const reply = await starboardMessage.reply(`<@${reaction.message.author.id}> you made it on the starboard`);
+            // Wait 10 seconds and then delete the message
+            void sleep(10_000).then(async () => {
+                await reply.delete().catch(() => {
+                    this.logger.warn('Failed to delete message %s', reply.id);
+                });
+            });
+            // }
         }
     }
 
