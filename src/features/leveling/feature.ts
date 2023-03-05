@@ -55,7 +55,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled('invite-tracking', message.guild?.id)) return;
+        if (!await isFeatureEnabled('leveling', message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -78,7 +78,7 @@ export class Feature {
 
     @On({ event: 'voiceStateUpdate' })
     async voiceStateUpdate([oldState, newState]: ArgsOf<'voiceStateUpdate'>): Promise<void> {
-        if (!await isFeatureEnabled('invite-tracking', newState.guild?.id)) return;
+        if (!await isFeatureEnabled('leveling', newState.guild?.id)) return;
 
         // Check if the user has joined a voice channel
         if (oldState.channelId === null && newState.channelId !== null) {
@@ -229,13 +229,8 @@ export class Feature {
                         id: user.id,
                         xp: user.xp.totalXp,
                         guild: {
-                            connectOrCreate: {
-                                where: {
-                                    id: interaction.guild.id
-                                },
-                                create: {
-                                    id: interaction.guild.id
-                                }
+                            connect: {
+                                id: interaction.guild.id
                             }
                         }
                     }

@@ -12,6 +12,7 @@ const main = async () => {
     // Load all the events, commands and api
     await import('./features/audit-log');
     await import('./features/auto-roles');
+    await import('./features/custom-commands');
     await import('./features/debug');
     await import('./features/dynamic-channel-names');
     await import('./features/economy');

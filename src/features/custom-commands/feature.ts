@@ -1,0 +1,81 @@
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { prisma } from '@app/common/prisma-client';
+import { globalLogger } from '@app/logger';
+import { ChannelType, TextChannel } from 'discord.js';
+import { ArgsOf, Discord, On } from 'discordx';
+import { replaceVariables } from '@app/common/replace-variables';
+
+@Discord()
+export class Feature {
+    private logger = globalLogger.scope('CustomCommands');
+
+    constructor() {
+        this.logger.success('Feature initialized');
+    }
+
+    @On({ event: 'messageCreate' })
+    async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
+        if (!await isFeatureEnabled('custom-commands', message.guild?.id)) return;
+
+        // Check if the message was sent in a guild
+        if (!message.guild?.id) return;
+
+        // Check if the message was sent in a guild text channel
+        if (message.channel.type !== ChannelType.GuildText) return;
+
+        // Check if the message was sent by a bot
+        if (message.author.bot) return;
+
+        // Check if the message was sent by a webhook
+        if (!message.member) return;
+
+        // Check if this is the custom commands channel and if if this is a valid custom commands message
+        const customCommand = await prisma.customCommand.findFirst({
+            where: {
+                CustomCommandFeature: {
+                    feature: {
+                        guild: {
+                            id: message.guild.id
+                        }
+                    }
+                },
+                triggerChannelId: message.channel.id,
+                triggerMessage: message.content.trim()
+            },
+            include: {
+                extraMessages: true
+            }
+        });
+        if (!customCommand) return;
+
+        // Delete the message
+        if (customCommand.deleteTrigger) await message.delete().catch(() => {
+            this.logger.error('Failed to delete message', message.id);
+        });
+
+        // Send the custom command response
+        if (customCommand.responseMessage) await message.reply(replaceVariables(customCommand.responseMessage, message.member));
+
+        // Add the roles
+        if (customCommand.addRoles.length) {
+            const member = await message.guild.members.fetch(message.author.id);
+            await member.roles.add(customCommand.addRoles);
+        }
+
+        // Remove the roles
+        if (customCommand.removeRoles.length) {
+            const member = await message.guild.members.fetch(message.author.id);
+            await member.roles.remove(customCommand.removeRoles);
+        }
+
+        // Send extra messages
+        if (customCommand.extraMessages.length) {
+            for (const extraMessage of customCommand.extraMessages) {
+                if (!extraMessage.message) continue;
+                const channel = await message.guild.channels.fetch(extraMessage.channelId ?? message.channel.id) as TextChannel;
+                if (!channel) continue;
+                await channel.send(replaceVariables(extraMessage.message, message.member));
+            }
+        }
+    }
+}

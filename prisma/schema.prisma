@@ -125,6 +125,62 @@ model InviteTrackingFeature {
   feature Features?
 }
 
+model CustomCommandExtraMessages {
+  id String @id @unique @default(uuid())
+
+  // The message sent to the channel when the trigger is sent
+  message String?
+
+  // The channel where the message is sent
+  // If this is null then it will be sent in the same channel as the trigger
+  channelId String?
+
+  // The command that triggered this
+  customCommand   CustomCommand? @relation(fields: [customCommandId], references: [id])
+  customCommandId String?
+}
+
+model CustomCommand {
+  id String @id @unique @default(uuid())
+
+  // The channel where the command must be sent
+  // If this is null then it can be sent in any channel
+  triggerChannelId String?
+
+  // The message needed to trigger this
+  // If this is blank then it will trigger on any message
+  triggerMessage String?
+
+  // The message sent to the channel when the trigger is sent
+  responseMessage String?
+
+  // Roles to add to the user when the trigger is sent
+  addRoles String[]
+
+  // Roles to remove from the user when the trigger is sent
+  removeRoles String[]
+
+  // Extra messages to send when the trigger is sent
+  extraMessages CustomCommandExtraMessages[]
+
+  // Whether the trigger should be deleted when the response is sent
+  deleteTrigger          Boolean               @default(false)
+  CustomCommandFeature   CustomCommandFeature? @relation(fields: [customCommandFeatureId], references: [id])
+  customCommandFeatureId String?
+}
+
+model CustomCommandFeature {
+  id String @id @unique @default(uuid())
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  // The custom commands
+  customCommands CustomCommand[]
+
+  feature Features?
+}
+
 model Features {
   id String @id @unique @default(uuid())
 
@@ -142,6 +198,9 @@ model Features {
 
   inviteTracking          InviteTrackingFeature @relation(fields: [inviteTrackingFeatureId], references: [id])
   inviteTrackingFeatureId String                @unique
+
+  customCommand          CustomCommandFeature @relation(fields: [customCommandFeatureId], references: [id])
+  customCommandFeatureId String               @unique
 
   guild Guild?
 }
