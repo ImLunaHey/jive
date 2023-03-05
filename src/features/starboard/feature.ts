@@ -5,6 +5,7 @@ import { globalLogger } from '@app/logger';
 import { ChannelType, EmbedBuilder, MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
+import { resolve as resolveMedia } from 'media-extractor';
 
 const extension = (attachment: string) => {
     const imageLink = attachment.split(".");
@@ -133,7 +134,7 @@ export class Feature {
                 .setDescription(outdent`
                     **[Jump to message](${reaction.message.url})**
 
-                    ${reaction.message.cleanContent}
+                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? resolveMedia(reaction.message.cleanContent) : reaction.message.cleanContent}
                 `)
                 .setAuthor({
                     name: reaction.message.author.tag,
