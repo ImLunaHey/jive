@@ -119,7 +119,7 @@ export class Feature {
                 })
                 .setTimestamp()
                 .setFooter({
-                    text: `⭐ ${starCount} | ${reaction.message.id}`,
+                    text: reaction.message.id,
                 });
             if (image) embed.setImage(image);
             const starboardMessage = await starChannel.messages.fetch(stars.id);
@@ -134,7 +134,7 @@ export class Feature {
                 .setDescription(outdent`
                     **[Jump to message](${reaction.message.url})**
 
-                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? resolveMedia(reaction.message.cleanContent) : reaction.message.cleanContent}
+                    ${reaction.message.cleanContent?.startsWith('https://tenor.com') ? resolveMedia(reaction.message.cleanContent) : reaction.message.content}
                 `)
                 .setAuthor({
                     name: reaction.message.author.tag,
@@ -142,7 +142,7 @@ export class Feature {
                 })
                 .setTimestamp(new Date())
                 .setFooter({
-                    text: `⭐ 1 | ${reaction.message.id}`,
+                    text: reaction.message.id,
                 });
             if (image) embed.setImage(image);
             await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
@@ -218,7 +218,7 @@ export class Feature {
                 })
                 .setTimestamp()
                 .setFooter({
-                    text: `⭐ ${starCount} | ${reaction.message.id}`,
+                    text: reaction.message.id,
                 });
             if (image) embed.setImage(image);
             const starboardMessage = await starChannel.messages.fetch(stars.id);
