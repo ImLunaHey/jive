@@ -1,5 +1,5 @@
 import { env } from '@app/env';
-import { Signale } from 'signale';
+import { Signale } from 'signales';
 
 export const globalLogger = new Signale({
     scope: 'app',
