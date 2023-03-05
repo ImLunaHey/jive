@@ -63,7 +63,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral });
 
         // Get a random post, try 3 times
-        const post = await this.getRandomRedditPost(3);
+        const post = await this.getRandomRedditPost(3, subreddit);
 
         // If this is a nsfw post and the channel is not nsfw, show an error
         if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
