@@ -75,10 +75,10 @@ model LevelingFeature {
   enabled Boolean @default(false)
 
   // The channel where the leveling messages are sent
-  levelingChannelId String
+  levelingChannelId String?
 
   // The message sent to the user when they level up
-  levelingMessage String
+  levelingMessage String?
 
   feature Features?
 }
@@ -102,10 +102,25 @@ model StarboardFeature {
   enabled Boolean @default(false)
 
   // The channel where the starboard messages are sent
-  starboardChannelId String
+  starboardChannelId String?
 
   // The minimum amount of stars required to send a message to the starboard
-  minimumStars Int
+  minimumStars Int @default(3)
+
+  feature Features?
+}
+
+model InviteTrackingFeature {
+  id String @id @unique @default(uuid())
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  // The channel where the invite tracking messages are sent
+  inviteTrackingChannelId String?
+
+  // The message sent to the channel when an invite is used
+  inviteTrackingMessage String?
 
   feature Features?
 }
@@ -124,6 +139,9 @@ model Features {
 
   starboard          StarboardFeature @relation(fields: [starboardFeatureId], references: [id])
   starboardFeatureId String           @unique
+
+  inviteTracking          InviteTrackingFeature @relation(fields: [inviteTrackingFeatureId], references: [id])
+  inviteTrackingFeatureId String                @unique
 
   guild Guild?
 }

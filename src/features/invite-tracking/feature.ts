@@ -96,7 +96,26 @@ export class Feature {
                             id: guildId
                         },
                         create: {
-                            id: guildId
+                            id: guildId,
+                            features: {
+                                create: {
+                                    autoRoles: {
+                                        create: {}
+                                    },
+                                    inviteTracking: {
+                                        create: {}
+                                    },
+                                    leveling: {
+                                        create: {}
+                                    },
+                                    starboard: {
+                                        create: {}
+                                    },
+                                    welcome: {
+                                        create: {}
+                                    }
+                                }
+                            }
                         }
                     }
                 },
