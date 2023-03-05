@@ -5,7 +5,7 @@ import { Discord, Slash } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Debug');
+    private logger = globalLogger.scope('Features');
 
     constructor() {
         this.logger.success('Feature initialized');
@@ -65,8 +65,35 @@ export class Feature {
         // Reply with the current features
         await interaction.editReply({
             embeds: [{
-                title: 'Current features',
-                description: '```' + JSON.stringify(features) + '```',
+                title: 'Features',
+                description: 'Configure the bot\'s features',
+                fields: [
+                    {
+                        name: 'Starboard',
+                        value: features?.starboard?.enabled ? 'Enabled' : 'Disabled',
+                        inline: true
+                    },
+                    {
+                        name: 'Welcome',
+                        value: features?.welcome?.enabled ? 'Enabled' : 'Disabled',
+                        inline: true
+                    },
+                    {
+                        name: 'Leveling',
+                        value: features?.leveling?.enabled ? 'Enabled' : 'Disabled',
+                        inline: true
+                    },
+                    {
+                        name: 'Auto Roles',
+                        value: features?.autoRoles?.enabled ? 'Enabled' : 'Disabled',
+                        inline: true
+                    },
+                    {
+                        name: 'Invite Tracking',
+                        value: features?.inviteTracking?.enabled ? 'Enabled' : 'Disabled',
+                        inline: true
+                    },
+                ]
             }],
         });
     }
