@@ -12,9 +12,6 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
         // If the feature is enabled globally, return true
         if (globallyEnabled.includes(id as string)) return true;
 
-        // If this feature doesn't exist, return false
-        if (!['leveling', 'welcome'].includes(id as string)) return false;
-
         // Is this feature enabled for this guild?
         const features = await prisma.features.findFirst({
             where: {
@@ -30,7 +27,7 @@ export const isFeatureEnabled = async (id: Autocomplete<'leveling' | 'welcome'>,
             }
         });
 
-        return features?.[id as keyof typeof features].enabled;
+        return features?.[id as keyof typeof features].enabled ?? false;
     };
 
     globalLogger.debug('Checking feature enabled', { id, guildId, enabled: await check() });
