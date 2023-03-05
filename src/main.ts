@@ -15,6 +15,7 @@ const main = async () => {
     await import('./features/debug');
     await import('./features/dynamic-channel-names');
     await import('./features/economy');
+    await import('./features/features');
     await import('./features/invite-tracking');
     await import('./features/leveling');
     await import('./features/moderation');

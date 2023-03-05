@@ -65,7 +65,7 @@ export class Feature {
         name: 'ping',
         description: 'Pong!',
     })
-    async clearMessages(
+    async ping(
         interaction: CommandInteraction
     ) {
         // Show the bot thinking
