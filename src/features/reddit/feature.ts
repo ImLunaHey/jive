@@ -1,4 +1,4 @@
-import { RedditResponse } from '@app/features/reddit/types';
+import { RedditResponse, T3 } from '@app/features/reddit/types';
 import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction, TextChannel } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
@@ -12,6 +12,22 @@ export class Feature {
 
     constructor() {
         this.logger.success('Feature initialized');
+    }
+
+    async getRandomRedditPost(tries = 0, subreddit?: string): Promise<T3 | undefined> {
+        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'cats'}/random.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
+        const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
+            const post = response.data.children.find(child => child.kind === 't3')?.data;
+            if (!post) return false;
+
+            // Check if we got an image/gif/video post
+            const isGifOrVideo = (post.post_hint === 'link' && (!post.url.endsWith('gif') || post.url.endsWith('gifv') || post.url.endsWith('mp4')));
+            const isImage = post.post_hint === 'image';
+            return isGifOrVideo || isImage;
+        }).map(response => response.data.children.find(child => child.kind === 't3')?.data);
+        const post = redditPosts[0];
+        if (!post) return this.getRandomRedditPost(tries--, subreddit);
+        return post;
     }
 
     @Slash({
@@ -46,18 +62,8 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral });
 
-        // Get a random post
-        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'cats'}/random.json?limit=10`).then(response => response.json() as Promise<RedditResponse>);
-        const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
-            const post = response.data.children.find(child => child.kind === 't3')?.data;
-            if (!post) return false;
-
-            // Check if we got an image/gif/video post
-            const isGifOrVideo = (post.post_hint === 'link' && (!post.url.endsWith('gif') || post.url.endsWith('gifv') || post.url.endsWith('mp4')));
-            const isImage = post.post_hint === 'image';
-            return isGifOrVideo || isImage;
-        }).map(response => response.data.children.find(child => child.kind === 't3')?.data);
-        const post = redditPosts[0];
+        // Get a random post, try 3 times
+        const post = await this.getRandomRedditPost(3);
 
         // If this is a nsfw post and the channel is not nsfw, show an error
         if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {

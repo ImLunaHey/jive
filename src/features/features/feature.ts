@@ -58,7 +58,8 @@ export class Feature {
                 welcome: true,
                 leveling: true,
                 autoRoles: true,
-                inviteTracking: true
+                inviteTracking: true,
+                customCommand: true,
             }
         });
 
@@ -93,6 +94,10 @@ export class Feature {
                         value: features?.inviteTracking?.enabled ? 'Enabled' : 'Disabled',
                         inline: true
                     },
+                    {
+                        name: 'Custom Commands',
+                        value: features?.customCommand?.enabled ? 'Enabled' : 'Disabled',
+                    }
                 ]
             }],
         });
