@@ -28,6 +28,9 @@ export class Feature {
         // Check if the feature is enabled
         if (!await isFeatureEnabled('autoDelete', message.guild?.id)) return;
 
+        // Skip own messages
+        if (message.author.id === message.client.user?.id) return;
+
         // Check if the message is in a guild
         if (!message.guild) return;
 
@@ -63,7 +66,7 @@ export class Feature {
                     this.logger.warn('Failed to send reply message to %s', message.id);
                 });
 
-                void sleep(autoDeleteChannel.timeout).then(async () => {
+                void sleep(autoDeleteChannel.replyTimeout).then(async () => {
                     await reply?.delete().catch(() => {
                         this.logger.warn('Failed to delete reply message %s', reply?.id);
                     });

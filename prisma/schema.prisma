@@ -255,7 +255,7 @@ model AutoDelete {
 
   // The timeout before the reply message is deleted
   // If this is null then it will not be deleted
-  replyTimeout Int?
+  replyTimeout Int @default(0)
 
   AutoDeleteSettings   AutoDeleteSettings? @relation(fields: [autoDeleteSettingsId], references: [id])
   autoDeleteSettingsId String?
