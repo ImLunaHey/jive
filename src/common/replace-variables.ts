@@ -1,5 +1,17 @@
 import { Collection, Guild, GuildMember } from 'discord.js';
-import { render } from 'squirrelly';
+import { render, filters } from 'squirrelly';
+
+filters.define('reverse', (data: unknown) => {
+    if (typeof data === 'string') return data.split('').reverse().join('');
+    if (Array.isArray(data)) return data.reverse();
+    return data;
+});
+
+filters.define('random', (data: unknown) => {
+    if (Array.isArray(data)) return data[Math.floor(Math.random() * data.length)];
+    if (typeof data === 'string') return data[Math.floor(Math.random() * data.length)];
+    return data;
+});
 
 const transformMember = (member: GuildMember) => ({
     id: member.id,
@@ -38,17 +50,25 @@ const transformGuild = (guild: Guild) => ({
 });
 
 export const replaceVariablesForMember = async (message: string, member: GuildMember): Promise<string> => {
-    await member.guild.channels.fetch();
-    await member.guild.roles.fetch();
-    await member.guild.members.fetch();
+    try {
+        await member.guild.channels.fetch();
+        await member.guild.roles.fetch();
+        await member.guild.members.fetch();
 
-    return render(message, { guild: transformGuild(member.guild), member: transformMember(member) }, { useWith: true });
+        return render(message, { guild: transformGuild(member.guild), member: transformMember(member) }, { useWith: true });
+    } catch {
+        return 'Failed to render message, please contact <@784365843810222080>.';
+    }
 };
 
 export const replaceVariablesForGuild = async (message: string, guild: Guild): Promise<string> => {
-    await guild.channels.fetch();
-    await guild.roles.fetch();
-    await guild.members.fetch();
+    try {
+        await guild.channels.fetch();
+        await guild.roles.fetch();
+        await guild.members.fetch();
 
-    return render(message, { guild: transformGuild(guild) }, { useWith: true });
+        return render(message, { guild: transformGuild(guild) }, { useWith: true });
+    } catch {
+        return 'Failed to render message, please contact <@784365843810222080>.';
+    }
 };
