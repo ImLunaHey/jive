@@ -2,7 +2,18 @@ import { prisma } from '@app/common/prisma-client';
 
 const globallyEnabled: string[] = [];
 
-export const isFeatureEnabled = async (id: 'leveling' | 'welcome' | 'starboard' | 'autoRoles' | 'customCommand', guildId?: string) => {
+type features =
+    'auditLog' |
+    'autoDelete' |
+    'customCommand' |
+    'dynamicChannelNames' |
+    'inviteTracking' |
+    'leveling' |
+    'starboard' |
+    'welcome'
+    ;
+
+export const isFeatureEnabled = async (id: features, guildId?: string) => {
     const check = async () => {
         if (!guildId) return false;
 
@@ -10,23 +21,26 @@ export const isFeatureEnabled = async (id: 'leveling' | 'welcome' | 'starboard' 
         if (globallyEnabled.includes(id as string)) return true;
 
         // Is this feature enabled for this guild?
-        const features = await prisma.features.findFirst({
+        const settings = await prisma.settings.findFirst({
             where: {
                 guild: {
                     id: guildId
                 }
             },
             select: {
+                auditLog: true,
+                autoDelete: true,
+                customCommand: true,
+                dynamicChannelNames: true,
+                inviteTracking: true,
                 leveling: true,
-                welcome: true,
-                autoRoles: true,
                 starboard: true,
-                customCommand: true
+                welcome: true,
             }
         });
 
         try {
-            const feature = features?.[id as keyof typeof features];
+            const feature = settings?.[id as keyof typeof settings];
             return feature?.enabled ?? false;
         } catch (error) {
             console.log(error);

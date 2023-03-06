@@ -46,20 +46,22 @@ export class Feature {
             return;
         }
 
-        // Get the current features
-        const features = await prisma.features.findFirst({
+        // Get the current settings
+        const settings = await prisma.settings.findFirst({
             where: {
                 guild: {
                     id: guild.id
                 }
             },
             include: {
+                auditLog: true,
+                autoDelete: true,
+                customCommand: true,
+                dynamicChannelNames: true,
+                inviteTracking: true,
+                leveling: true,
                 starboard: true,
                 welcome: true,
-                leveling: true,
-                autoRoles: true,
-                inviteTracking: true,
-                customCommand: true,
             }
         });
 
@@ -70,34 +72,41 @@ export class Feature {
                 description: 'Configure the bot\'s features',
                 fields: [
                     {
-                        name: 'Starboard',
-                        value: features?.starboard?.enabled ? 'Enabled' : 'Disabled',
-                        inline: true
+                        name: 'Audit Log',
+                        value: settings?.auditLog?.enabled ? 'Enabled' : 'Disabled',
                     },
                     {
-                        name: 'Welcome',
-                        value: features?.welcome?.enabled ? 'Enabled' : 'Disabled',
+                        name: 'Auto Delete',
+                        value: settings?.autoDelete?.enabled ? 'Enabled' : 'Disabled',
+                    },
+                    {
+                        name: 'Custom Commands',
+                        value: settings?.customCommand?.enabled ? 'Enabled' : 'Disabled',
+                    },
+                    {
+                        name: 'Dynamic Channel Names',
+                        value: settings?.dynamicChannelNames?.enabled ? 'Enabled' : 'Disabled',
+                    },
+                    {
+                        name: 'Invite Tracking',
+                        value: settings?.inviteTracking?.enabled ? 'Enabled' : 'Disabled',
                         inline: true
                     },
                     {
                         name: 'Leveling',
-                        value: features?.leveling?.enabled ? 'Enabled' : 'Disabled',
+                        value: settings?.leveling?.enabled ? 'Enabled' : 'Disabled',
                         inline: true
                     },
                     {
-                        name: 'Auto Roles',
-                        value: features?.autoRoles?.enabled ? 'Enabled' : 'Disabled',
+                        name: 'Starboard',
+                        value: settings?.starboard?.enabled ? 'Enabled' : 'Disabled',
                         inline: true
                     },
                     {
-                        name: 'Invite Tracking',
-                        value: features?.inviteTracking?.enabled ? 'Enabled' : 'Disabled',
+                        name: 'Welcome',
+                        value: settings?.welcome?.enabled ? 'Enabled' : 'Disabled',
                         inline: true
                     },
-                    {
-                        name: 'Custom Commands',
-                        value: features?.customCommand?.enabled ? 'Enabled' : 'Disabled',
-                    }
                 ]
             }],
         });

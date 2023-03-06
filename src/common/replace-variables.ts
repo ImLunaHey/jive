@@ -1,25 +1,53 @@
-import { GuildMember } from 'discord.js';
+import { Collection, Guild, GuildMember } from 'discord.js';
+import { render } from 'squirrelly';
 
-export const replaceVariables = (message: string, member: GuildMember): string => {
-    return message
-        .replace(/{{user}}/g, `<@${member.id}>`)
-        .replace(/{{user.id}}/g, member.id)
-        .replace(/{{user.tag}}/g, member.user.tag)
-        .replace(/{{user.username}}/g, member.user.username)
-        .replace(/{{user.discriminator}}/g, member.user.discriminator)
-        .replace(/{{user.avatar}}/g, member.user.avatarURL() ?? '')
-        .replace(/{{user.avatarURL}}/g, member.user.avatarURL() ?? '')
-        .replace(/{{user.avatarURL.png}}/g, member.user.avatarURL({ extension: 'png' }) ?? '')
-        .replace(/{{user.avatarURL.jpg}}/g, member.user.avatarURL({ extension: 'jpg' }) ?? '')
-        .replace(/{{user.avatarURL.jpeg}}/g, member.user.avatarURL({ extension: 'jpeg' }) ?? '')
-        .replace(/{{user.avatarURL.webp}}/g, member.user.avatarURL({ extension: 'webp' }) ?? '')
-        .replace(/{{guild}}/g, `<@${member.guild.id}>`)
-        .replace(/{{guild.id}}/g, member.guild.id)
-        .replace(/{{guild.name}}/g, member.guild.name)
-        .replace(/{{guild.icon}}/g, member.guild.iconURL() ?? '')
-        .replace(/{{guild.iconURL}}/g, member.guild.iconURL() ?? '')
-        .replace(/{{guild.iconURL.jpg}}/g, member.guild.iconURL({ extension: 'jpg' }) ?? '')
-        .replace(/{{guild.iconURL.png}}/g, member.guild.iconURL({ extension: 'png' }) ?? '')
-        .replace(/{{guild.iconURL.jpeg}}/g, member.guild.iconURL({ extension: 'jpeg' }) ?? '')
-        .replace(/{{guild.iconURL.webp}}/g, member.guild.iconURL({ extension: 'webp' }) ?? '');
-}
+const transformMember = (member: GuildMember) => ({
+    id: member.id,
+    name: member.user.username,
+    displayName: member.displayName,
+    discriminator: member.user.discriminator,
+    bot: member.user.bot
+});
+
+const transformGuild = (guild: Guild) => ({
+    id: guild.id,
+    name: guild.name,
+    iconURL: guild.iconURL(),
+    memberCount: guild.memberCount,
+    roles: guild.roles.cache.reduce<{ [key: string]: { id: string; name: string; size: number } }>((roles, role) => {
+        roles[role.id] = {
+            id: role.id,
+            name: role.name,
+            size: role.members.size
+        };
+        return roles;
+    }, {}),
+    channels: guild.channels.cache.reduce<{ [key: string]: { id: string; name: string; size: number } }>((channels, channel) => {
+        channels[channel.id] = {
+            id: channel.id,
+            name: channel.name,
+            size: (channel.members as Collection<string, GuildMember>).size
+        };
+        return channels;
+    }, {}),
+    members: guild.members.cache.reduce<{ [key: string]: { id: string; name: string; displayName: string; discriminator: string; bot: boolean } }>((members, member) => {
+        members[member.id] = transformMember(member);
+        return members;
+    }, {})
+});
+
+export const replaceVariablesForMember = async (message: string, member: GuildMember): Promise<string> => {
+    await member.guild.channels.fetch();
+    await member.guild.roles.fetch();
+    await member.guild.members.fetch();
+
+    return render(message, { guild: transformGuild(member.guild), member: transformMember(member) }, { useWith: true });
+};
+
+export const replaceVariablesForGuild = async (message: string, guild: Guild): Promise<string> => {
+    await guild.channels.fetch();
+    await guild.roles.fetch();
+    await guild.members.fetch();
+
+    return render(message, { guild: transformGuild(guild) }, { useWith: true });
+};

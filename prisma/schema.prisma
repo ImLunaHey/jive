@@ -26,8 +26,8 @@ model Guild {
 
   invites    Invite[]
   members    GuildMember[]
-  features   Features      @relation(fields: [featuresId], references: [id])
-  featuresId String        @unique
+  settings   Settings      @relation(fields: [settingsId], references: [id])
+  settingsId String        @unique
 }
 
 model Invite {
@@ -39,19 +39,23 @@ model Invite {
   guildId String
 }
 
-// Joins -> Accepts Rules -> Welcome Message
-model WelcomeFeature {
+model WelcomeSettings {
   id String @id @unique @default(uuid())
 
   // Whether the feature is enabled or not
   enabled Boolean @default(false)
 
-  // The channel where the rules are sent
-  // This is where the user must send the rulesCommand to accept the rules
-  rulesChannelId String?
+  // Whether the bot should wait until the user accepts the rules
+  waitUntilGate Boolean @default(false)
 
-  // The message the user must send to accept the rules
-  rulesCommand String?
+  // The channel where the join message is sent
+  joinChannelId String?
+
+  // Should the message be sent to a DM instead of channel
+  joinDm Boolean @default(false)
+
+  // The message sent to the user
+  joinMessage String?
 
   // Roles are given to the user once they accept the rules
   addRoles String[]
@@ -59,16 +63,10 @@ model WelcomeFeature {
   // Roles are removed from the user once they accept the rules
   removeRoles String[]
 
-  // The channel where the welcome message is sent
-  welcomeChannelId String?
-
-  // The message sent to the user when they accept the rules
-  welcomeMessage String?
-
-  feature Features?
+  settings Settings?
 }
 
-model LevelingFeature {
+model LevelingSettings {
   id String @id @unique @default(uuid())
 
   // Whether the feature is enabled or not
@@ -80,22 +78,10 @@ model LevelingFeature {
   // The message sent to the user when they level up
   levelingMessage String?
 
-  feature Features?
+  settings Settings?
 }
 
-model AutoRolesFeature {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // Roles are given to the user when they join the server
-  addRoles String[]
-
-  feature Features?
-}
-
-model StarboardFeature {
+model StarboardSettings {
   id String @id @unique @default(uuid())
 
   // Whether the feature is enabled or not
@@ -111,10 +97,10 @@ model StarboardFeature {
   // If this is empty then any reaction can be used
   reactions String[]
 
-  feature Features?
+  settings Settings?
 }
 
-model InviteTrackingFeature {
+model InviteTrackingSettings {
   id String @id @unique @default(uuid())
 
   // Whether the feature is enabled or not
@@ -123,16 +109,16 @@ model InviteTrackingFeature {
   // The channel where the invite tracking messages are sent
   inviteTrackingChannelId String?
 
-  // The message sent to the channel when an invite is used
+  // If we should log when an invite is used
   inviteTrackingMessage String?
 
-  feature Features?
+  settings Settings?
 }
 
 model CustomCommandExtraMessages {
   id String @id @unique @default(uuid())
 
-  // The message sent to the channel when the trigger is sent
+  // If we should log when the trigger is sent
   message String?
 
   // The channel where the message is sent
@@ -155,7 +141,7 @@ model CustomCommand {
   // If this is blank then it will trigger on any message
   triggerMessage String?
 
-  // The message sent to the channel when the trigger is sent
+  // If we should log when the trigger is sent
   responseMessage String?
 
   // Roles to add to the user when the trigger is sent
@@ -168,12 +154,13 @@ model CustomCommand {
   extraMessages CustomCommandExtraMessages[]
 
   // Whether the trigger should be deleted when the response is sent
-  deleteTrigger          Boolean               @default(false)
-  CustomCommandFeature   CustomCommandFeature? @relation(fields: [customCommandFeatureId], references: [id])
-  customCommandFeatureId String?
+  deleteTrigger Boolean @default(false)
+
+  CustomCommandSettings   CustomCommandSettings? @relation(fields: [customCommandSettingsId], references: [id])
+  customCommandSettingsId String?
 }
 
-model CustomCommandFeature {
+model CustomCommandSettings {
   id String @id @unique @default(uuid())
 
   // Whether the feature is enabled or not
@@ -182,29 +169,159 @@ model CustomCommandFeature {
   // The custom commands
   customCommands CustomCommand[]
 
-  feature Features?
+  settings Settings?
 }
 
-model Features {
+model AuditLog {
   id String @id @unique @default(uuid())
 
-  autoRoles          AutoRolesFeature @relation(fields: [autoRolesFeatureId], references: [id])
-  autoRolesFeatureId String           @unique
+  // The channel where the audit log messages are sent
+  auditLogChannelId String?
 
-  welcome          WelcomeFeature @relation(fields: [welcomeFeatureId], references: [id])
-  welcomeFeatureId String         @unique
+  // If we should log when a user is banned
+  ban Boolean @default(false)
 
-  leveling          LevelingFeature @relation(fields: [levelingFeatureId], references: [id])
-  levelingFeatureId String          @unique
+  // If we should log when a user is unbanned
+  unban Boolean @default(false)
 
-  starboard          StarboardFeature @relation(fields: [starboardFeatureId], references: [id])
-  starboardFeatureId String           @unique
+  // If we should log when a user is kicked
+  kick Boolean @default(false)
 
-  inviteTracking          InviteTrackingFeature @relation(fields: [inviteTrackingFeatureId], references: [id])
-  inviteTrackingFeatureId String                @unique
+  // If we should log when a user is muted
+  mute Boolean @default(false)
 
-  customCommand          CustomCommandFeature @relation(fields: [customCommandFeatureId], references: [id])
-  customCommandFeatureId String               @unique
+  // If we should log when a user is unmuted
+  unmute Boolean @default(false)
+
+  // If we should log when a user is warned
+  warn Boolean @default(false)
+
+  // If we should log when a user joins
+  join Boolean @default(false)
+
+  // If we should log when a message is deleted
+  messageDelete Boolean @default(false)
+
+  // If we should log when a message is deleted
+  bulkMessageDelete Boolean @default(false)
+
+  // Should we ignore bots?
+  ignoreBots Boolean @default(false)
+
+  // Roles to ignore
+  ignoredRoles String[]
+
+  // Users to ignore
+  ignoredUsers String[]
+
+  // Channels to ignore
+  ignoredChannels String[]
+
+  AuditLogSettings   AuditLogSettings? @relation(fields: [auditLogSettingsId], references: [id])
+  auditLogSettingsId String?
+}
+
+model AuditLogSettings {
+  id String @id @unique @default(uuid())
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  auditLogs AuditLog[]
+
+  settings Settings?
+}
+
+model AutoDelete {
+  id String @id @unique @default(uuid())
+
+  // true = delete the messages that DO NOT trigger the command
+  // false = delete the messages that trigger the command
+  inverted Boolean @default(false)
+
+  // How long until the message is deleted
+  timeout Int @default(0)
+
+  // The channel where the auto-delete is triggered
+  // If this is null then it can be triggered in any channel
+  triggerChannelId String?
+
+  // The message that triggers the auto-delete
+  // If this is blank then it will trigger on any message
+  triggerMessage String?
+
+  // A response message to send to the user
+  replyMessage String?
+
+  // The timeout before the reply message is deleted
+  // If this is null then it will not be deleted
+  replyTimeout Int?
+
+  AutoDeleteSettings   AutoDeleteSettings? @relation(fields: [autoDeleteSettingsId], references: [id])
+  autoDeleteSettingsId String?
+}
+
+model AutoDeleteSettings {
+  id String @id @unique @default(uuid())
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  autoDeletes AutoDelete[]
+
+  settings Settings?
+}
+
+model DynamicChannel {
+  id String @id @unique @default(uuid())
+
+  // The dynamic channel
+  channelId String
+
+  // The template for that channel
+  channelTemplate String
+
+  DynamicChannelNamesSettings   DynamicChannelNamesSettings? @relation(fields: [dynamicChannelNamesSettingsId], references: [id])
+  dynamicChannelNamesSettingsId String?
+}
+
+model DynamicChannelNamesSettings {
+  id String @id @unique @default(uuid())
+
+  // Whether the feature is enabled or not
+  enabled Boolean @default(false)
+
+  channels DynamicChannel[]
+
+  settings Settings?
+}
+
+model Settings {
+  id String @id @unique @default(uuid())
+
+  auditLog           AuditLogSettings @relation(fields: [auditLogSettingsId], references: [id])
+  auditLogSettingsId String           @unique
+
+  autoDelete           AutoDeleteSettings @relation(fields: [autoDeleteSettingsId], references: [id])
+  autoDeleteSettingsId String             @unique
+
+  dynamicChannelNames           DynamicChannelNamesSettings @relation(fields: [dynamicChannelNamesSettingsId], references: [id])
+  dynamicChannelNamesSettingsId String                      @unique
+
+  welcome           WelcomeSettings @relation(fields: [welcomeSettingsId], references: [id])
+  welcomeSettingsId String          @unique
+
+  leveling           LevelingSettings @relation(fields: [levelingSettingsId], references: [id])
+  levelingSettingsId String           @unique
+
+  starboard           StarboardSettings @relation(fields: [starboardSettingsId], references: [id])
+  starboardSettingsId String            @unique
+
+  inviteTracking           InviteTrackingSettings @relation(fields: [inviteTrackingSettingsId], references: [id])
+  inviteTrackingSettingsId String                 @unique
+
+  customCommand           CustomCommandSettings @relation(fields: [customCommandSettingsId], references: [id])
+  customCommandSettingsId String                @unique
 
   guild Guild?
 }

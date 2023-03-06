@@ -1,39 +1,53 @@
 import { client } from '@app/client';
+import { prisma } from '@app/common/prisma-client';
+import { replaceVariablesForGuild } from '@app/common/replace-variables';
+import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
+import { ChannelType } from 'discord.js';
+
+// TODO: Add these to the database for luna's lobby
+// `✅ {{ guild.roles['965589467832401950'].size }}/{{ guild.roles['927462721933443082'].size }} verified members`
+// `💳 {{ guild.roles['927469767680487474'].size }} sellers`
 
 class DynamicChannelNamesService {
     private logger = globalLogger.scope('DynamicChannelNames');
 
     async setChannelNames() {
-        const guild = await client.guilds.fetch('927461441051701280');
+        // Wait until the client is ready
+        while (!client.readyAt) await sleep(1_000);
 
-        // Fetch all members
-        await guild.members.fetch();
-
-        // Fetch all channels
-        const channels = await guild.channels.fetch().then(channels => channels.filter(channel => channel && ['988738451300036679', '988738402012762152'].includes(channel.id)));
-        const sellers = await guild.roles.fetch('927469767680487474').then(role => role?.members.size ?? 0);
-        const verified = await guild.roles.fetch('965589467832401950').then(role => role?.members.size ?? 0);
-        const members = await guild.roles.fetch('927462721933443082').then(role => role?.members.size ?? 0);
-
-        for (const channel of channels.values()) {
-            // Sellers
-            if (channel?.id === '988738451300036679') {
-                const name = `💳 ${sellers} sellers`;
-                if (channel.name !== name) {
-                    this.logger.info('Updating channel name from "%s" to "%s"', channel.name, name);
-                    await channel.setName(name);
+        const dynamicChannels = await prisma.dynamicChannel.findMany({
+            include: {
+                DynamicChannelNamesSettings: {
+                    include: {
+                        settings: {
+                            include: {
+                                guild: true
+                            }
+                        }
+                    }
                 }
             }
+        });
 
-            // Members
-            if (channel?.id === '988738402012762152') {
-                const name = `✅ ${verified}/${members} verified members`;
-                if (channel.name !== name) {
-                    this.logger.info('Updating channel name from "%s" to "%s"', channel.name, name);
-                    await channel.setName(name);
-                }
-            }
+        // Update all dynamic channel names
+        for (const dynamicChannel of dynamicChannels) {
+            // Get the guild
+            const guildId = dynamicChannel.DynamicChannelNamesSettings?.settings?.guild?.id;
+            if (!guildId) continue;
+            const guild = await client.guilds.fetch(guildId);
+
+            // Get the channel
+            const channel = await guild.channels.fetch(dynamicChannel.channelId);
+            if (!channel) continue;
+
+            // Don't update the name if it's the same
+            const newName = await replaceVariablesForGuild(dynamicChannel.channelTemplate, guild);
+            if ((channel.type === ChannelType.GuildVoice ? channel.name : channel.name.replace(/\-/g, ' ')) === newName) continue;
+
+            // Update the channel name
+            this.logger.info('Updating channel name from "%s" to "%s" in "%s"', channel.name, newName, guild.name);
+            await channel.setName(newName);
         }
     }
 }

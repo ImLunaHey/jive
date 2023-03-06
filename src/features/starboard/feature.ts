@@ -76,7 +76,7 @@ export class Feature {
         if (!await this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
-        const features = await prisma.features.findFirst({
+        const settings = await prisma.settings.findFirst({
             where: {
                 guild: {
                     id: reaction.message.guild.id
@@ -87,17 +87,17 @@ export class Feature {
                 starboard: true
             }
         });
-        if (!features) return;
-        if (!features.starboard.starboardChannelId) return;
+        if (!settings) return;
+        if (!settings.starboard.starboardChannelId) return;
 
         // Skip if this post doesn't have enough reactions
-        if ((reaction.count ?? 0) < features.starboard.minimumReactions) return;
+        if ((reaction.count ?? 0) < settings.starboard.minimumReactions) return;
 
         // Check if this is a valid emoji reaction
-        if (reaction.emoji.name && features.starboard.reactions.length >= 1 && !features.starboard.reactions.includes(reaction.emoji.name)) return;
+        if (reaction.emoji.name && settings.starboard.reactions.length >= 1 && !settings.starboard.reactions.includes(reaction.emoji.name)) return;
 
         // Get the starboard channel
-        const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
+        const starChannel = reaction.message.guild.channels.cache.get(settings.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
         if (starChannel.type !== ChannelType.GuildText) return;
 
@@ -206,7 +206,7 @@ export class Feature {
         }
 
         // Skip if the starboard isn't setup
-        const features = await prisma.features.findFirst({
+        const settings = await prisma.settings.findFirst({
             where: {
                 guild: {
                     id: reaction.message.guild.id
@@ -217,17 +217,17 @@ export class Feature {
                 starboard: true
             }
         });
-        if (!features) return;
-        if (!features.starboard.starboardChannelId) {
+        if (!settings) return;
+        if (!settings.starboard.starboardChannelId) {
             this.logger.debug('Starboard is not setup for %s', reaction.message.guild.name);
             return;
         }
 
         // Check if this is a valid emoji reaction
-        if (reaction.emoji.name && features.starboard.reactions.length >= 1 && !features.starboard.reactions.includes(reaction.emoji.name)) return;
+        if (reaction.emoji.name && settings.starboard.reactions.length >= 1 && !settings.starboard.reactions.includes(reaction.emoji.name)) return;
 
         // Get the starboard channel
-        const starChannel = reaction.message.guild.channels.cache.get(features.starboard.starboardChannelId) as TextChannel;
+        const starChannel = reaction.message.guild.channels.cache.get(settings.starboard.starboardChannelId) as TextChannel;
         if (!starChannel) return;
         if (starChannel.type !== ChannelType.GuildText) return;
 

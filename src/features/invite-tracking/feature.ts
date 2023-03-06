@@ -19,7 +19,7 @@ export class Feature {
 
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
-            if (!await isFeatureEnabled('invite-tracking', guildId)) return;
+            if (!await isFeatureEnabled('inviteTracking', guildId)) return;
 
             // Fetch the invites
             this.logger.debug(`Fetching invites for guild ${guildId}...`);
@@ -61,7 +61,7 @@ export class Feature {
         if (inviteUsed) this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
 
         // Skip if the feature is disabled
-        const features = await prisma.features.findFirst({
+        const settings = await prisma.settings.findFirst({
             where: {
                 guild: {
                     id: member.guild.id
@@ -72,11 +72,11 @@ export class Feature {
                 inviteTracking: true
             }
         });
-        if (!features) return;
-        if (!features.inviteTracking.inviteTrackingChannelId) return;
+        if (!settings) return;
+        if (!settings.inviteTracking.inviteTrackingChannelId) return;
 
         // Post a message in the invite tracking channel
-        const inviteTrackingChannel = member.guild.channels.cache.get(features.inviteTracking.inviteTrackingChannelId);
+        const inviteTrackingChannel = member.guild.channels.cache.get(settings.inviteTracking.inviteTrackingChannelId);
         if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
         if (!inviteUsed) {

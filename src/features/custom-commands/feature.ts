@@ -2,7 +2,7 @@ import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import { ChannelType, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
-import { replaceVariables } from '@app/common/replace-variables';
+import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { prisma } from '@app/common/prisma-client';
 
 @Discord()
@@ -32,8 +32,8 @@ export class Feature {
         // Check if this is the custom commands channel and if if this is a valid custom commands message
         const customCommand = await prisma.customCommand.findFirst({
             where: {
-                CustomCommandFeature: {
-                    feature: {
+                CustomCommandSettings: {
+                    settings: {
                         guild: {
                             id: message.guild.id
                         }
@@ -57,7 +57,7 @@ export class Feature {
         });
 
         // Send the custom command response
-        if (customCommand.responseMessage) await message.reply(replaceVariables(customCommand.responseMessage, message.member));
+        if (customCommand.responseMessage) await message.reply(await replaceVariablesForMember(customCommand.responseMessage, message.member));
 
         // Add the roles
         if (customCommand.addRoles.length) {
@@ -77,7 +77,7 @@ export class Feature {
                 if (!extraMessage.message) continue;
                 const channel = await message.guild.channels.fetch(extraMessage.channelId ?? message.channel.id) as TextChannel;
                 if (!channel) continue;
-                await channel.send(replaceVariables(extraMessage.message, message.member));
+                await channel.send(await replaceVariablesForMember(extraMessage.message, message.member));
             }
         }
     }
