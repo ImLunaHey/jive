@@ -3,6 +3,7 @@ import { render } from 'squirrelly';
 
 const transformMember = (member: GuildMember) => ({
     id: member.id,
+    tag: `<@${member.id}>`,
     name: member.user.username,
     displayName: member.displayName,
     discriminator: member.user.discriminator,
