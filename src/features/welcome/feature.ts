@@ -2,6 +2,7 @@ import { client } from '@app/client';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
+import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
 import { WelcomeSettings } from '@prisma/client';
 import { GuildMember, TextChannel } from 'discord.js';
@@ -24,9 +25,18 @@ export class Feature {
             if (!joinChannel) return;
 
             // Send the welcome message
-            if (settings.joinMessage) await joinChannel.send({
-                content: await replaceVariablesForMember(settings.joinMessage, member),
-            });
+            if (settings.joinMessage) {
+                const joinMessage = await joinChannel.send({
+                    content: await replaceVariablesForMember(settings.joinMessage, member),
+                });
+
+                // If joinMessageTimeout is set delete the welcome message after the specified time
+                if (settings.joinMessageTimeout !== null) void sleep(settings.joinMessageTimeout).then(async () => {
+                    await joinMessage.delete().catch(() => {
+                        this.logger.error('Failed to delete welcome message', joinMessage.id);
+                    });
+                });
+            }
         }
 
         // If DM is set send the welcome message if there is one
@@ -74,7 +84,6 @@ export class Feature {
         // Welcome the member
         this.welcomeMember(member, settings);
     }
-
 
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {

@@ -57,6 +57,18 @@ model WelcomeSettings {
   // The message sent to the user
   joinMessage String?
 
+  // Should we delete the join message after a certain amount of time
+  joinMessageTimeout Int @default(0)
+
+  // The channel where the leave message is sent
+  leaveChannelId String?
+
+  // Should the message be sent to a DM instead of channel
+  leaveDm Boolean @default(false)
+
+  // The message sent to the user
+  leaveMessage String?
+
   // Roles are given to the user once they accept the rules
   addRoles String[]
 
