@@ -51,13 +51,13 @@ export class Feature {
         // Log that we ran a custom command
         this.logger.info('Ran custom command "%s" for %s in %s', customCommand.triggerMessage, message.member.user.tag, message.guild.name);
 
+        // Send the custom command response
+        if (customCommand.responseMessage) await message.reply(await replaceVariablesForMember(customCommand.responseMessage, message.member));
+
         // Delete the message
         if (customCommand.deleteTrigger) await message.delete().catch(() => {
             this.logger.error('Failed to delete message', message.id);
         });
-
-        // Send the custom command response
-        if (customCommand.responseMessage) await message.reply(await replaceVariablesForMember(customCommand.responseMessage, message.member));
 
         // Add the roles
         if (customCommand.addRoles.length) {
