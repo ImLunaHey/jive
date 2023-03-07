@@ -92,6 +92,10 @@ export class Feature {
                         value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown',
                         inline: true,
                     }, {
+                        name: 'Left Server',
+                        value: `<t:${Math.floor(new Date().getTime() / 1000)}:R>`,
+                        inline: true,
+                    }, {
                         name: 'Time here',
                         value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
                         inline: true,
