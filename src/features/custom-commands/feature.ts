@@ -39,8 +39,12 @@ export class Feature {
                         }
                     }
                 },
-                triggerChannelId: message.channel.id,
-                triggerMessage: message.content.trim()
+                triggerMessage: message.content.trim(),
+                OR: [{
+                    triggerChannelId: message.channel.id,
+                }, {
+                    triggerChannelId: null
+                }]
             },
             include: {
                 extraMessages: true
