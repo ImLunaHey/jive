@@ -6,7 +6,7 @@ import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, SelectMenuComponent, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
-import { Discord, Guard, Slash, GuardFunction } from 'discordx';
+import { Discord, Guard, Slash, GuardFunction, On, ArgsOf } from 'discordx';
 
 @Discord()
 export class Feature {
@@ -22,6 +22,25 @@ export class Feature {
             .setCustomId(enabled ? `${id}-disable` : `${id}-enable`)
             .setLabel(enabled ? `Disable ${name}` : `Enable ${name}`)
             .setStyle(enabled ? ButtonStyle.Danger : ButtonStyle.Success);
+    }
+
+    @On({ event: 'interactionCreate' })
+    async onInteractionCreate([interaction]: ArgsOf<'interactionCreate'>) {
+        if (!interaction.isModalSubmit()) return;
+
+        // Only handle the setup modal
+        if (!interaction.customId.startsWith('setup-modal-')) return;
+
+        if (interaction.customId === 'setup-modal-welcome-joinMessage') {
+            console.log('join message modal!');
+
+            await interaction.reply({
+                content: 'Join message modal!',
+                ephemeral: true,
+            });
+
+            return;
+        }
     }
 
     @Slash({
@@ -359,7 +378,7 @@ export class Feature {
 
                     // Create the modal
                     const modal = new ModalBuilder()
-                        .setCustomId('welcome-joinMessage-modal')
+                        .setCustomId('setup-modal-welcome-joinMessage')
                         .setTitle('Welcome settings');
 
                     // Create the text input components
