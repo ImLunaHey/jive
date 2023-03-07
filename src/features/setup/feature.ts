@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, ArgsOf } from 'discordx';
@@ -28,10 +28,7 @@ export class Feature {
     async onInteractionCreate([interaction]: ArgsOf<'interactionCreate'>) {
         if (!interaction.isModalSubmit()) return;
 
-        // Only handle the setup modal
-        if (!interaction.customId.startsWith('setup-modal-')) return;
-
-        if (interaction.customId === 'setup-modal-welcome-joinMessage') {
+        if (interaction.customId === 'welcome-joinMessage-modal') {
             const joinMessage = interaction.fields.getTextInputValue('joinMessage');
 
             // Update the database
@@ -263,11 +260,11 @@ export class Feature {
                                 .setLabel(settings.welcome.waitUntilGate ? 'Disable gate' : 'Enable gate')
                                 .setStyle(settings.welcome.waitUntilGate ? ButtonStyle.Danger : ButtonStyle.Success),
                             new ButtonBuilder()
-                                .setCustomId('welcome-joinMessage')
+                                .setCustomId('welcome-joinMessage-button')
                                 .setLabel('Set join message')
                                 .setStyle(ButtonStyle.Primary),
                             new ButtonBuilder()
-                                .setCustomId('welcome-joinChannelId')
+                                .setCustomId('welcome-joinChannelId-button')
                                 .setLabel('Set join channel')
                                 .setStyle(ButtonStyle.Primary)
                         ),
@@ -386,7 +383,6 @@ export class Feature {
             {
                 name: 'welcome-joinMessage',
                 async callback(interaction) {
-                    console.log('welcome-joinMessage callback!');
                     if (!interaction.channel) return;
                     if (interaction.channel.type !== ChannelType.GuildText) return;
 
@@ -396,7 +392,7 @@ export class Feature {
 
                     // Create the modal
                     const modal = new ModalBuilder()
-                        .setCustomId('setup-modal-welcome-joinMessage')
+                        .setCustomId('welcome-joinMessage-modal')
                         .setTitle('Welcome settings');
 
                     // Add inputs to the modal
@@ -413,6 +409,79 @@ export class Feature {
 
                     // Show the modal to the user
                     await interaction.showModal(modal);
+                }
+            },
+            {
+                name: 'welcome-joinChannelId-button',
+                async callback(interaction) {
+                    if (!interaction.channel) return;
+                    if (interaction.channel.type !== ChannelType.GuildText) return;
+
+                    // Get the settings
+                    const settings = await getSettings();
+                    if (!settings) return;
+
+                    // Create select menu
+                    await interaction.followUp({
+                        ephemeral: true,
+                        components: [
+                            new ActionRowBuilder<StringSelectMenuBuilder>()
+                                .addComponents(
+                                    new StringSelectMenuBuilder()
+                                        .setCustomId('welcome-joinChannelId-select')
+                                        .setPlaceholder('Nothing selected')
+                                        .addOptions(
+                                            {
+                                                label: 'Select me',
+                                                description: 'This is a description',
+                                                value: 'first_option',
+                                            },
+                                            {
+                                                label: 'You can select me too',
+                                                description: 'This is also a description',
+                                                value: 'second_option',
+                                            },
+                                        )
+                                ),
+                        ]
+                    });
+                }
+            }, {
+                name: 'welcome-joinChannelId-select',
+                async callback(interaction) {
+                    if (!interaction.channel) return;
+                    if (interaction.channel.type !== ChannelType.GuildText) return;
+
+                    // Get the settings
+                    const settings = await getSettings();
+                    if (!settings) return;
+
+                    // Make sure it's a select menu
+                    if (!interaction.isStringSelectMenu()) return;
+
+                    // Update the database
+                    await prisma.guild.update({
+                        where: {
+                            id: guild.id
+                        },
+                        data: {
+                            settings: {
+                                update: {
+                                    welcome: {
+                                        update: {
+                                            joinChannelId: interaction.values[0]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // Tell the user that it worked
+                    await interaction.followUp({
+                        content: `Successfully updated the join channel!`,
+                        ephemeral: true
+                    });
                 }
             }
         ]);
