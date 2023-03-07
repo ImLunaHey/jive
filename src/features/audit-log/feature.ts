@@ -1,5 +1,6 @@
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
+import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { AuditLog } from '@prisma/client';
 import { Channel, ChannelType, Colors, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
@@ -82,7 +83,7 @@ export class Feature {
                     },
                     description: member.joinedTimestamp ? outdent`
                         📤 <@${member.id}> **left the server**
-                        They were here for **${Math.floor((Date.now() - member.joinedTimestamp) / 1000 / 60 / 60 / 24)} days**
+                        They were here for **${timeLength(member.joinedTimestamp)}**
                     ` : outdent`
                         📤 <@${member.id}> **left the server**
                     `,
