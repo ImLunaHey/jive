@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, SelectMenuComponent, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, SelectMenuComponent, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Guard, Slash, GuardFunction } from 'discordx';
@@ -349,6 +349,7 @@ export class Feature {
             {
                 name: 'welcome-joinMessage',
                 async callback(interaction) {
+                    console.log('welcome-joinMessage callback!');
                     if (!interaction.channel) return;
                     if (interaction.channel.type !== ChannelType.GuildText) return;
 
@@ -358,12 +359,12 @@ export class Feature {
 
                     // Create the modal
                     const modal = new ModalBuilder()
-                        .setCustomId('modals-welcome')
+                        .setCustomId('welcome-joinMessage-modal')
                         .setTitle('Welcome settings');
 
                     // Create the text input components
                     const welcomeJoinMessageInput = new TextInputBuilder()
-                        .setCustomId('welcome-joinMessage-input')
+                        .setCustomId('joinMessage')
                         .setLabel(`What's the join message?`)
                         .setStyle(TextInputStyle.Paragraph);
 
@@ -374,6 +375,19 @@ export class Feature {
 
                     // Show the modal to the user
                     await interaction.showModal(modal);
+                }
+            },
+            {
+                name: 'welcome-joinMessage-modal',
+                async callback(_interaction) {
+                    console.log('welcome-joinMessage-modal callback!');
+                    if (!_interaction.isModalSubmit()) return;
+                    const interaction = _interaction as ModalSubmitInteraction;
+                    const joinMessage = interaction.fields.getTextInputValue('joinMessage');
+
+                    await interaction.followUp({
+                        content: joinMessage,
+                    });
                 }
             }
         ]);
