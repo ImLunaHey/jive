@@ -217,6 +217,36 @@ model AuditLog {
   // If we should log when a message is deleted
   bulkMessageDelete Boolean @default(false)
 
+  // If we should log when a message is edited
+  messageEdit Boolean @default(false)
+
+  // If we should log when a user is updated
+  userUpdate Boolean @default(false)
+
+  // If we should log when a channel is created
+  channelCreate Boolean @default(false)
+
+  // If we should log when a channel is updated
+  channelUpdate Boolean @default(false)
+
+  // If we should log when a channel is deleted
+  channelDelete Boolean @default(false)
+
+  // If we should log when a role is created
+  roleCreate Boolean @default(false)
+
+  // If we should log when a role is updated
+  roleUpdate Boolean @default(false)
+
+  // If we should log when a role is deleted
+  roleDelete Boolean @default(false)
+
+  // If we should log when a user is added to a role
+  roleAdd Boolean @default(false)
+
+  // If we should log when a user is removed from a role
+  roleRemove Boolean @default(false)
+
   // Should we ignore bots?
   ignoreBots Boolean @default(false)
 

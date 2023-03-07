@@ -3,7 +3,7 @@ import { prisma } from '@app/common/prisma-client';
 import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, Colors, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
+import { Channel, ChannelType, Colors, EmbedBuilder, EmbedField, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -245,14 +245,269 @@ export class Feature {
 
     @On({ event: 'roleCreate' })
     async roleCreate([role]: ArgsOf<'roleCreate'>) {
+        if (!await isFeatureEnabled('auditLog', role.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: role.guild.id,
+                        }
+                    }
+                },
+                roleCreate: true,
+                auditLogChannelId: {
+                    not: null,
+                }
+            }
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = role.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            const iconUrl = role.guild.iconURL();
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Role Created',
+                    description: `**${role.name}**`,
+                    fields: [{
+                        name: 'Color',
+                        value: role.hexColor,
+                        inline: true,
+                    }, {
+                        name: 'Mentionable',
+                        value: role.mentionable ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Hoisted',
+                        value: role.hoist ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Position',
+                        value: String(role.position),
+                        inline: true,
+                    }, {
+                        name: 'Permissions',
+                        value: role.permissions.toArray().join(', '),
+                        inline: true,
+                    }, {
+                        name: 'Managed',
+                        value: role.managed ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Created At',
+                        value: `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`,
+                        inline: true,
+                    }],
+                    color: Colors.Green,
+                    thumbnail: {
+                        url: iconUrl ?? '',
+                    },
+                    footer: {
+                        text: `Role ID: ${role.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'roleDelete' })
     async guildRoleDelete([role]: ArgsOf<'roleDelete'>) {
+        if (!await isFeatureEnabled('auditLog', role.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: role.guild.id,
+                        }
+                    }
+                },
+                roleDelete: true,
+                auditLogChannelId: {
+                    not: null,
+                }
+            }
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = role.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            const iconUrl = role.guild.iconURL();
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Role Deleted',
+                    description: `**${role.name}**`,
+                    fields: [{
+                        name: 'Color',
+                        value: role.hexColor,
+                        inline: true,
+                    }, {
+                        name: 'Mentionable',
+                        value: role.mentionable ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Hoisted',
+                        value: role.hoist ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Position',
+                        value: String(role.position),
+                        inline: true,
+                    }, {
+                        name: 'Permissions',
+                        value: role.permissions.toArray().join(', '),
+                        inline: true,
+                    }, {
+                        name: 'Managed',
+                        value: role.managed ? 'Yes ✅' : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Created At',
+                        value: `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`,
+                        inline: true,
+                    }, {
+                        name: 'Deleted At',
+                        value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
+                        inline: true,
+                    }],
+                    color: Colors.Red,
+                    thumbnail: {
+                        url: iconUrl ?? '',
+                    },
+                    footer: {
+                        text: `Role ID: ${role.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'roleUpdate' })
     async guildRoleUpdate([oldRole, newRole]: ArgsOf<'roleUpdate'>) {
+        if (!await isFeatureEnabled('auditLog', newRole.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: newRole.guild.id,
+                        }
+                    }
+                },
+                roleUpdate: true,
+                auditLogChannelId: {
+                    not: null,
+                }
+            }
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = newRole.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            const fields: EmbedField[] = [];
+
+            // Check if the role name changed
+            if (oldRole.name !== newRole.name) {
+                fields.push({
+                    name: 'Name',
+                    value: `**Old:** ${oldRole.name}\n**New:** ${newRole.name}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role color changed
+            if (oldRole.hexColor !== newRole.hexColor) {
+                fields.push({
+                    name: 'Color',
+                    value: `**Old:** ${oldRole.hexColor}\n**New:** ${newRole.hexColor}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role mentionable changed
+            if (oldRole.mentionable !== newRole.mentionable) {
+                fields.push({
+                    name: 'Mentionable',
+                    value: `**Old:** ${oldRole.mentionable ? 'Yes ✅' : 'No ❌'}\n**New:** ${newRole.mentionable ? 'Yes ✅' : 'No ❌'}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role hoist changed
+            if (oldRole.hoist !== newRole.hoist) {
+                fields.push({
+                    name: 'Hoisted',
+                    value: `**Old:** ${oldRole.hoist ? 'Yes ✅' : 'No ❌'}\n**New:** ${newRole.hoist ? 'Yes ✅' : 'No ❌'}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role position changed
+            if (oldRole.position !== newRole.position) {
+                fields.push({
+                    name: 'Position',
+                    value: `**Old:** ${oldRole.position}\n**New:** ${newRole.position}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role permissions changed
+            if (oldRole.permissions.bitfield !== newRole.permissions.bitfield) {
+                fields.push({
+                    name: 'Permissions',
+                    value: `**Old:** ${oldRole.permissions.toArray().join(', ')}\n**New:** ${newRole.permissions.toArray().join(', ')}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the role managed changed
+            if (oldRole.managed !== newRole.managed) {
+                fields.push({
+                    name: 'Managed',
+                    value: `**Old:** ${oldRole.managed ? 'Yes ✅' : 'No ❌'}\n**New:** ${newRole.managed ? 'Yes ✅' : 'No ❌'}`,
+                    inline: true,
+                });
+            }
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Role Updated',
+                    description: `**${newRole.name}**`,
+                    fields,
+                    color: Colors.Yellow,
+                    thumbnail: {
+                        url: newRole.guild.iconURL() ?? '',
+                    },
+                    footer: {
+                        text: `Role ID: ${newRole.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'emojiCreate' })
