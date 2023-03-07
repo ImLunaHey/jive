@@ -3,7 +3,7 @@ import { prisma } from '@app/common/prisma-client';
 import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, Colors, EmbedBuilder, EmbedField, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
+import { Channel, ChannelType, Colors, EmbedField, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -401,7 +401,6 @@ export class Feature {
 
     @On({ event: 'roleUpdate' })
     async guildRoleUpdate([oldRole, newRole]: ArgsOf<'roleUpdate'>) {
-        if (true) return;
         if (!await isFeatureEnabled('auditLog', newRole.guild.id)) return;
 
         // Get the audit log channel
@@ -493,13 +492,16 @@ export class Feature {
                 });
             }
 
+            // Don't send the embed if nothing changed
+            if (fields.length === 0) return;
+
             // Send the embed
             await auditLogChannel.send({
                 embeds: [{
                     title: 'Role Updated',
                     description: `**${newRole.name}**`,
                     fields,
-                    color: Colors.Yellow,
+                    color: Number(`0x${newRole.hexColor.replace('#', '')}`),
                     thumbnail: {
                         url: newRole.guild.iconURL() ?? '',
                     },
