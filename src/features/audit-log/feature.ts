@@ -82,7 +82,7 @@ export class Feature {
                         name: member.user.tag,
                         icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
                     },
-                    description: '📤 <@${member.id}> **left the server**',
+                    description: `📤 <@${member.id}> **left the server**`,
                     fields: [{
                         name: 'Account Created',
                         value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
