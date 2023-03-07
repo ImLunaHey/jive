@@ -73,39 +73,35 @@ export class Feature {
                 fields: [
                     {
                         name: 'Audit Log',
-                        value: settings?.auditLog?.enabled ? 'Enabled' : 'Disabled',
+                        value: settings?.auditLog?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Auto Delete',
-                        value: settings?.autoDelete?.enabled ? 'Enabled' : 'Disabled',
+                        value: settings?.autoDelete?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Custom Commands',
-                        value: settings?.customCommand?.enabled ? 'Enabled' : 'Disabled',
+                        value: settings?.customCommand?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Dynamic Channel Names',
-                        value: settings?.dynamicChannelNames?.enabled ? 'Enabled' : 'Disabled',
+                        value: settings?.dynamicChannelNames?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Invite Tracking',
-                        value: settings?.inviteTracking?.enabled ? 'Enabled' : 'Disabled',
-                        inline: true
+                        value: settings?.inviteTracking?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Leveling',
-                        value: settings?.leveling?.enabled ? 'Enabled' : 'Disabled',
-                        inline: true
+                        value: settings?.leveling?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Starboard',
-                        value: settings?.starboard?.enabled ? 'Enabled' : 'Disabled',
-                        inline: true
+                        value: settings?.starboard?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Welcome',
-                        value: settings?.welcome?.enabled ? 'Enabled' : 'Disabled',
-                        inline: true
+                        value: settings?.welcome?.enabled ? 'Enabled ✅' : 'Disabled ❌',
                     },
                 ]
             }],
