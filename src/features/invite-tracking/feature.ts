@@ -80,9 +80,31 @@ export class Feature {
         if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
         if (!inviteUsed) {
-            await inviteTrackingChannel?.send(`${member} joined but we couldn't find the invite that was used`);
+            await inviteTrackingChannel?.send({
+                embeds: [{
+                    title: 'Invite used',
+                    description: `${member} joined using an unknown invite`,
+                }]
+            });
         } else {
-            await inviteTrackingChannel?.send(`${member} was invited by <@${inviteUsed.inviter?.id}> [${inviteUsed.uses} uses]`);
+            await inviteTrackingChannel?.send({
+                embeds: [{
+                    title: 'Invite used',
+                    description: `${member} joined using invite ${inviteUsed.code}`,
+                    fields: [
+                        {
+                            name: 'Uses',
+                            value: inviteUsed.uses?.toString() ?? '1',
+                            inline: true
+                        },
+                        {
+                            name: 'Inviter',
+                            value: inviteUsed.inviter?.toString() ?? 'Unknown',
+                            inline: true
+                        }
+                    ]
+                }]
+            });
         }
     }
 
