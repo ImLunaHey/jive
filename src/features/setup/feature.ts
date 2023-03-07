@@ -1,3 +1,4 @@
+import '@total-typescript/ts-reset';
 import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
@@ -229,7 +230,28 @@ export class Feature {
                         name: 'Enabled',
                         value: settings.welcome.enabled ? 'Yes ✅' : 'No ❌',
                         inline: true
-                    }]);
+                    }, {
+                        name: 'Wait until gate',
+                        value: settings.welcome.waitUntilGate ? `Yes ✅` : 'No ❌',
+                        inline: true,
+                    }, {
+                        name: 'Send via DM?',
+                        value: settings.welcome.joinDm ? `Yes ✅` : 'No ❌',
+                    }, settings.welcome.joinDm ? null : {
+                        name: 'Join channel',
+                        value: settings.welcome.joinChannelId ? `<#${settings.welcome.joinChannelId}>` : 'None',
+                        inline: true,
+                    }, {
+                        name: 'Join message',
+                        value: settings.welcome.joinMessage ? settings.welcome.joinMessage : 'None',
+                    }, {
+                        name: 'Leave channel',
+                        value: settings.welcome.leaveChannelId ? `<#${settings.welcome.leaveChannelId}>` : 'None',
+                        inline: true,
+                    }, {
+                        name: 'Leave message',
+                        value: settings.welcome.leaveMessage ? settings.welcome.leaveMessage : 'None',
+                    }].filter(Boolean));
             },
         ]);
 
