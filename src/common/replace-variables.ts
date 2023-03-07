@@ -1,3 +1,4 @@
+import { createTimer } from '@app/common/timer';
 import { globalLogger } from '@app/logger';
 import { Collection, Colors, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
 import { readFileSync } from 'fs';
@@ -8,6 +9,9 @@ import { NodeVM } from 'vm2';
 const getSquirrelly = readFileSync('./squirrelly.js', 'utf8');
 
 const renderTemplate = (template: string, data: Record<string, unknown>): string => {
+    // Register timer
+    const endTimer = createTimer('renderTemplate');
+
     // Create a new locked-down VM
     const vm = new NodeVM({
         timeout: 2_000, // After 2s the script will be terminated
@@ -62,6 +66,9 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
         globalLogger.scope('replaceVariables').error('Failed to render message, recieved non-string result.');
         return 'Failed to render message, please contact <@784365843810222080>.';
     }
+
+    // Log the time it took to render the template
+    endTimer();
 
     return result;
 };
