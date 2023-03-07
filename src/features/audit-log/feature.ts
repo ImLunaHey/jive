@@ -41,6 +41,7 @@ export class Feature {
     }
 
     // Kick
+    // Leave
     @On({ event: 'guildMemberRemove' })
     async guildMemberRemove([member]: ArgsOf<'guildMemberRemove'>) {
         if (!await isFeatureEnabled('auditLog', member.guild?.id)) return;
@@ -87,6 +88,18 @@ export class Feature {
                     ` : outdent`
                         📤 <@${member.id}> **left the server**
                     `,
+                    fields: [{
+                        name: 'Account Created',
+                        value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                        inline: true,
+                    }, {
+                        name: 'Joined Server',
+                        value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown',
+                        inline: true,
+                    }, {
+                        name: 'Roles',
+                        value: member.roles.cache.size > 1 ? member.roles.cache.filter(role => role.id !== member.guild.id).map(role => `<@&${role.id}>`).join(' ') : 'None',
+                    }],
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
                     },
