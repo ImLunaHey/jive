@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, PermissionFlagsBits, SelectMenuComponent } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, SelectMenuComponent, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Guard, Slash, GuardFunction } from 'discordx';
@@ -92,7 +92,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('AuditLog')
+                    .setTitle('AuditLog')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.auditLog.enabled ? 'Yes ✅' : 'No ❌',
@@ -111,7 +111,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('AutoDelete')
+                    .setTitle('AutoDelete')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.autoDelete.enabled ? 'Yes ✅' : 'No ❌',
@@ -130,7 +130,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('CustomCommands')
+                    .setTitle('CustomCommands')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.customCommand.enabled ? 'Yes ✅' : 'No ❌',
@@ -149,7 +149,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('DynamicChannelNames')
+                    .setTitle('DynamicChannelNames')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.dynamicChannelNames.enabled ? 'Yes ✅' : 'No ❌',
@@ -168,7 +168,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('InviteTracking')
+                    .setTitle('InviteTracking')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.inviteTracking.enabled ? 'Yes ✅' : 'No ❌',
@@ -187,7 +187,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('Leveling')
+                    .setTitle('Leveling')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.leveling.enabled ? 'Yes ✅' : 'No ❌',
@@ -206,7 +206,7 @@ export class Feature {
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('Starboard')
+                    .setTitle('Starboard')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.starboard.enabled ? 'Yes ✅' : 'No ❌',
@@ -221,11 +221,23 @@ export class Feature {
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
                             this.createToggleButton('welcome', 'Welcome', settings.welcome.enabled),
+                            new ButtonBuilder()
+                                .setCustomId('welcome-waitUntilGate')
+                                .setLabel(settings.welcome.waitUntilGate ? 'Disable gate' : 'Enable gate')
+                                .setStyle(settings.welcome.waitUntilGate ? ButtonStyle.Danger : ButtonStyle.Success),
+                            new ButtonBuilder()
+                                .setCustomId('welcome-joinMessage')
+                                .setLabel('Set join message')
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('welcome-joinChannelId')
+                                .setLabel('Set join channel')
+                                .setStyle(ButtonStyle.Primary)
                         ),
                 ]);
 
                 return new EmbedBuilder()
-                    .setDescription('Welcome')
+                    .setTitle('Welcome')
                     .addFields([{
                         name: 'Enabled',
                         value: settings.welcome.enabled ? 'Yes ✅' : 'No ❌',
@@ -235,19 +247,20 @@ export class Feature {
                         value: settings.welcome.waitUntilGate ? `Yes ✅` : 'No ❌',
                         inline: true,
                     }, {
-                        name: 'Send via DM?',
+                        name: 'Send join message via DM?',
                         value: settings.welcome.joinDm ? `Yes ✅` : 'No ❌',
+                        inline: true,
                     }, settings.welcome.joinDm ? null : {
                         name: 'Join channel',
                         value: settings.welcome.joinChannelId ? `<#${settings.welcome.joinChannelId}>` : 'None',
                         inline: true,
-                    }, {
-                        name: 'Join message',
-                        value: settings.welcome.joinMessage ? settings.welcome.joinMessage : 'None',
-                    }, {
+                    }, settings.welcome.leaveDm ? null : {
                         name: 'Leave channel',
                         value: settings.welcome.leaveChannelId ? `<#${settings.welcome.leaveChannelId}>` : 'None',
                         inline: true,
+                    }, {
+                        name: 'Join message',
+                        value: settings.welcome.joinMessage ? settings.welcome.joinMessage : 'None',
                     }, {
                         name: 'Leave message',
                         value: settings.welcome.leaveMessage ? settings.welcome.leaveMessage : 'None',
@@ -277,8 +290,9 @@ export class Feature {
                         }
                     });
 
+                    // Tell the user that it worked
                     await interaction.followUp({
-                        content: `${id}-${enabled ? 'disable' : 'enable'} button callback!`,
+                        content: `Successfully ${enabled ? 'disabled' : 'enabled'} ${id}`,
                         ephemeral: true
                     });
                 }
@@ -302,6 +316,66 @@ export class Feature {
             generateTrigger('starboard', false),
             generateTrigger('welcome', true),
             generateTrigger('welcome', false),
+            {
+                name: 'welcome:waitUntilGate',
+                async callback(interaction) {
+                    const settings = await getSettings();
+                    if (!settings) return;
+
+                    // Update the database
+                    await prisma.guild.update({
+                        where: {
+                            id: guild.id
+                        },
+                        data: {
+                            settings: {
+                                update: {
+                                    welcome: {
+                                        update: {
+                                            waitUntilGate: !settings.welcome.waitUntilGate
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    await interaction.followUp({
+                        content: `welcome-waitUntilGate button callback!`,
+                        ephemeral: true
+                    });
+                }
+            },
+            {
+                name: 'welcome:joinMessage',
+                async callback(interaction) {
+                    if (!interaction.channel) return;
+                    if (interaction.channel.type !== ChannelType.GuildText) return;
+
+                    // Get the settings
+                    const settings = await getSettings();
+                    if (!settings) return;
+
+                    // Create the modal
+                    const modal = new ModalBuilder()
+                        .setCustomId('modals-welcome')
+                        .setTitle('Welcome settings');
+
+                    // Create the text input components
+                    const welcomeJoinMessageInput = new TextInputBuilder()
+                        .setCustomId('welcome-joinMessage-input')
+                        .setLabel(`What's the join message?`)
+                        .setStyle(TextInputStyle.Paragraph);
+
+                    // Add inputs to the modal
+                    modal.addComponents([
+                        new ActionRowBuilder<TextInputBuilder>().addComponents(welcomeJoinMessageInput)
+                    ]);
+
+                    // Show the modal to the user
+                    await interaction.showModal(modal);
+                }
+            }
         ]);
 
         await builder.build({
