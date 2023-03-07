@@ -317,7 +317,7 @@ export class Feature {
             generateTrigger('welcome', true),
             generateTrigger('welcome', false),
             {
-                name: 'welcome:waitUntilGate',
+                name: 'welcome-waitUntilGate',
                 async callback(interaction) {
                     const settings = await getSettings();
                     if (!settings) return;
@@ -347,7 +347,7 @@ export class Feature {
                 }
             },
             {
-                name: 'welcome:joinMessage',
+                name: 'welcome-joinMessage',
                 async callback(interaction) {
                     if (!interaction.channel) return;
                     if (interaction.channel.type !== ChannelType.GuildText) return;
