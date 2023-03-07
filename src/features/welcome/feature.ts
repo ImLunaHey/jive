@@ -81,8 +81,11 @@ export class Feature {
         // Check if the guild has this feature setup
         if (!settings) return;
 
-        // Welcome the member
-        this.welcomeMember(member, settings);
+        // If waitUntilGate is false welcome the member
+        if (!settings.waitUntilGate) {
+            // Welcome the member
+            await this.welcomeMember(member, settings);
+        }
     }
 
     @On({ event: 'guildMemberUpdate' })
@@ -109,7 +112,7 @@ export class Feature {
             this.logger.info('Member %s has passed the membership screening requirements', newMember.id);
 
             // Welcome the member
-            this.welcomeMember(newMember, settings);
+            await this.welcomeMember(newMember, settings);
         }
     }
 }
