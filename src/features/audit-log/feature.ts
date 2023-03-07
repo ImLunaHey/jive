@@ -1,3 +1,4 @@
+import { channelTypeToName } from '@app/common/channel-type-to-name';
 import { hexToColour } from '@app/common/hex-to-colour';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
@@ -540,6 +541,20 @@ export class Feature {
 
         const fields: EmbedField[] = [];
 
+        // Channel name
+        fields.push({
+            name: 'Name',
+            value: channel.name,
+            inline: true,
+        });
+
+        // Channel type
+        fields.push({
+            name: 'Type',
+            value: channelTypeToName(channel.type),
+            inline: true,
+        });
+
         // Text channels
         if (channel.type === ChannelType.GuildText) {
             // Topic
@@ -559,7 +574,7 @@ export class Feature {
             // Slowmode
             fields.push({
                 name: 'Slowmode',
-                value: `${channel.rateLimitPerUser} seconds`,
+                value: channel.rateLimitPerUser ? `${channel.rateLimitPerUser} seconds` : 'Off',
                 inline: true,
             });
         }
@@ -593,55 +608,9 @@ export class Feature {
             await auditLogChannel.send({
                 embeds: [{
                     title: 'Channel Created',
-                    description: `**${channel.name}**`,
+                    description: `<#${channel.id}>`,
                     fields,
                     color: Colors.Green,
-                    footer: {
-                        text: `Channel ID: ${channel.id}`,
-                    },
-                }],
-            });
-        }
-    }
-
-    @On({ event: 'channelDelete' })
-    async channelDelete([channel]: ArgsOf<'channelDelete'>) {
-        // Don't log DM channels
-        if (channel.type === ChannelType.DM) return;
-
-        // Check if the feature is enabled
-        if (!await isFeatureEnabled('auditLog', channel.guild.id)) return;
-
-        // Get the audit log channel
-        const auditLogs = await prisma.auditLog.findMany({
-            where: {
-                AuditLogSettings: {
-                    settings: {
-                        guild: {
-                            id: channel.guild.id,
-                        },
-                    },
-                },
-                channelDelete: true,
-                auditLogChannelId: {
-                    not: null,
-                },
-            },
-        });
-
-        // Send the message to the audit log channels
-        for (const auditLog of auditLogs) {
-            // Get the audit log channel
-            if (!auditLog.auditLogChannelId) continue;
-            const auditLogChannel = channel.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
-            if (!auditLogChannel) continue;
-
-            // Send the embed
-            await auditLogChannel.send({
-                embeds: [{
-                    title: 'Channel Deleted',
-                    description: `**${channel.name}**`,
-                    color: Colors.Red,
                     footer: {
                         text: `Channel ID: ${channel.id}`,
                     },
@@ -719,7 +688,7 @@ export class Feature {
                 if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
                     fields.push({
                         name: 'Slowmode',
-                        value: `**Old:** ${oldChannel.rateLimitPerUser}\n**New:** ${newChannel.rateLimitPerUser}`,
+                        value: `**Old:** ${oldChannel.rateLimitPerUser ? `${oldChannel.rateLimitPerUser} seconds` : 'Off'}\n**New:** ${newChannel.rateLimitPerUser ? `${newChannel.rateLimitPerUser} seconds` : 'Off'}`,
                         inline: true,
                     });
                 }
@@ -782,6 +751,70 @@ export class Feature {
                     fields,
                     footer: {
                         text: `Channel ID: ${newChannel.id}`,
+                    },
+                }],
+            });
+        }
+    }
+
+    @On({ event: 'channelDelete' })
+    async channelDelete([channel]: ArgsOf<'channelDelete'>) {
+        // Don't log DM channels
+        if (channel.type === ChannelType.DM) return;
+
+        // Check if the feature is enabled
+        if (!await isFeatureEnabled('auditLog', channel.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: channel.guild.id,
+                        },
+                    },
+                },
+                channelDelete: true,
+                auditLogChannelId: {
+                    not: null,
+                },
+            },
+        });
+
+        // Create the embed fields
+        const fields: EmbedField[] = [];
+
+        // Channel type
+        fields.push({
+            name: 'Type',
+            value: channelTypeToName(channel.type),
+            inline: true,
+        });
+
+        // Category
+        fields.push({
+            name: 'Category',
+            value: channel.name,
+            inline: true,
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = channel.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Channel Deleted',
+                    description: `**${channel.name}**`,
+                    fields,
+                    color: Colors.Red,
+                    footer: {
+                        text: `Channel ID: ${channel.id}`,
                     },
                 }],
             });
