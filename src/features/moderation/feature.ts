@@ -174,12 +174,16 @@ export class Feature {
                 return;
             }
 
+            // TODO: Add kick to database
+            // TODO: This can be used by the auditlog to enrich the auditlog message
+            // Kicked wasi#7226.
+
             // Kick the user
             await member.kick(reason);
 
             // Send a message to the moderator that the user was kicked
             await interaction.editReply({
-                content: `Kicked ${member.user.tag}.`
+                content: `Successfully kicked <@${member.user.id}>.`
             });
         } catch (error: unknown) {
             if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
