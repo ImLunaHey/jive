@@ -2,7 +2,7 @@ import { prisma } from '@app/common/prisma-client';
 
 const globallyEnabled: string[] = [];
 
-type features =
+export type globalFeatures =
     'auditLog' |
     'autoDelete' |
     'customCommand' |
@@ -13,7 +13,7 @@ type features =
     'welcome'
     ;
 
-export const isFeatureEnabled = async (id: features, guildId?: string) => {
+export const isFeatureEnabled = async (id: globalFeatures, guildId?: string) => {
     const check = async () => {
         if (!guildId) return false;
 
