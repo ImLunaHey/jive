@@ -422,7 +422,7 @@ export class Feature {
                     if (!settings) return;
 
                     // Create select menu
-                    await interaction.followUp({
+                    await interaction.reply({
                         ephemeral: true,
                         components: [
                             new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -459,6 +459,11 @@ export class Feature {
                     // Make sure it's a select menu
                     if (!interaction.isStringSelectMenu()) return;
 
+                    // Show bot as thinking
+                    await interaction.deferReply({
+                        ephemeral: true
+                    });
+
                     // Update the database
                     await prisma.guild.update({
                         where: {
@@ -478,9 +483,8 @@ export class Feature {
                     });
 
                     // Tell the user that it worked
-                    await interaction.followUp({
-                        content: `Successfully updated the join channel!`,
-                        ephemeral: true
+                    await interaction.editReply({
+                        content: `Successfully updated the join channel!`
                     });
                 }
             }
