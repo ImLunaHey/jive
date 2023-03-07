@@ -4,7 +4,7 @@ import { prisma } from '@app/common/prisma-client';
 import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, Colors, EmbedField, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
+import { Channel, ChannelType, Colors, EmbedField, GuildHubType, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -538,6 +538,50 @@ export class Feature {
             },
         });
 
+        const fields: EmbedField[] = [];
+
+        // Text channels
+        if (channel.type === ChannelType.GuildText) {
+            // Topic
+            fields.push({
+                name: 'Topic',
+                value: channel.topic || 'None',
+                inline: true,
+            });
+
+            // NSFW
+            fields.push({
+                name: 'NSFW',
+                value: channel.nsfw ? 'Yes ✅' : 'No ❌',
+                inline: true,
+            });
+
+            // Slowmode
+            fields.push({
+                name: 'Slowmode',
+                value: `${channel.rateLimitPerUser} seconds`,
+                inline: true,
+            });
+        }
+
+        // Category
+        fields.push({
+            name: 'Category',
+            value: channel.parent ? channel.parent.name : 'None',
+            inline: true,
+        });
+
+        // Permissions
+        fields.push({
+            name: 'Permissions',
+            value: channel.permissionOverwrites.cache.map((permission) => {
+                const role = channel.guild.roles.cache.get(permission.id);
+                if (role) return `${role.name}: ${permission.allow.toArray().join(', ')}`;
+                return `${permission.id}: ${permission.allow.toArray().join(', ')}`;
+            }).join('\n'),
+            inline: true,
+        });
+
         // Send the message to the audit log channels
         for (const auditLog of auditLogs) {
             // Get the audit log channel
@@ -550,6 +594,7 @@ export class Feature {
                 embeds: [{
                     title: 'Channel Created',
                     description: `**${channel.name}**`,
+                    fields,
                     color: Colors.Green,
                     footer: {
                         text: `Channel ID: ${channel.id}`,
