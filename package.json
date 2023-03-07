@@ -1,6 +1,7 @@
 {
   "name": "jive",
   "scripts": {
+    "postinstall": "npx patch-package",
     "build": "npx tsup ./src/main.ts",
     "dev": "npm run build -- --onSuccess=\"MAINTENCE_MODE=true node dist/main.js\" --watch",
     "start": "node dist/main.js"
