@@ -15,6 +15,10 @@ export class Feature {
     }
 
     async getRandomRedditPost(tries = 0, subreddit?: string): Promise<T3 | undefined> {
+        // If we have no tries left, return undefined
+        if (tries <= 0) return undefined;
+
+        // Get a random post from the subreddit
         const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit ?? 'cats'}/random.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
         const redditPosts = (Array.isArray(redditResponses) ? redditResponses : []).filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
@@ -26,6 +30,8 @@ export class Feature {
             return isGifOrVideo || isImage;
         }).map(response => response.data.children.find(child => child.kind === 't3')?.data);
         const post = redditPosts[0];
+
+        // If we didn't get a post, try again
         if (!post) return this.getRandomRedditPost(tries--, subreddit);
         return post;
     }
@@ -65,23 +71,23 @@ export class Feature {
         // Get a random post, try 3 times
         const post = await this.getRandomRedditPost(3, subreddit);
 
-        // If this is a nsfw post and the channel is not nsfw, show an error
-        if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
-            await interaction.followUp({
-                embeds: [{
-                    title: 'This is not a NSFW channel',
-                    description: 'Please use this command in a NSFW channel',
-                }]
-            });
-            return;
-        }
-
         // If we didn't get a post, show an error
         if (!post) {
             await interaction.followUp({
                 embeds: [{
                     title: 'No posts found',
                     description: 'Please try a different subreddit',
+                }]
+            });
+            return;
+        }
+
+        // If this is a nsfw post and the channel is not nsfw, show an error
+        if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
+            await interaction.followUp({
+                embeds: [{
+                    title: 'This is not a NSFW channel',
+                    description: 'Please use this command in a NSFW channel',
                 }]
             });
             return;
