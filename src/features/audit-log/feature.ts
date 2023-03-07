@@ -330,7 +330,7 @@ export class Feature {
                         icon_url: message.author.avatarURL() ?? undefined,
                     },
                     description: outdent`
-                        🗑️ Message sent by <@${message.author.id}> deleted in ${message.channel}
+                        🗑️ Message sent by <@${message.author.id}> deleted in <#${message.channel.id}>
                         ${message.content ?? ''}
                     `,
                     color: Colors.Red,
