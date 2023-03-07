@@ -154,6 +154,10 @@ export class Feature {
                         icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
                     },
                     description: `📥 <@${member.id}> **joined the server**`,
+                    fields: [{
+                        name: 'Account Created',
+                        value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                    }],
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
                     },
