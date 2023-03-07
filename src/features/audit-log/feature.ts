@@ -79,7 +79,7 @@ export class Feature {
             await auditLogChannel.send({
                 embeds: [{
                     author: {
-                        name: member.user.username,
+                        name: member.user.tag,
                         icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
                     },
                     description: member.joinedTimestamp ? outdent`
@@ -151,7 +151,7 @@ export class Feature {
             await auditLogChannel.send({
                 embeds: [{
                     author: {
-                        name: member.user.username,
+                        name: member.user.tag,
                         icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
                     },
                     description: `📥 <@${member.id}> **joined the server**`,
@@ -206,7 +206,7 @@ export class Feature {
             await auditLogChannel.send({
                 embeds: [{
                     author: {
-                        name: ban.user.username,
+                        name: ban.user.tag,
                         icon_url: ban.user.avatarURL() ?? ban.user.defaultAvatarURL,
                     },
                     description: `📥 <@${ban.user.id}> **joined the server**`,
@@ -339,7 +339,7 @@ export class Feature {
             await auditLogChannel.send({
                 embeds: [{
                     author: {
-                        name: message.author.username,
+                        name: message.author.tag,
                         icon_url: message.author.avatarURL() ?? undefined,
                     },
                     description: outdent`
