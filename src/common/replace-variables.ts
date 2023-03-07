@@ -1,5 +1,5 @@
 import { globalLogger } from '@app/logger';
-import type { Collection, Guild, GuildMember } from 'discord.js';
+import type { Collection, Guild, GuildMember, MessageCreateOptions, MessagePayload } from 'discord.js';
 import { readFileSync } from 'fs';
 import { NodeVM } from 'vm2';
 
@@ -7,7 +7,7 @@ import { NodeVM } from 'vm2';
 // Without it being compiled, it wouldn't be possible to run it in a sandbox.
 const getSquirrelly = readFileSync('./squirrelly.js', 'utf8');
 
-const renderTemplate = (template: string, data: Record<string, unknown>) => {
+const renderTemplate = (template: string, data: Record<string, unknown>): string => {
     // Create a new locked-down VM
     const vm = new NodeVM({
         timeout: 2_000, // After 2s the script will be terminated
@@ -123,5 +123,19 @@ export const replaceVariablesForGuild = async (message: string, guild: Guild): P
         return renderTemplate(message, { guild: transformGuild(guild) });
     } catch {
         return 'Failed to render message, please contact <@784365843810222080>.';
+    }
+};
+
+export const templateResultToMessage = (result: string): MessageCreateOptions => {
+    try {
+        return JSON.parse(result);
+    } catch {
+        return {
+            embeds: [{
+                title: 'Failed to render message',
+                description: 'Please contact <@784365843810222080>.',
+                color: 0xFF0000
+            }]
+        };
     }
 };

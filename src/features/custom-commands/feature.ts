@@ -2,7 +2,7 @@ import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import { ChannelType, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
-import { replaceVariablesForMember } from '@app/common/replace-variables';
+import { replaceVariablesForMember, templateResultToMessage } from '@app/common/replace-variables';
 import { prisma } from '@app/common/prisma-client';
 
 @Discord()
@@ -52,7 +52,7 @@ export class Feature {
         this.logger.info('Ran custom command "%s" for %s in %s', customCommand.triggerMessage, message.member.user.tag, message.guild.name);
 
         // Send the custom command response
-        if (customCommand.responseMessage) await message.reply(await replaceVariablesForMember(customCommand.responseMessage, message.member));
+        if (customCommand.responseMessage) await message.reply(templateResultToMessage(await replaceVariablesForMember(customCommand.responseMessage, message.member)));
 
         // Delete the message
         if (customCommand.deleteTrigger) await message.delete().catch(() => {
