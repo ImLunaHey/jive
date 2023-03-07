@@ -82,12 +82,7 @@ export class Feature {
                         name: member.user.tag,
                         icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
                     },
-                    description: member.joinedTimestamp ? outdent`
-                        📤 <@${member.id}> **left the server**
-                        They were here for **${timeLength(new Date(member.joinedTimestamp))}**
-                    ` : outdent`
-                        📤 <@${member.id}> **left the server**
-                    `,
+                    description: '📤 <@${member.id}> **left the server**',
                     fields: [{
                         name: 'Account Created',
                         value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
@@ -99,6 +94,9 @@ export class Feature {
                     }, {
                         name: 'Roles',
                         value: member.roles.cache.size > 1 ? member.roles.cache.filter(role => role.id !== member.guild.id).map(role => `<@&${role.id}>`).join(' ') : 'None',
+                    }, {
+                        name: 'Time here',
+                        value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
                     }],
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
