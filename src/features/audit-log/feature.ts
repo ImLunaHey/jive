@@ -328,8 +328,10 @@ export class Feature {
                         name: message.author.username,
                         icon_url: message.author.avatarURL() ?? undefined,
                     },
-                    title: `🗑️ Message sent by <@${message.author.id}> deleted in ${message.channel}`,
-                    description: message.content ?? '',
+                    description: outdent`
+                        🗑️ Message sent by <@${message.author.id}> deleted in ${message.channel}
+                        ${message.content ?? ''}
+                    `,
                     color: Colors.Red,
                     footer: {
                         text: `Message ID: ${message.id}`
