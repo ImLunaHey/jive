@@ -401,6 +401,7 @@ export class Feature {
 
     @On({ event: 'roleUpdate' })
     async guildRoleUpdate([oldRole, newRole]: ArgsOf<'roleUpdate'>) {
+        if (true) return;
         if (!await isFeatureEnabled('auditLog', newRole.guild.id)) return;
 
         // Get the audit log channel
