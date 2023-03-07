@@ -1,5 +1,5 @@
 import { globalLogger } from '@app/logger';
-import type { Collection, Guild, GuildMember, MessageCreateOptions, MessagePayload } from 'discord.js';
+import { Collection, Colors, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
 import { readFileSync } from 'fs';
 import { NodeVM } from 'vm2';
 
@@ -134,7 +134,7 @@ export const templateResultToMessage = (result: string): MessageCreateOptions =>
             embeds: [{
                 title: 'Failed to render message',
                 description: 'Please contact <@784365843810222080>.',
-                color: 0xFF0000
+                color: Colors.Red,
             }]
         };
     }

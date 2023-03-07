@@ -2,7 +2,7 @@ import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
+import { Channel, ChannelType, Colors, GuildMember, PartialGuildMember, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -39,6 +39,7 @@ export class Feature {
         return true;
     }
 
+    // Kick
     @On({ event: 'guildMemberRemove' })
     async guildMemberRemove([member]: ArgsOf<'guildMemberRemove'>) {
         if (!await isFeatureEnabled('auditLog', member.guild?.id)) return;
@@ -88,7 +89,7 @@ export class Feature {
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
                     },
-                    color: 0xff0000,
+                    color: Colors.Red,
                     footer: {
                         text: `Member ID: ${member.id}`,
                     },
@@ -98,6 +99,7 @@ export class Feature {
         }
     }
 
+    // Join
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>) {
         if (!await isFeatureEnabled('auditLog', member.guild?.id)) return;
@@ -142,7 +144,7 @@ export class Feature {
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
                     },
-                    color: 0xff0000,
+                    color: Colors.Green,
                     footer: {
                         text: `Member ID: ${member.id}`,
                     },
@@ -152,6 +154,7 @@ export class Feature {
         }
     }
 
+    // Ban
     @On({ event: 'guildBanAdd' })
     async guildBanAdd([ban]: ArgsOf<'guildBanAdd'>) {
         if (!await isFeatureEnabled('auditLog', ban.guild.id)) return;
@@ -196,7 +199,7 @@ export class Feature {
                     thumbnail: {
                         url: ban.user.avatarURL({ size: 4096 }) ?? ban.user.defaultAvatarURL,
                     },
-                    color: 0xff0000,
+                    color: Colors.Red,
                     footer: {
                         text: `Member ID: ${ban.user.id}`,
                     },
@@ -206,6 +209,7 @@ export class Feature {
         }
     }
 
+    // Unban
     @On({ event: 'guildBanRemove' })
     async guildBanRemove([ban]: ArgsOf<'guildBanRemove'>) {
     }
@@ -270,6 +274,7 @@ export class Feature {
     async inviteDelete([invite]: ArgsOf<'inviteDelete'>) {
     }
 
+    // messageDelete
     @On({ event: 'messageDelete' })
     async messageDelete([message]: ArgsOf<'messageDelete'>) {
         if (!await isFeatureEnabled('auditLog', message.guild?.id)) return;
@@ -323,9 +328,9 @@ export class Feature {
                         name: message.author.username,
                         icon_url: message.author.avatarURL() ?? undefined,
                     },
-                    title: `🗑️ Message deleted in ${message.channel}`,
+                    title: `🗑️ Message sent by <@${message.author.id}> deleted in ${message.channel}`,
                     description: message.content ?? '',
-                    color: 0xff0000,
+                    color: Colors.Red,
                     footer: {
                         text: `Message ID: ${message.id}`
                     },
@@ -335,6 +340,8 @@ export class Feature {
         }
     }
 
+    // bulkMessageDelete
+    // @TODO: not working even with it enabled
     @On({ event: 'messageDeleteBulk' })
     async messageDeleteBulk([messages]: ArgsOf<'messageDeleteBulk'>) {
         // Get the first message
@@ -385,7 +392,7 @@ export class Feature {
                     // },
                     title: `🗑️ ${messages.size} messages deleted in ${firstMessage.channel}`,
                     // description: firstMessage.content ?? '',
-                    color: 0xff0000,
+                    color: Colors.Red,
                     // footer: {
                     //     text: `Message ID: ${firstMessage.id}`
                     // },

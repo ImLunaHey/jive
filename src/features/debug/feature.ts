@@ -2,7 +2,7 @@ import { client } from '@app/client';
 import { prisma } from '@app/common/prisma-client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
-import { ChannelType, CommandInteraction, EmbedBuilder } from 'discord.js';
+import { ChannelType, Colors, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { Discord, On, Slash } from 'discordx';
 
 @Discord()
@@ -39,7 +39,7 @@ export class Feature {
             title: 'Bot status',
             description: `The bot is ${status} and ready to go!`,
             // Orange or green
-            color: env.MAINTENCE_MODE ? 0xffa500 : 0x00ff00,
+            color: env.MAINTENCE_MODE ? Colors.Orange : Colors.Green,
         });
 
         // Fetch the messages

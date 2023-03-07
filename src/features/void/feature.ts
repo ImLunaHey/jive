@@ -1,7 +1,7 @@
 import { client } from '@app/client';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import { TextChannel } from 'discord.js';
+import { Colors, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
@@ -40,13 +40,17 @@ export class Feature {
         const embed = {
             title: 'Void',
             description: 'This channel is a void. Anything you say here will be deleted after 1 minute, please keep in mind unverified members can access this channel.',
-            color: 0x000000,
+            color: Colors.Purple,
         };
 
         // Check if the channel is already a void
         const lastMessage = messages.last();
-        if (lastMessage?.embeds[0]?.title === embed.title) return;
-        if (lastMessage?.embeds[0]?.description === embed.description) return;
+        const isVoidMessage = (
+            lastMessage?.embeds[0]?.title === embed.title &&
+            lastMessage?.embeds[0]?.description === embed.description &&
+            lastMessage?.embeds[0]?.color === embed.color
+        );
+        if (isVoidMessage) return;
 
         // Send the embed
         await voidChannel.send({
