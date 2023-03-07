@@ -92,11 +92,12 @@ export class Feature {
                         value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown',
                         inline: true,
                     }, {
-                        name: 'Roles',
-                        value: member.roles.cache.size > 1 ? member.roles.cache.filter(role => role.id !== member.guild.id).map(role => `<@&${role.id}>`).join(' ') : 'None',
-                    }, {
                         name: 'Time here',
                         value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
+                        inline: true,
+                    }, {
+                        name: 'Roles',
+                        value: member.roles.cache.size > 1 ? member.roles.cache.filter(role => role.id !== member.guild.id).map(role => `<@&${role.id}>`).join(' ') : 'None',
                     }],
                     thumbnail: {
                         url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
