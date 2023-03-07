@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, SelectMenuBuilder, SelectMenuComponent, SelectMenuOptionBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, ArgsOf } from 'discordx';
@@ -32,12 +32,28 @@ export class Feature {
         if (!interaction.customId.startsWith('setup-modal-')) return;
 
         if (interaction.customId === 'setup-modal-welcome-joinMessage') {
-            console.log('join message modal!');
-
             const joinMessage = interaction.fields.getTextInputValue('joinMessage');
 
+            // Update the database
+            await prisma.guild.update({
+                where: {
+                    id: interaction.guild?.id,
+                },
+                data: {
+                    settings: {
+                        update: {
+                            welcome: {
+                                update: {
+                                    joinMessage,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
             await interaction.reply({
-                content: joinMessage,
+                content: 'Join message updated',
                 ephemeral: true,
             });
 
@@ -317,7 +333,7 @@ export class Feature {
                         ephemeral: true
                     });
                 }
-            } satisfies Trigger<ButtonComponent | SelectMenuComponent>;
+            } satisfies Trigger<ButtonComponent>;
         };
 
         builder.setTriggers([
