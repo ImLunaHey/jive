@@ -5,7 +5,7 @@ import { NodeVM } from 'vm2';
 
 // This is the compiled version of the Squirrelly library, which is used to render the templates.
 // Without it being compiled, it wouldn't be possible to run it in a sandbox.
-const getSquirrelly = readFileSync('./s.js', 'utf8');
+const getSquirrelly = readFileSync('./squirrelly.js', 'utf8');
 
 const renderTemplate = (template: string, data: Record<string, unknown>) => {
     // Create a new locked-down VM
