@@ -1,17 +1,70 @@
-import { Collection, Guild, GuildMember } from 'discord.js';
-import { render, filters } from 'squirrelly';
+import { globalLogger } from '@app/logger';
+import type { Collection, Guild, GuildMember } from 'discord.js';
+import { readFileSync } from 'fs';
+import { NodeVM } from 'vm2';
 
-filters.define('reverse', (data: unknown) => {
-    if (typeof data === 'string') return data.split('').reverse().join('');
-    if (Array.isArray(data)) return data.reverse();
-    return data;
-});
+// This is the compiled version of the Squirrelly library, which is used to render the templates.
+// Without it being compiled, it wouldn't be possible to run it in a sandbox.
+const getSquirrelly = readFileSync('./s.js', 'utf8');
 
-filters.define('random', (data: unknown) => {
-    if (Array.isArray(data)) return data[Math.floor(Math.random() * data.length)];
-    if (typeof data === 'string') return data[Math.floor(Math.random() * data.length)];
-    return data;
-});
+const renderTemplate = (template: string, data: Record<string, unknown>) => {
+    // Create a new locked-down VM
+    const vm = new NodeVM({
+        timeout: 2_000, // After 2s the script will be terminated
+        allowAsync: false, // Disable async functions
+        eval: true, // Enable eval (required for Squirrelly)
+        wasm: false, // Disable WebAssembly
+        require: false, // Disable require
+        nesting: false, // Disable nesting
+        console: 'off', // Disable console
+        sandbox: { // The variables that are available in the script
+            process: {
+                env: {
+                    NODE_ENV: process.env.NODE_ENV // Give access to just the NODE_ENV variable
+                }
+            }
+        },
+    });
+
+    // Freeze the template and data to prevent them from being modified
+    vm.freeze({ template, data }, 'args');
+
+    // Run the script
+    const result = vm.run(`
+        ${getSquirrelly}
+        const Sqrl = getSquirrelly();
+        Sqrl.defaultConfig.autoEscape = false;
+
+        Sqrl.filters.define('reverse', (data) => {
+            if (typeof data === 'string') return data.split('').reverse().join('');
+            if (Array.isArray(data)) return data.reverse();
+            return data;
+        });
+        
+        Sqrl.filters.define('random', (data) => {
+            if (Array.isArray(data)) return data[Math.floor(Math.random() * data.length)];
+            if (typeof data === 'string') return data[Math.floor(Math.random() * data.length)];
+            return data;
+        });
+
+        let output;
+
+        try {
+            output = String(Sqrl.render(args.template, args.data, { useWith: true }));
+        } catch {
+            output = 'Failed to render message, please contact <@784365843810222080>.';
+        }
+
+        module.exports = output;
+    `);
+
+    if (typeof result !== 'string') {
+        globalLogger.scope('replaceVariables').error('Failed to render message, recieved non-string result.');
+        return 'Failed to render message, please contact <@784365843810222080>.';
+    }
+
+    return result;
+};
 
 const transformMember = (member: GuildMember) => ({
     id: member.id,
@@ -55,7 +108,7 @@ export const replaceVariablesForMember = async (message: string, member: GuildMe
         await member.guild.roles.fetch();
         await member.guild.members.fetch();
 
-        return render(message, { guild: transformGuild(member.guild), member: transformMember(member) }, { useWith: true });
+        return renderTemplate(message, { guild: transformGuild(member.guild), member: transformMember(member) });
     } catch {
         return 'Failed to render message, please contact <@784365843810222080>.';
     }
@@ -67,7 +120,7 @@ export const replaceVariablesForGuild = async (message: string, guild: Guild): P
         await guild.roles.fetch();
         await guild.members.fetch();
 
-        return render(message, { guild: transformGuild(guild) }, { useWith: true });
+        return renderTemplate(message, { guild: transformGuild(guild) });
     } catch {
         return 'Failed to render message, please contact <@784365843810222080>.';
     }
