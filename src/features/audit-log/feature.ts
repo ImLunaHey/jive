@@ -83,7 +83,7 @@ export class Feature {
                     },
                     description: member.joinedTimestamp ? outdent`
                         📤 <@${member.id}> **left the server**
-                        They were here for **${timeLength(member.joinedTimestamp)}**
+                        They were here for **${timeLength(new Date(member.joinedTimestamp))}**
                     ` : outdent`
                         📤 <@${member.id}> **left the server**
                     `,
