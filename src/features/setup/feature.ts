@@ -3,10 +3,10 @@ import { client } from '@app/client';
 import { globalFeatures } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, SelectMenuComponent, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, SelectMenuBuilder, SelectMenuComponent, SelectMenuOptionBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
-import { Discord, Guard, Slash, GuardFunction, On, ArgsOf } from 'discordx';
+import { Discord, Slash, On, ArgsOf } from 'discordx';
 
 @Discord()
 export class Feature {
@@ -34,8 +34,10 @@ export class Feature {
         if (interaction.customId === 'setup-modal-welcome-joinMessage') {
             console.log('join message modal!');
 
+            const joinMessage = interaction.fields.getTextInputValue('joinMessage');
+
             await interaction.reply({
-                content: 'Join message modal!',
+                content: joinMessage,
                 ephemeral: true,
             });
 
@@ -381,38 +383,26 @@ export class Feature {
                         .setCustomId('setup-modal-welcome-joinMessage')
                         .setTitle('Welcome settings');
 
-                    // Create the text input components
-                    const welcomeJoinMessageInput = new TextInputBuilder()
-                        .setCustomId('joinMessage')
-                        .setLabel(`What's the join message?`)
-                        .setStyle(TextInputStyle.Paragraph);
-
                     // Add inputs to the modal
                     modal.addComponents([
-                        new ActionRowBuilder<TextInputBuilder>().addComponents(welcomeJoinMessageInput)
+                        new ActionRowBuilder<TextInputBuilder>().addComponents(
+                            new TextInputBuilder()
+                                .setCustomId('joinMessage')
+                                .setLabel(`What's the join message?`)
+                                .setPlaceholder('<@{{ member.id }}> welcome to {{ guild.name }}!')
+                                .setValue(settings.welcome.joinMessage ?? '')
+                                .setStyle(TextInputStyle.Paragraph)
+                        ),
                     ]);
 
                     // Show the modal to the user
                     await interaction.showModal(modal);
                 }
-            },
-            {
-                name: 'welcome-joinMessage-modal',
-                async callback(_interaction) {
-                    console.log('welcome-joinMessage-modal callback!');
-                    if (!_interaction.isModalSubmit()) return;
-                    const interaction = _interaction as ModalSubmitInteraction;
-                    const joinMessage = interaction.fields.getTextInputValue('joinMessage');
-
-                    await interaction.followUp({
-                        content: joinMessage,
-                    });
-                }
             }
         ]);
 
         await builder.build({
-            ephemeral: true
+            ephemeral: true,
         });
     }
 }
