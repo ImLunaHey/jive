@@ -550,7 +550,7 @@ export class Feature {
                 embeds: [{
                     title: 'Channel Created',
                     description: `**${channel.name}**`,
-                    color: hexToColour('#00ff00'),
+                    color: Colors.Green,
                     footer: {
                         text: `Channel ID: ${channel.id}`,
                     },
@@ -596,7 +596,7 @@ export class Feature {
                 embeds: [{
                     title: 'Channel Deleted',
                     description: `**${channel.name}**`,
-                    color: hexToColour('#ff0000'),
+                    color: Colors.Red,
                     footer: {
                         text: `Channel ID: ${channel.id}`,
                     },
@@ -650,8 +650,8 @@ export class Feature {
                 });
             }
 
-            // Forums
-            if (oldChannel.type === ChannelType.GuildForum && newChannel.type === ChannelType.GuildForum) {
+            // Text channels
+            if (oldChannel.type === ChannelType.GuildText && newChannel.type === ChannelType.GuildText) {
                 // Check if the channel topic changed
                 if (oldChannel.topic !== newChannel.topic) {
                     fields.push({
@@ -660,10 +660,7 @@ export class Feature {
                         inline: true,
                     });
                 }
-            }
 
-            // Text channels
-            if (oldChannel.type === ChannelType.GuildText && newChannel.type === ChannelType.GuildText) {
                 // Check if the channel nsfw changed
                 if (oldChannel.nsfw !== newChannel.nsfw) {
                     fields.push({
