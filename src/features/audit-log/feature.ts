@@ -1,3 +1,4 @@
+import { hexToColour } from '@app/common/hex-to-colour';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { timeLength } from '@app/common/time';
@@ -271,8 +272,6 @@ export class Feature {
             const auditLogChannel = role.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
             if (!auditLogChannel) continue;
 
-            const iconUrl = role.guild.iconURL();
-
             // Send the embed
             await auditLogChannel.send({
                 embeds: [{
@@ -307,10 +306,7 @@ export class Feature {
                         value: `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`,
                         inline: true,
                     }],
-                    color: Colors.Green,
-                    thumbnail: {
-                        url: iconUrl ?? '',
-                    },
+                    color: hexToColour(role.hexColor),
                     footer: {
                         text: `Role ID: ${role.id}`,
                     },
@@ -346,8 +342,6 @@ export class Feature {
             if (!auditLog.auditLogChannelId) continue;
             const auditLogChannel = role.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
             if (!auditLogChannel) continue;
-
-            const iconUrl = role.guild.iconURL();
 
             // Send the embed
             await auditLogChannel.send({
@@ -387,10 +381,7 @@ export class Feature {
                         value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
                         inline: true,
                     }],
-                    color: Colors.Red,
-                    thumbnail: {
-                        url: iconUrl ?? '',
-                    },
+                    color: hexToColour(role.hexColor),
                     footer: {
                         text: `Role ID: ${role.id}`,
                     },
@@ -501,10 +492,7 @@ export class Feature {
                     title: 'Role Updated',
                     description: `**${newRole.name}**`,
                     fields,
-                    color: Number(`0x${newRole.hexColor.replace('#', '')}`),
-                    thumbnail: {
-                        url: newRole.guild.iconURL() ?? '',
-                    },
+                    color: hexToColour(newRole.hexColor),
                     footer: {
                         text: `Role ID: ${newRole.id}`,
                     },
@@ -531,14 +519,231 @@ export class Feature {
 
     @On({ event: 'channelCreate' })
     async channelCreate([channel]: ArgsOf<'channelCreate'>) {
+        if (!await isFeatureEnabled('auditLog', channel.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: channel.guild.id,
+                        },
+                    },
+                },
+                channelCreate: true,
+                auditLogChannelId: {
+                    not: null,
+                },
+            },
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = channel.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Channel Created',
+                    description: `**${channel.name}**`,
+                    color: hexToColour('#00ff00'),
+                    footer: {
+                        text: `Channel ID: ${channel.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'channelDelete' })
     async channelDelete([channel]: ArgsOf<'channelDelete'>) {
+        // Don't log DM channels
+        if (channel.type === ChannelType.DM) return;
+
+        // Check if the feature is enabled
+        if (!await isFeatureEnabled('auditLog', channel.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: channel.guild.id,
+                        },
+                    },
+                },
+                channelDelete: true,
+                auditLogChannelId: {
+                    not: null,
+                },
+            },
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = channel.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Channel Deleted',
+                    description: `**${channel.name}**`,
+                    color: hexToColour('#ff0000'),
+                    footer: {
+                        text: `Channel ID: ${channel.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'channelUpdate' })
     async channelUpdate([oldChannel, newChannel]: ArgsOf<'channelUpdate'>) {
+        // Don't log DM channels
+        if (oldChannel.type === ChannelType.DM) return;
+        if (newChannel.type === ChannelType.DM) return;
+
+        // Check if the feature is enabled
+        if (!await isFeatureEnabled('auditLog', oldChannel.guild.id)) return;
+
+        // Get the audit log channel
+        const auditLogs = await prisma.auditLog.findMany({
+            where: {
+                AuditLogSettings: {
+                    settings: {
+                        guild: {
+                            id: oldChannel.guild.id,
+                        },
+                    },
+                },
+                channelUpdate: true,
+                auditLogChannelId: {
+                    not: null,
+                },
+            },
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Get the audit log channel
+            if (!auditLog.auditLogChannelId) continue;
+            const auditLogChannel = oldChannel.guild.channels.cache.get(auditLog.auditLogChannelId) as TextChannel | undefined;
+            if (!auditLogChannel) continue;
+
+            // Create the embed fields
+            const fields: EmbedField[] = [];
+
+            // Check if the channel name changed
+            if (oldChannel.name !== newChannel.name) {
+                fields.push({
+                    name: 'Name',
+                    value: `**Old:** ${oldChannel.name}\n**New:** ${newChannel.name}`,
+                    inline: true,
+                });
+            }
+
+            // Forums
+            if (oldChannel.type === ChannelType.GuildForum && newChannel.type === ChannelType.GuildForum) {
+                // Check if the channel topic changed
+                if (oldChannel.topic !== newChannel.topic) {
+                    fields.push({
+                        name: 'Topic',
+                        value: `**Old:** ${oldChannel.topic || 'None'}\n**New:** ${newChannel.topic || 'None'}`,
+                        inline: true,
+                    });
+                }
+            }
+
+            // Text channels
+            if (oldChannel.type === ChannelType.GuildText && newChannel.type === ChannelType.GuildText) {
+                // Check if the channel nsfw changed
+                if (oldChannel.nsfw !== newChannel.nsfw) {
+                    fields.push({
+                        name: 'NSFW',
+                        value: `**Old:** ${oldChannel.nsfw ? 'Yes ✅' : 'No ❌'}\n**New:** ${newChannel.nsfw ? 'Yes ✅' : 'No ❌'}`,
+                        inline: true,
+                    });
+                }
+
+                // Check if the channel rate limit changed
+                if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
+                    fields.push({
+                        name: 'Slowmode',
+                        value: `**Old:** ${oldChannel.rateLimitPerUser}\n**New:** ${newChannel.rateLimitPerUser}`,
+                        inline: true,
+                    });
+                }
+            }
+
+            // Check if the channel position changed
+            if (oldChannel.rawPosition !== newChannel.rawPosition) {
+                fields.push({
+                    name: 'Position',
+                    value: `**Old:** ${oldChannel.rawPosition}\n**New:** ${newChannel.rawPosition}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the channel parent changed
+            if (oldChannel.parentId !== newChannel.parentId) {
+                fields.push({
+                    name: 'Category',
+                    value: `**Old:** ${oldChannel.parent?.name || 'None'}\n**New:** ${newChannel.parent?.name || 'None'}`,
+                    inline: true,
+                });
+            }
+
+            // Check if the channel permissions changed
+            if (oldChannel.permissionOverwrites.cache.size !== newChannel.permissionOverwrites.cache.size) {
+                fields.push({
+                    name: 'Permissions',
+                    value: `**Old:** ${oldChannel.permissionOverwrites.cache.size}\n**New:** ${newChannel.permissionOverwrites.cache.size}`,
+                    inline: true,
+                });
+            }
+
+            // Voice channels
+            if (oldChannel.type === ChannelType.GuildVoice && newChannel.type === ChannelType.GuildVoice) {
+                // Check if the channel bitrate changed
+                if (oldChannel.bitrate !== newChannel.bitrate) {
+                    fields.push({
+                        name: 'Bitrate',
+                        value: `**Old:** ${oldChannel.bitrate}\n**New:** ${newChannel.bitrate}`,
+                        inline: true,
+                    });
+                }
+
+                // Check if the channel user limit changed
+                if (oldChannel.userLimit !== newChannel.userLimit) {
+                    fields.push({
+                        name: 'User Limit',
+                        value: `**Old:** ${oldChannel.userLimit}\n**New:** ${newChannel.userLimit}`,
+                        inline: true,
+                    });
+                }
+            }
+
+            // Send the embed
+            await auditLogChannel.send({
+                embeds: [{
+                    title: 'Channel Updated',
+                    description: `**${newChannel.name}**`,
+                    color: Colors.Purple,
+                    fields,
+                    footer: {
+                        text: `Channel ID: ${newChannel.id}`,
+                    },
+                }],
+            });
+        }
     }
 
     @On({ event: 'channelPinsUpdate' })
