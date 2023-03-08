@@ -7,6 +7,22 @@ import { outdent } from 'outdent';
 
 class UserError extends Error { };
 
+const getClosest = (array: number[], goal: number) => array.reduce((prev, curr) => Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
+const createChance = <T = unknown>(results: Record<number, T>): (() => T) => () => {
+    const chance = Math.floor(Math.random() * 100);
+    const closest = getClosest(Object.keys(results).map(Number), chance);
+    return results[closest] as T;
+};
+
+const createRarity = createChance({
+    20: Rarity.COMMON,
+    40: Rarity.UNCOMMON,
+    60: Rarity.RARE,
+    80: Rarity.EPIC,
+    95: Rarity.LEGENDARY,
+    100: Rarity.MYTHIC,
+});
+
 @Discord()
 export class Feature {
     private logger = globalLogger.scope('Economy');
@@ -283,7 +299,7 @@ export class Feature {
             description: 'The item you want to buy',
             type: ApplicationCommandOptionType.String,
             required: true,
-            async autocomplete(interaction, command) {
+            async autocomplete(interaction) {
                 const focusedOption = interaction.options.getFocused(true);
                 const choices = await prisma.item.findMany({
                     where: {
@@ -302,7 +318,7 @@ export class Feature {
             description: 'How many you want to buy',
             type: ApplicationCommandOptionType.Number,
             required: false,
-            async autocomplete(interaction, command) {
+            async autocomplete(interaction) {
                 await interaction.respond([{
                     name: '1',
                     value: 1,
@@ -344,8 +360,14 @@ export class Feature {
 
                 // If this is a consumable item decrement the quantity
                 if (item.quantity !== null) {
+                    // If the item is out of stock, don't let the user buy it
+                    if (item.quantity && item.quantity < 0) throw new UserError('This item is out of stock.');
+
+                    // Check if the user is trying to buy more than the quantity
+                    if (item.quantity && item.quantity < quantity) throw new UserError(`You can only buy ${item.quantity} of this item.`);
+
                     // Decrement the item's quantity by the amount the user wants to buy
-                    const updatedItem = await prisma.item.update({
+                    await prisma.item.update({
                         where: { id: item.id },
                         data: {
                             quantity: {
@@ -353,12 +375,14 @@ export class Feature {
                             }
                         },
                     });
-
-                    // If the item is out of stock, don't let the user buy it
-                    if (updatedItem.quantity && updatedItem.quantity < 0) throw new UserError(`There's only \`${updatedItem.quantity}\` of this item left, you cannot buy \`${quantity}\`.`);
                 } else {
                     // If the item is not a consumable, make sure the user isn't trying to buy more than 1
-                    if (quantity > 1) throw new UserError('You can\'t buy more than \`1\` of this item.');
+                    if (quantity > 1) throw new UserError('This item is not a commodity, you can only buy 1 at a time.');
+
+                    // Remove the item from the shop
+                    await prisma.item.delete({
+                        where: { id: item.id },
+                    });
                 }
 
                 // Take the user's coins
@@ -402,7 +426,7 @@ export class Feature {
                         ...(item.category === Category.COLLECTABLES ? {
                             rarity: item.rarity,
                         } : {
-                            rarity: Object.keys(Rarity).find((_, i, ar) => Math.random() < 1 / (ar.length - i)) as Rarity,
+                            rarity: createRarity()
                         }),
                         owner: {
                             connect: {

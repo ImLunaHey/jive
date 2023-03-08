@@ -230,6 +230,7 @@ enum Rarity {
   RARE      @map("RARE")
   EPIC      @map("EPIC")
   LEGENDARY @map("LEGENDARY")
+  MYTHIC    @map("MYTHIC")
 }
 
 model Item {
