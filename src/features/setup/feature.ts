@@ -330,7 +330,7 @@ export class Feature {
                     });
 
                     // Tell the user that it worked
-                    await interaction.followUp({
+                    await interaction.reply({
                         content: `Successfully ${enabled ? 'disabled' : 'enabled'} ${id}`,
                         ephemeral: true
                     });
