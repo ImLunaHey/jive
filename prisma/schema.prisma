@@ -220,6 +220,7 @@ enum Category {
   WEAPONS      @map("WEAPONS") // Weapons are items that can be used to attack other players
   ARMOR        @map("ARMOR") // Armor is items that can be used to protect yourself from attacks
   TOOLS        @map("TOOLS") // Tools are items that can be used to help you in your adventures
+  JUNK         @map("JUNK") // Junk is items that are useless
 }
 
 enum Rarity {

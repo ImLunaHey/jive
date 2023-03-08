@@ -359,7 +359,7 @@ export class Feature {
                 }
 
                 // Take the user's coins
-                await prisma.guildMember.update({
+                const guildMember = await prisma.guildMember.update({
                     where: { id: interaction.member?.user.id },
                     data: {
                         coins: {
@@ -367,6 +367,9 @@ export class Feature {
                         },
                     },
                 });
+
+                // If the user doesn't have enough coins, don't let them buy the item
+                if (guildMember.coins < 0) throw new UserError(`You don't have enough coins to buy this item. You need \`${item.price * quantity}\` coins.`);
 
                 // Add the coins to the guild
                 await prisma.guild.update({
