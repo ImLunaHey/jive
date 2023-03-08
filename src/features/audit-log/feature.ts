@@ -252,7 +252,7 @@ export class Feature {
         if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
             fields.push({
                 name: 'Roles',
-                value: `${oldMember.roles.cache.map(r => `<@&${r}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.map(r => `<@&${r}>`).join(', ') ?? 'None'}`,
+                value: `${oldMember.roles.cache.map(r => `<@${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.map(r => `<@${r.id}>`).join(', ') ?? 'None'}`,
                 inline: true,
             });
         }
@@ -290,7 +290,7 @@ export class Feature {
                 name: newMember.user.tag,
                 icon_url: newMember.user.avatarURL() ?? newMember.user.defaultAvatarURL,
             },
-            description: `📥 <@${newMember.id}> **joined the server**`,
+            description: `📥 <@${newMember.user.id}> **updated**`,
             fields,
             thumbnail: {
                 url: newMember.user.avatarURL({ size: 4096 }) ?? newMember.user.defaultAvatarURL,

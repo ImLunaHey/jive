@@ -235,7 +235,7 @@ model Item {
   name        String   @unique
   description String
   category    Category
-  rarity      Rarity
+  rarity      Rarity   @default(COMMON)
   price       Int
 
   // If the item is a consumable, it will have a quantity
