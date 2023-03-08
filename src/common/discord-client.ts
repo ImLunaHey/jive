@@ -28,10 +28,14 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.once('ready', async () => {
+        globalLogger.info('Connected to discord as %s', client.user?.username);
+
         // Make sure all guilds are in cache
+        globalLogger.info('Fetching all guilds');
         await client.guilds.fetch();
 
         // Add all guilds to the database
+        globalLogger.info('Adding all guilds to the database');
         for (const guild of client.guilds.cache.values()) {
             await prisma.guild.upsert({
                 where: {
@@ -45,6 +49,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         }
 
         // init all application commands
+        globalLogger.info('Initializing all application commands');
         await client.initApplicationCommands();
 
         globalLogger.info('%s is ready', client.user?.username);
