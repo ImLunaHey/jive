@@ -4,7 +4,7 @@ import { prisma } from '@app/common/prisma-client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
+import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 
 @Discord()
 export class Feature {
