@@ -138,10 +138,9 @@ export class Feature {
                 result = result.replaceAll(client.token, "[REDACTED]");
 
                 // Send the result
-                await interaction.reply(`\`\`\`js\n${result}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'editReply' : 'reply'](`\`\`\`js\n${result}\n\`\`\``);
             } catch (error: unknown) {
-                // Send the error
-                await interaction.reply(`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'editReply' : 'reply'](`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
             }
 
             return;
