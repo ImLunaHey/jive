@@ -238,4 +238,59 @@ export class Feature {
             });
         }
     }
+
+    @Slash({
+        name: 'shop',
+        description: 'View the shop'
+    })
+    async shop(
+        interaction: CommandInteraction
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the items
+        const items = await prisma.item.findMany({
+            take: 25,
+        });
+
+        // Send the shop
+        await interaction.editReply({
+            embeds: [{
+                title: 'Shop',
+                description: items.map(item => outdent`
+                    **${item.name}**
+                    ${item.description}
+                    \`${item.price}\` coins
+                `).join('\n\n')
+            }]
+        });
+    }
+
+    @Slash({
+        name: 'buy',
+        description: 'Buy an item from the shop'
+    })
+    async buy(
+        @SlashOption({
+            name: 'item',
+            description: 'The item you want to buy',
+            type: ApplicationCommandOptionType.String,
+            required: true,
+            async autocomplete(interaction, command) {
+                const focusedOption = interaction.options.getFocused(true);
+                const choices = await prisma.item.findMany();
+                const filtered = choices.filter(item => item.name.startsWith(focusedOption.value)).slice(0, 25);
+
+                await interaction.respond(
+                    filtered.map(choice => ({ name: choice.name, value: choice.id })),
+                );
+            },
+        }) item: string,
+        interaction: CommandInteraction
+    ) {
+        // @TODO: this
+        await interaction.reply('Not implemented yet');
+    }
 }
+

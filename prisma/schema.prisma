@@ -211,3 +211,19 @@ enum FeaturesEnabled {
   VOID                  @map("VOID")
   WELCOME               @map("WELCOME")
 }
+
+enum Category {
+  CONSUMABLES  @map("CONSUMABLES") // Consumables are items that can be used once and then disappear
+  COLLECTABLES @map("COLLECTABLES") // Collectables are rare/epic items
+  WEAPONS      @map("WEAPONS") // Weapons are items that can be used to attack other players
+  ARMOR        @map("ARMOR") // Armor is items that can be used to protect yourself from attacks
+  TOOLS        @map("TOOLS") // Tools are items that can be used to help you in your adventures
+}
+
+model Item {
+  id          String   @id @unique @default(uuid())
+  name        String   @unique
+  description String
+  category    Category
+  price       Int
+}
