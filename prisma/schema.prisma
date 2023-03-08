@@ -236,6 +236,7 @@ enum Rarity {
 model Item {
   id          String   @id @unique @default(uuid())
   name        String
+  emoji       String
   description String
   category    Category
   rarity      Rarity   @default(COMMON)

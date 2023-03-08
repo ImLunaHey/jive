@@ -32,6 +32,7 @@ export class Feature {
         // Check if this is the custom commands channel and if if this is a valid custom commands message
         const customCommand = await prisma.customCommand.findFirst({
             where: {
+                enabled: true,
                 settings: {
                     guild: {
                         id: message.guild.id

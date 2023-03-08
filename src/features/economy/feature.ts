@@ -413,6 +413,7 @@ export class Feature {
                     data: {
                         category: item.category,
                         name: item.name,
+                        emoji: item.emoji,
                         description: item.description,
                         price: item.price,
                         quantity,
