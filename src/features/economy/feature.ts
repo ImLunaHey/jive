@@ -254,6 +254,9 @@ export class Feature {
 
         // Get the items
         const items = await prisma.item.findMany({
+            where: {
+                owner: null
+            },
             take: 25,
         });
 
