@@ -433,5 +433,46 @@ export class Feature {
             return;
         }
     }
-}
 
+    @Slash({
+        name: 'inventory',
+        description: 'View your inventory'
+    })
+    async inventory(
+        @SlashOption({
+            name: 'page',
+            description: 'The page you want to view',
+            type: ApplicationCommandOptionType.Number,
+            required: false,
+        }) page: number = 1,
+        interaction: CommandInteraction
+    ) {
+        if (!interaction.guild?.id) return;
+
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the items
+        const items = await prisma.item.findMany({
+            where: {
+                owner: {
+                    id: interaction.member?.user.id,
+                }
+            },
+            take: 25,
+            skip: (page - 1) * 25,
+        });
+
+        // Send the shop
+        await interaction.editReply({
+            embeds: [{
+                title: 'Inventory',
+                description: items.map(item => outdent`
+                    **${item.name}** [${item.rarity}]
+                    ${item.description}
+                    \`${item.price}\` coins
+                `).join('\n\n')
+            }],
+        });
+    }
+}
