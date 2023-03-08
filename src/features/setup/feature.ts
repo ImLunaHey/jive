@@ -17,9 +17,9 @@ export class Feature {
 
     }
 
-    createToggleButton(id: string, name: string, enabled: boolean) {
+    createToggleButton(id: Features, name: string, enabled: boolean) {
         return new ButtonBuilder()
-            .setCustomId(enabled ? `${id}-disable` : `${id}-enable`)
+            .setCustomId(enabled ? `${id.toLowerCase()}-disable` : `${id.toLowerCase()}-enable`)
             .setLabel(enabled ? `Disable ${name}` : `Enable ${name}`)
             .setStyle(enabled ? ButtonStyle.Danger : ButtonStyle.Success);
     }
@@ -121,7 +121,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('auditLog', 'AuditLog', settings.featuresEnabled.includes(Features.AUDIT_LOG)),
+                            this.createToggleButton(Features.AUDIT_LOG, 'AuditLog', settings.featuresEnabled.includes(Features.AUDIT_LOG)),
                         ),
                 ]);
 
@@ -140,7 +140,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('autoDelete', 'AutoDelete', settings.featuresEnabled.includes(Features.AUTO_DELETE)),
+                            this.createToggleButton(Features.AUTO_DELETE, 'AutoDelete', settings.featuresEnabled.includes(Features.AUTO_DELETE)),
                         ),
                 ]);
 
@@ -159,7 +159,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('customCommand', 'CustomCommands', settings.featuresEnabled.includes(Features.CUSTOM_COMMANDS)),
+                            this.createToggleButton(Features.CUSTOM_COMMANDS, 'CustomCommands', settings.featuresEnabled.includes(Features.CUSTOM_COMMANDS)),
                         ),
                 ]);
 
@@ -178,7 +178,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('dynamicChannelNames', 'DynamicChannelNames', settings.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES)),
+                            this.createToggleButton(Features.DYNAMIC_CHANNEL_NAMES, 'DynamicChannelNames', settings.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES)),
                         ),
                 ]);
 
@@ -197,7 +197,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('inviteTracking', 'InviteTracking', settings.featuresEnabled.includes(Features.INVITE_TRACKING)),
+                            this.createToggleButton(Features.INVITE_TRACKING, 'InviteTracking', settings.featuresEnabled.includes(Features.INVITE_TRACKING)),
                         ),
                 ]);
 
@@ -216,7 +216,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('leveling', 'Leveling', settings.featuresEnabled.includes(Features.LEVELING)),
+                            this.createToggleButton(Features.LEVELING, 'Leveling', settings.featuresEnabled.includes(Features.LEVELING)),
                         ),
                 ]);
 
@@ -235,7 +235,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('starboard', 'Starboard', settings.featuresEnabled.includes(Features.STARBOARD)),
+                            this.createToggleButton(Features.STARBOARD, 'Starboard', settings.featuresEnabled.includes(Features.STARBOARD)),
                         ),
                 ]);
 
@@ -254,7 +254,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('welcome', 'Welcome', settings.featuresEnabled.includes(Features.WELCOME)),
+                            this.createToggleButton(Features.WELCOME, 'Welcome', settings.featuresEnabled.includes(Features.WELCOME)),
                             new ButtonBuilder()
                                 .setCustomId('welcome-waitUntilGate')
                                 .setLabel(settings.welcome?.waitUntilGate ? 'Disable gate' : 'Enable gate')
@@ -304,7 +304,7 @@ export class Feature {
 
         const generateTrigger = (id: Features, enabled: boolean) => {
             return {
-                name: `${id}-${enabled ? 'disable' : 'enable'}`,
+                name: `${id.toLowerCase()}-${enabled ? 'disable' : 'enable'}`,
                 async callback(interaction) {
                     // Get the features enabled
                     const featuresEnabled = await prisma.settings.findFirst({
@@ -312,7 +312,6 @@ export class Feature {
                             guildId: guild.id
                         }
                     }).then(settings => settings?.featuresEnabled ?? []);
-                    if (!featuresEnabled) return;
 
                     // Update the database
                     await prisma.guild.update({
