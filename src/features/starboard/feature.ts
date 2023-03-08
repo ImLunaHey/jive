@@ -170,19 +170,16 @@ export class Feature {
 
     @On({ event: 'messageReactionRemove' })
     async messageReactionRemove([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
-        this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
-
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) {
-            this.logger.info('Starboard feature is not enabled');
-            return;
-        }
+        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) {
             this.logger.info('Message is in a DM');
             return;
         }
+
+        this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // Check if the reaction is a partial
         if (reaction.partial) {
