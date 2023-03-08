@@ -282,7 +282,11 @@ export class Feature {
             required: true,
             async autocomplete(interaction, command) {
                 const focusedOption = interaction.options.getFocused(true);
-                const choices = await prisma.item.findMany();
+                const choices = await prisma.item.findMany({
+                    where: {
+                        owner: null
+                    }
+                });
                 const filtered = choices.filter(item => item.name.startsWith(focusedOption.value)).slice(0, 25);
 
                 await interaction.respond(
