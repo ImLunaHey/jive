@@ -10,6 +10,8 @@ const schema = z.object({
     LOG_LEVEL: z.enum(['info', 'timer', 'debug', 'warn', 'error']).optional(),
     BOT_TOKEN: z.string().min(55).max(80),
     MAINTENCE_MODE: z.boolean().optional(),
+    OWNER_ID: z.string().min(17).max(19),
+    OWNER_GUILD_ID: z.string().min(17).max(19),
 });
 
 const processEnv = {
@@ -17,6 +19,8 @@ const processEnv = {
     LOG_LEVEL: process.env.LOG_LEVEL ?? 'info',
     BOT_TOKEN: process.env.BOT_TOKEN,
     MAINTENCE_MODE: !!process.env.MAINTENCE_MODE,
+    OWNER_ID: process.env.OWNER_ID,
+    OWNER_GUILD_ID: process.env.OWNER_GUILD_ID,
 } satisfies Parameters<typeof schema.safeParse>[0];
 
 // --------------------------

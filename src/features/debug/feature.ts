@@ -1,9 +1,10 @@
+import { inspect } from 'util';
 import { client } from '@app/client';
 import { prisma } from '@app/common/prisma-client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
-import { ChannelType, Colors, CommandInteraction, EmbedBuilder } from 'discord.js';
-import { Discord, On, Slash } from 'discordx';
+import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction, EmbedBuilder } from 'discord.js';
+import { Discord, Guard, Guild, On, Slash, SlashOption } from 'discordx';
 
 @Discord()
 export class Feature {
@@ -84,5 +85,42 @@ export class Feature {
                 description: `Message latency is ${message.createdTimestamp - interaction.createdTimestamp}ms. API Latency is ${Math.round(interaction.client.ws.ping)}ms`
             }]
         });
+    }
+
+    @Slash({
+        name: 'eval',
+        description: 'Evaluate code',
+    })
+    @Guard((interaction) => interaction.user.id === env.OWNER_ID)
+    @Guild(env.OWNER_GUILD_ID)
+    async eval(
+        @SlashOption({
+            name: 'code',
+            description: 'The code to evaluate',
+            type: ApplicationCommandOptionType.String,
+            required: true
+        }) code: string,
+        interaction: CommandInteraction,
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            // Evaluate our input
+            const evaled = eval(code);
+
+            // Cleanup result
+            let result = evaled;
+            if (result && result.constructor.name == "Promise") result = await result;
+            if (typeof result !== "string") result = inspect(result, { depth: 1 });
+            result = result.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
+            result = result.replaceAll(client.token, "[REDACTED]");
+
+            // Send the result
+            await interaction.reply(`\`\`\`js\n${result}\n\`\`\``);
+        } catch (error: unknown) {
+            // Send the error
+            await interaction.reply(`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
+        }
     }
 }
