@@ -192,7 +192,7 @@ export class Feature {
                 name: ban.user.tag,
                 icon_url: ban.user.avatarURL() ?? ban.user.defaultAvatarURL,
             },
-            description: `📥 <@${ban.user.id}> **joined the server**`,
+            description: `📥 <@${ban.user.id}> **banned**`,
             thumbnail: {
                 url: ban.user.avatarURL({ size: 4096 }) ?? ban.user.defaultAvatarURL,
             },
@@ -231,6 +231,95 @@ export class Feature {
 
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
+        if (!await isFeatureEnabled(Features.AUDIT_LOG, newMember.guild.id)) return;
+
+        // Get the audit logs
+        const auditLogs = await this.getAuditLogs(newMember.guild);
+
+        // Create the fields
+        const fields: EmbedField[] = [];
+
+        // Check if the nickname changed
+        if (oldMember.nickname !== newMember.nickname) {
+            fields.push({
+                name: 'Nickname',
+                value: `${oldMember.nickname ?? 'None'} ➔ ${newMember.nickname ?? 'None'}`,
+                inline: true,
+            });
+        }
+
+        // Check if the roles changed
+        if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
+            fields.push({
+                name: 'Roles',
+                value: `${oldMember.roles.cache.map(r => `<@&${r}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.map(r => `<@&${r}>`).join(', ') ?? 'None'}`,
+                inline: true,
+            });
+        }
+
+        // Check if the avatar changed
+        if (oldMember.user.avatar !== newMember.user.avatar) {
+            fields.push({
+                name: 'Avatar',
+                value: `[Old](${oldMember.user.avatarURL({ size: 4096 }) ?? oldMember.user.defaultAvatarURL}) ➔ [New](${newMember.user.avatarURL({ size: 4096 }) ?? newMember.user.defaultAvatarURL})`,
+                inline: true,
+            });
+        }
+
+        // Check if the username changed
+        if (oldMember.user.username !== newMember.user.username) {
+            fields.push({
+                name: 'Username',
+                value: `${oldMember.user.username} ➔ ${newMember.user.username}`,
+                inline: true,
+            });
+        }
+
+        // Check if the discriminator changed
+        if (oldMember.user.discriminator !== newMember.user.discriminator) {
+            fields.push({
+                name: 'Discriminator',
+                value: `${oldMember.user.discriminator} ➔ ${newMember.user.discriminator}`,
+                inline: true,
+            });
+        }
+
+        // Create the embed
+        const embed = new EmbedBuilder({
+            author: {
+                name: newMember.user.tag,
+                icon_url: newMember.user.avatarURL() ?? newMember.user.defaultAvatarURL,
+            },
+            description: `📥 <@${newMember.id}> **joined the server**`,
+            fields,
+            thumbnail: {
+                url: newMember.user.avatarURL({ size: 4096 }) ?? newMember.user.defaultAvatarURL,
+            },
+            color: Colors.Green,
+            footer: {
+                text: `Member ID: ${newMember.id}`,
+            },
+        });
+
+        // Send the message to the audit log channels
+        for (const auditLog of auditLogs) {
+            // Check if this action is ignored
+            if (auditLog.ignoredActions?.includes('MEMBER_UPDATE')) continue;
+
+            // Get the audit log channel
+            const auditLogChannel = this.getAuditLogChannel(newMember.guild, auditLog.channelId);
+            if (!auditLogChannel) continue;
+
+            // Check if this is valid
+            if (!this.isValid(auditLog, {
+                member: newMember,
+            })) continue;
+
+            // Send the message
+            await auditLogChannel.send({
+                embeds: [embed]
+            });
+        }
     }
 
     @On({ event: 'guildUpdate' })
