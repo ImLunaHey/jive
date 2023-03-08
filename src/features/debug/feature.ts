@@ -137,10 +137,19 @@ export class Feature {
                 result = result.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
                 result = result.replaceAll(client.token, "[REDACTED]");
 
+                // Check if the result is too long
+                if (result.length > 2000) {
+                    result = result.slice(0, 2000);
+                    result += '...';
+                }
+
+                // If we already replied and the result is undefined or null, we don't need to send a message
+                if ((interaction.deferred || interaction.replied) && !result) return;
+
                 // Send the result
-                await interaction[(interaction.deferred || interaction.replied) ? 'editReply' : 'reply'](`\`\`\`js\n${result}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`\`\`js\n${result}\n\`\`\``);
             } catch (error: unknown) {
-                await interaction[(interaction.deferred || interaction.replied) ? 'editReply' : 'reply'](`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
             }
 
             return;
