@@ -7,9 +7,11 @@ import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { EmbedBuilder } from '@discordjs/builders';
 import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, Colors, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, TextChannel, User } from 'discord.js';
+import { Channel, ChannelType, Colors, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, Role, TextChannel, User } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
+
+const filterOutEveryoneRole = (r: Role) => r.name !== '@everyone';
 
 @Discord()
 export class Feature {
@@ -249,10 +251,10 @@ export class Feature {
         }
 
         // Check if the roles changed
-        if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
+        if (oldMember.roles.cache.filter(filterOutEveryoneRole).size !== newMember.roles.cache.filter(filterOutEveryoneRole).size) {
             fields.push({
                 name: 'Roles',
-                value: `${oldMember.roles.cache.map(r => `<@${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.map(r => `<@${r.id}>`).join(', ') ?? 'None'}`,
+                value: `${oldMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@${r.id}>`).join(', ') ?? 'None'}`,
                 inline: true,
             });
         }
