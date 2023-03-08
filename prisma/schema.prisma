@@ -139,6 +139,7 @@ enum Action {
   EMOJI_CREATE        @map("EMOJI_CREATE")
   EMOJI_DELETE        @map("EMOJI_DELETE")
   EMOJI_EDIT          @map("EMOJI_EDIT")
+  MEMBER_UPDATE       @map("MEMBER_UPDATE")
 }
 
 model AuditLog {
