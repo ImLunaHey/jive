@@ -98,9 +98,6 @@ export class Feature {
     async eval(
         interaction: CommandInteraction,
     ) {
-        // Show the bot thinking
-        await interaction.deferReply({ ephemeral: true });
-
         // Create the modal
         const modal = new ModalBuilder()
             .setCustomId('eval-modal')
