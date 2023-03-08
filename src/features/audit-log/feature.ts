@@ -254,7 +254,7 @@ export class Feature {
         if (oldMember.roles.cache.filter(filterOutEveryoneRole).size !== newMember.roles.cache.filter(filterOutEveryoneRole).size) {
             fields.push({
                 name: 'Roles',
-                value: `${oldMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@${r.id}>`).join(', ') ?? 'None'}`,
+                value: `${oldMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@&${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@&${r.id}>`).join(', ') ?? 'None'}`,
                 inline: true,
             });
         }
