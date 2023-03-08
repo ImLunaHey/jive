@@ -14,7 +14,6 @@ export class Feature {
 
     constructor() {
         this.logger.success('Feature initialized');
-
     }
 
     createToggleButton(id: Features, name: string, enabled: boolean) {
