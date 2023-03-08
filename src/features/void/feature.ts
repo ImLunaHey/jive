@@ -2,7 +2,7 @@ import { client } from '@app/client';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
 import { Colors, TextChannel } from 'discord.js';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {

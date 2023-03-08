@@ -1,8 +1,6 @@
-import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
-import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {

@@ -3,7 +3,7 @@ import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { ChannelType, EmbedBuilder, MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 import { resolve as resolveMedia } from 'media-extractor';
 import { sleep } from '@app/common/sleep';

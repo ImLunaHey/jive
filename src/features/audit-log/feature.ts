@@ -8,7 +8,7 @@ import { globalLogger } from '@app/logger';
 import { EmbedBuilder } from '@discordjs/builders';
 import { AuditLog } from '@prisma/client';
 import { Channel, ChannelType, Colors, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, Role, TextChannel, User } from 'discord.js';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
 const filterOutEveryoneRole = (r: Role) => r.name !== '@everyone';

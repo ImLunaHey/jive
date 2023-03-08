@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, GuildMember, PermissionFlagsBits, VoiceChannel } from 'discord.js';
-import { ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
+import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';

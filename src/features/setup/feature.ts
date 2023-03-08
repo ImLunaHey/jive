@@ -6,7 +6,7 @@ import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import { Trigger } from 'discord.js-pages/lib/types';
-import { Discord, Slash, On, ArgsOf } from 'discordx';
+import { Discord, Slash, On, type ArgsOf } from 'discordx';
 
 @Discord()
 export class Feature {

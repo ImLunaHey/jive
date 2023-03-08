@@ -1,4 +1,4 @@
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { prisma } from '@app/common/prisma-client';
 import { client } from '@app/client';
