@@ -135,7 +135,15 @@ export const replaceVariablesForGuild = async (message: string, guild: Guild): P
 
 export const templateResultToMessage = (result: string): MessageCreateOptions => {
     try {
-        return JSON.parse(result) as MessageCreateOptions;
+        const message = JSON.parse(result);
+        if (typeof message === 'object') return message as MessageCreateOptions;
+        return {
+            embeds: [{
+                title: `Failed to render message, recieved "${typeof message}" message.`,
+                description: 'Please contact <@784365843810222080>.',
+                color: Colors.Red,
+            }]
+        } satisfies MessageCreateOptions;
     } catch {
         return {
             embeds: [{
