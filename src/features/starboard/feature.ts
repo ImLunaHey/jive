@@ -49,8 +49,6 @@ export class Feature {
 
     @On({ event: 'messageReactionAdd' })
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
-        this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
-
         // Check if the starboard feature is enabled
         if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) return;
 
@@ -89,6 +87,11 @@ export class Feature {
         });
         if (!settings) return;
         if (settings.starboards.length === 0) return;
+
+        // Check that atleast one starboard has the reaction enabled
+        if (settings.starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
+
+        this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // For each starboard
         for (const starboard of settings.starboards) {
@@ -179,8 +182,6 @@ export class Feature {
             return;
         }
 
-        this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
-
         // Check if the reaction is a partial
         if (reaction.partial) {
             // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
@@ -220,6 +221,11 @@ export class Feature {
         });
         if (!settings) return;
         if (settings.starboards.length === 0) return;
+
+        // Check that atleast one starboard has the reaction enabled
+        if (settings.starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
+
+        this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // For each starboard
         for (const starboard of settings.starboards) {
