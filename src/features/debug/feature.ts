@@ -91,7 +91,9 @@ export class Feature {
         name: 'eval',
         description: 'Evaluate code',
     })
-    @Guard((interaction) => interaction.user.id === env.OWNER_ID)
+    @Guard(async (interaction, _client, next) => {
+        if (interaction.user.id === env.OWNER_ID) await next();
+    })
     @Guild(env.OWNER_GUILD_ID)
     async eval(
         @SlashOption({
