@@ -128,7 +128,7 @@ export class Feature {
                 const code = interaction.fields.getTextInputValue('code');
 
                 // Evaluate our input
-                const evaled = eval(code);
+                const evaled = await Object.getPrototypeOf(async function () { }).constructor(code)();
 
                 // Cleanup result
                 let result = evaled;
