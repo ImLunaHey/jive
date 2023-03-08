@@ -3,7 +3,7 @@ import { globalLogger } from '@app/logger';
 import { prisma } from '@app/common/prisma-client';
 import { client } from '@app/client';
 import { ChannelType } from 'discord.js';
-import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 
 @Discord()
 export class Feature {
@@ -19,7 +19,7 @@ export class Feature {
 
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
-            if (!await isFeatureEnabled('inviteTracking', guildId)) return;
+            if (!await isFeatureEnabled(Features.INVITE_TRACKING, guildId)) return;
 
             // Fetch the invites
             this.logger.debug(`Fetching invites for guild ${guildId}...`);
@@ -46,16 +46,31 @@ export class Feature {
             where: {
                 guildId: member.guild.id,
             },
+            include: {
+                guild: true
+            }
         });
 
         // Fetch the invites after the user joined
         const guildInvitesNow = await member.guild.invites.fetch();
 
+        // Fetch the vanity invite data after the user joined
+        // const vanityData = await member.guild.fetchVanityData();
+
+        // Find the invite code that was used
+        // @TODO: Add support for vanity invites
+        const inviteCode = guildInvitesBeforeUserJoined.find((invite) => {
+            // // Check if the invite was a vanity invite
+            // if (invite.code === vanityData.code && vanityData.uses !== guildInvitesBeforeUserJoined.find((invite) => invite.code === vanityData.code)?.uses) return true;
+
+            // Check if the invite was a normal invite
+            const inviteAfterJoined = guildInvitesNow.find((inviteBefore) => inviteBefore.code === invite.code);
+            return inviteAfterJoined?.uses !== invite.uses;
+        })?.code;
+
         // Find the invite that was used
-        const inviteUsed = guildInvitesNow.find((invite) => {
-            const inviteBeforeUserJoined = guildInvitesBeforeUserJoined.find((inviteBefore) => inviteBefore.code === invite.code);
-            return inviteBeforeUserJoined?.uses !== invite.uses;
-        });
+        // @TODO: Add support for vanity invites
+        const inviteUsed = guildInvitesNow.find((invite) => invite.code === inviteCode);
 
         // Update the invite uses, skip if the invite is a DM invite
         if (inviteUsed) this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
@@ -73,10 +88,10 @@ export class Feature {
             }
         });
         if (!settings) return;
-        if (!settings.inviteTracking.inviteTrackingChannelId) return;
+        if (!settings.inviteTracking?.channelId) return;
 
         // Post a message in the invite tracking channel
-        const inviteTrackingChannel = member.guild.channels.cache.get(settings.inviteTracking.inviteTrackingChannelId);
+        const inviteTrackingChannel = member.guild.channels.cache.get(settings.inviteTracking.channelId);
         if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
         if (!inviteUsed) {
@@ -87,6 +102,7 @@ export class Feature {
                 }]
             });
         } else {
+            // Post a message in the invite tracking channel
             await inviteTrackingChannel?.send({
                 embeds: [{
                     title: 'Invite used',

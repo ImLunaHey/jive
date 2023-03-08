@@ -1,10 +1,10 @@
 import { client } from '@app/client';
-import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import { WelcomeSettings } from '@prisma/client';
+import { Welcome } from '@prisma/client';
 import { GuildMember, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
 
@@ -16,7 +16,7 @@ export class Feature {
         this.logger.success('Feature initialized');
     }
 
-    async welcomeMember(member: GuildMember, settings: WelcomeSettings) {
+    async welcomeMember(member: GuildMember, settings: Welcome) {
         // If join channel is set send the welcome message if there is one
         if (settings.joinChannelId) {
             // Fetch the welcome channel
@@ -65,10 +65,10 @@ export class Feature {
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled('welcome', member.guild.id)) return;
+        if (!await isFeatureEnabled(Features.WELCOME, member.guild.id)) return;
 
         // Get settings
-        const settings = await prisma.welcomeSettings.findFirst({
+        const settings = await prisma.welcome.findFirst({
             where: {
                 settings: {
                     guild: {
@@ -91,10 +91,10 @@ export class Feature {
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled('welcome', newMember.guild.id)) return;
+        if (!await isFeatureEnabled(Features.WELCOME, newMember.guild.id)) return;
 
         // Get settings
-        const settings = await prisma.welcomeSettings.findFirst({
+        const settings = await prisma.welcome.findFirst({
             where: {
                 settings: {
                     guild: {

@@ -75,6 +75,7 @@ export class Feature {
             },
             create: {
                 id: interaction.member?.user.id,
+                xp: 0,
                 coins: random,
                 guild: {
                     connect: {
@@ -121,6 +122,8 @@ export class Feature {
         await prisma.rateLimit.create({
             data: {
                 id: 'economy:daily',
+                count: 0,
+                lastReset: new Date(),
                 guildMember: {
                     connect: {
                         id: interaction.member?.user.id
@@ -204,6 +207,7 @@ export class Feature {
                     where: { id: target.id },
                     create: {
                         id: target.id,
+                        xp: 0,
                         coins: amount,
                         guild: {
                             connect: {

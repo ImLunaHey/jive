@@ -135,7 +135,7 @@ export const replaceVariablesForGuild = async (message: string, guild: Guild): P
 
 export const templateResultToMessage = (result: string): MessageCreateOptions => {
     try {
-        return JSON.parse(result);
+        return JSON.parse(result) as MessageCreateOptions;
     } catch {
         return {
             embeds: [{

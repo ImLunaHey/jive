@@ -11,370 +11,203 @@ datasource db {
 }
 
 model GuildMember {
-  id String @id @unique
-
-  xp    Int @default(0)
-  coins Int @default(0)
-
+  id         String      @id @unique
   guild      Guild       @relation(fields: [guildId], references: [id])
   guildId    String
+  xp         Int         @default(0)
+  coins      Int         @default(0)
   rateLimits RateLimit[]
 }
 
 model Guild {
-  id String @id @unique
-
-  invites    Invite[]
-  members    GuildMember[]
-  settings   Settings      @relation(fields: [settingsId], references: [id])
-  settingsId String        @unique
+  id       String        @id @unique
+  invites  Invite[]
+  members  GuildMember[]
+  settings Settings?
 }
 
 model Invite {
-  code String @id @unique
-
-  uses Int @default(0)
-
+  code    String @id @unique
+  uses    Int
   guild   Guild  @relation(fields: [guildId], references: [id])
   guildId String
 }
 
-model WelcomeSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // Whether the bot should wait until the user accepts the rules
-  waitUntilGate Boolean @default(false)
-
-  // The channel where the join message is sent
-  joinChannelId String?
-
-  // Should the message be sent to a DM instead of channel
-  joinDm Boolean @default(false)
-
-  // The message sent to the user
-  joinMessage String?
-
-  // Should we delete the join message after a certain amount of time
-  joinMessageTimeout Int @default(0)
-
-  // The channel where the leave message is sent
-  leaveChannelId String?
-
-  // Should the message be sent to a DM instead of channel
-  leaveDm Boolean @default(false)
-
-  // The message sent to the user
-  leaveMessage String?
-
-  // Roles are given to the user once they accept the rules
-  addRoles String[]
-
-  // Roles are removed from the user once they accept the rules
-  removeRoles String[]
-
-  settings Settings?
+model Welcome {
+  id                 String   @id @unique @default(uuid())
+  enabled            Boolean  @default(false)
+  waitUntilGate      Boolean
+  joinChannelId      String?
+  joinDm             Boolean
+  joinMessage        String?
+  // Timeout in milliseconds
+  joinMessageTimeout Int      @default(2000)
+  leaveChannelId     String?
+  leaveDm            Boolean
+  leaveMessage       String?
+  addRoles           String[]
+  removeRoles        String[]
+  settings           Settings @relation(fields: [settingsId], references: [id])
+  settingsId         String   @unique
 }
 
-model LevelingSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // The channel where the leveling messages are sent
+model Leveling {
+  id                String   @id @unique @default(uuid())
+  enabled           Boolean  @default(false)
   levelingChannelId String?
-
-  // The message sent to the user when they level up
-  levelingMessage String?
-
-  settings Settings?
+  levelingMessage   String?
+  settings          Settings @relation(fields: [settingsId], references: [id])
+  settingsId        String   @unique
 }
 
-model StarboardSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // The channel where the starboard messages are sent
-  starboardChannelId String?
-
-  // The minimum amount of reactions required to send a message to the starboard
-  minimumReactions Int @default(3)
-
-  // The reactions that needs to be used
-  // If this is empty then any reaction can be used
-  reactions String[]
-
-  settings Settings?
+model Starboard {
+  id                 String   @id @unique @default(uuid())
+  enabled            Boolean  @default(false)
+  starboardChannelId String
+  minimumReactions   Int
+  allowedReactions   String[]
+  triggerChannelId   String?
+  settings           Settings @relation(fields: [settingsId], references: [id])
+  settingsId         String
 }
 
-model InviteTrackingSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // The channel where the invite tracking messages are sent
-  inviteTrackingChannelId String?
-
-  // If we should log when an invite is used
-  inviteTrackingMessage String?
-
-  settings Settings?
+model InviteTracking {
+  id         String   @id @unique @default(uuid())
+  enabled    Boolean  @default(false)
+  channelId  String?
+  message    String?
+  settings   Settings @relation(fields: [settingsId], references: [id])
+  settingsId String   @unique
 }
 
-model CustomCommandExtraMessages {
-  id String @id @unique @default(uuid())
-
-  // If we should log when the trigger is sent
-  message String?
-
-  // The channel where the message is sent
-  // If this is null then it will be sent in the same channel as the trigger
-  channelId String?
-
-  // The command that triggered this
-  customCommand   CustomCommand? @relation(fields: [customCommandId], references: [id])
-  customCommandId String?
+model ExtraMessage {
+  id              String        @id @unique @default(uuid())
+  message         String
+  channelId       String?
+  customCommand   CustomCommand @relation(fields: [customCommandId], references: [id])
+  customCommandId String        @unique
 }
 
 model CustomCommand {
-  id String @id @unique @default(uuid())
-
-  // The channel where the command must be sent
-  // If this is null then it can be sent in any channel
+  id               String         @id @unique @default(uuid())
+  name             String         @unique
+  enabled          Boolean        @default(false)
   triggerChannelId String?
-
-  // The message needed to trigger this
-  // If this is blank then it will trigger on any message
-  triggerMessage String?
-
-  // If we should log when the trigger is sent
-  responseMessage String?
-
-  // Roles to add to the user when the trigger is sent
-  addRoles String[]
-
-  // Roles to remove from the user when the trigger is sent
-  removeRoles String[]
-
-  // Extra messages to send when the trigger is sent
-  extraMessages CustomCommandExtraMessages[]
-
-  // Whether the trigger should be deleted when the response is sent
-  deleteTrigger Boolean @default(false)
-
-  CustomCommandSettings   CustomCommandSettings? @relation(fields: [customCommandSettingsId], references: [id])
-  customCommandSettingsId String?
+  triggerMessage   String?
+  deleteTrigger    Boolean
+  responseMessage  String?
+  responseTimeout  Int
+  addRoles         String[]
+  removeRoles      String[]
+  extraMessages    ExtraMessage[]
+  settings         Settings?      @relation(fields: [settingsId], references: [id])
+  settingsId       String?
 }
 
-model CustomCommandSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  // The custom commands
-  customCommands CustomCommand[]
-
-  settings Settings?
+enum Action {
+  JOIN                @map("JOIN")
+  LEAVE               @map("LEAVE")
+  BAN                 @map("BAN")
+  KICK                @map("KICK")
+  MUTE                @map("MUTE")
+  UNMUTE              @map("UNMUTE")
+  WARN                @map("WARN")
+  UNWARN              @map("UNWARN")
+  PURGE               @map("PURGE")
+  ROLE_ADD            @map("ROLE_ADD")
+  ROLE_REMOVE         @map("ROLE_REMOVE")
+  ROLE_CREATE         @map("ROLE_CREATE")
+  ROLE_DELETE         @map("ROLE_DELETE")
+  ROLE_EDIT           @map("ROLE_EDIT")
+  CHANNEL_CREATE      @map("CHANNEL_CREATE")
+  CHANNEL_DELETE      @map("CHANNEL_DELETE")
+  CHANNEL_EDIT        @map("CHANNEL_EDIT")
+  MESSAGE_DELETE      @map("MESSAGE_DELETE")
+  MESSAGE_BULK_DELETE @map("MESSAGE_BULK_DELETE")
+  MESSAGE_EDIT        @map("MESSAGE_EDIT")
+  VOICE_KICK          @map("VOICE_KICK")
+  VOICE_MUTE          @map("VOICE_MUTE")
+  VOICE_UNMUTE        @map("VOICE_UNMUTE")
+  VOICE_MOVE          @map("VOICE_MOVE")
+  VOICE_DEAFEN        @map("VOICE_DEAFEN")
+  VOICE_UNDEAFEN      @map("VOICE_UNDEAFEN")
+  GUILD_EDIT          @map("GUILD_EDIT")
+  INVITE_CREATE       @map("INVITE_CREATE")
+  INVITE_DELETE       @map("INVITE_DELETE")
+  EMOJI_CREATE        @map("EMOJI_CREATE")
+  EMOJI_DELETE        @map("EMOJI_DELETE")
+  EMOJI_EDIT          @map("EMOJI_EDIT")
 }
 
 model AuditLog {
-  id String @id @unique @default(uuid())
-
-  // The channel where the audit log messages are sent
-  auditLogChannelId String?
-
-  // If we should log when a user is banned
-  ban Boolean @default(false)
-
-  // If we should log when a user is unbanned
-  unban Boolean @default(false)
-
-  // If we should log when a user is kicked
-  kick Boolean @default(false)
-
-  // If we should log when a user is muted
-  mute Boolean @default(false)
-
-  // If we should log when a user is unmuted
-  unmute Boolean @default(false)
-
-  // If we should log when a user is warned
-  warn Boolean @default(false)
-
-  // If we should log when a user joins
-  join Boolean @default(false)
-
-  // If we should log when a message is deleted
-  messageDelete Boolean @default(false)
-
-  // If we should log when a message is deleted
-  bulkMessageDelete Boolean @default(false)
-
-  // If we should log when a message is edited
-  messageEdit Boolean @default(false)
-
-  // If we should log when a user is updated
-  userUpdate Boolean @default(false)
-
-  // If we should log when a channel is created
-  channelCreate Boolean @default(false)
-
-  // If we should log when a channel is updated
-  channelUpdate Boolean @default(false)
-
-  // If we should log when a channel is deleted
-  channelDelete Boolean @default(false)
-
-  // If we should log when a role is created
-  roleCreate Boolean @default(false)
-
-  // If we should log when a role is updated
-  roleUpdate Boolean @default(false)
-
-  // If we should log when a role is deleted
-  roleDelete Boolean @default(false)
-
-  // If we should log when a user is added to a role
-  roleAdd Boolean @default(false)
-
-  // If we should log when a user is removed from a role
-  roleRemove Boolean @default(false)
-
-  // Should we ignore bots?
-  ignoreBots Boolean @default(false)
-
-  // Roles to ignore
-  ignoredRoles String[]
-
-  // Users to ignore
-  ignoredUsers String[]
-
-  // Channels to ignore
+  id              String    @id @unique @default(uuid())
+  enabled         Boolean   @default(false)
+  channelId       String
+  // By default ignore all actions
+  // This is to prevent spamming the audit log channel
+  ignoredActions  Action[]  @default([JOIN, LEAVE, BAN, KICK, MUTE, UNMUTE, WARN, UNWARN, PURGE, ROLE_ADD, ROLE_REMOVE, ROLE_CREATE, ROLE_DELETE, ROLE_EDIT, CHANNEL_CREATE, CHANNEL_DELETE, CHANNEL_EDIT, MESSAGE_DELETE, MESSAGE_BULK_DELETE, MESSAGE_EDIT, VOICE_KICK, VOICE_MUTE, VOICE_UNMUTE, VOICE_MOVE, VOICE_DEAFEN, VOICE_UNDEAFEN, GUILD_EDIT, INVITE_CREATE, INVITE_DELETE])
+  ignoreBots      Boolean   @default(false)
+  ignoredRoles    String[]
+  ignoredUsers    String[]
   ignoredChannels String[]
-
-  AuditLogSettings   AuditLogSettings? @relation(fields: [auditLogSettingsId], references: [id])
-  auditLogSettingsId String?
-}
-
-model AuditLogSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  auditLogs AuditLog[]
-
-  settings Settings?
+  settings        Settings? @relation(fields: [settingsId], references: [id])
+  settingsId      String?
 }
 
 model AutoDelete {
-  id String @id @unique @default(uuid())
-
-  // true = delete the messages that DO NOT trigger the command
-  // false = delete the messages that trigger the command
-  inverted Boolean @default(false)
-
-  // How long until the message is deleted
-  timeout Int @default(0)
-
-  // The channel where the auto-delete is triggered
-  // If this is null then it can be triggered in any channel
+  id               String  @id @unique @default(uuid())
+  enabled          Boolean @default(false)
+  inverted         Boolean
+  timeout          Int
   triggerChannelId String?
-
-  // The message that triggers the auto-delete
-  // If this is blank then it will trigger on any message
-  triggerMessage String?
-
-  // A response message to send to the user
-  replyMessage String?
-
-  // The timeout before the reply message is deleted
-  // If this is null then it will not be deleted
-  replyTimeout Int @default(0)
-
-  AutoDeleteSettings   AutoDeleteSettings? @relation(fields: [autoDeleteSettingsId], references: [id])
-  autoDeleteSettingsId String?
-}
-
-model AutoDeleteSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  autoDeletes AutoDelete[]
-
-  settings Settings?
+  triggerMessage   String?
+  replyMessage     String?
+  replyTimeout     Int
 }
 
 model DynamicChannel {
-  id String @id @unique @default(uuid())
-
-  // The dynamic channel
-  channelId String
-
-  // The template for that channel
-  channelTemplate String
-
-  DynamicChannelNamesSettings   DynamicChannelNamesSettings? @relation(fields: [dynamicChannelNamesSettingsId], references: [id])
-  dynamicChannelNamesSettingsId String?
-}
-
-model DynamicChannelNamesSettings {
-  id String @id @unique @default(uuid())
-
-  // Whether the feature is enabled or not
-  enabled Boolean @default(false)
-
-  channels DynamicChannel[]
-
-  settings Settings?
+  id         String    @id @unique @default(uuid())
+  enabled    Boolean   @default(false)
+  channelId  String
+  template   String
+  settings   Settings? @relation(fields: [settingsId], references: [id])
+  settingsId String?
 }
 
 model Settings {
-  id String @id @unique @default(uuid())
-
-  auditLog           AuditLogSettings @relation(fields: [auditLogSettingsId], references: [id])
-  auditLogSettingsId String           @unique
-
-  autoDelete           AutoDeleteSettings @relation(fields: [autoDeleteSettingsId], references: [id])
-  autoDeleteSettingsId String             @unique
-
-  dynamicChannelNames           DynamicChannelNamesSettings @relation(fields: [dynamicChannelNamesSettingsId], references: [id])
-  dynamicChannelNamesSettingsId String                      @unique
-
-  welcome           WelcomeSettings @relation(fields: [welcomeSettingsId], references: [id])
-  welcomeSettingsId String          @unique
-
-  leveling           LevelingSettings @relation(fields: [levelingSettingsId], references: [id])
-  levelingSettingsId String           @unique
-
-  starboard           StarboardSettings @relation(fields: [starboardSettingsId], references: [id])
-  starboardSettingsId String            @unique
-
-  inviteTracking           InviteTrackingSettings @relation(fields: [inviteTrackingSettingsId], references: [id])
-  inviteTrackingSettingsId String                 @unique
-
-  customCommand           CustomCommandSettings @relation(fields: [customCommandSettingsId], references: [id])
-  customCommandSettingsId String                @unique
-
-  guild Guild?
+  id              String            @id @unique @default(uuid())
+  featuresEnabled FeaturesEnabled[]
+  dynamicChannels DynamicChannel[]
+  starboards      Starboard[]
+  welcome         Welcome?
+  customCommands  CustomCommand[]
+  auditLogs       AuditLog[]
+  inviteTracking  InviteTracking?
+  leveling        Leveling?
+  guild           Guild             @relation(fields: [guildId], references: [id])
+  guildId         String            @unique
 }
 
 model RateLimit {
-  id String @id @unique
-
-  count Int @default(0)
-
-  lastReset DateTime @default(now())
-
+  id            String      @id @unique @default(uuid())
+  count         Int
+  lastReset     DateTime    @default(now())
   guildMember   GuildMember @relation(fields: [guildMemberId], references: [id])
   guildMemberId String
+}
+
+enum FeaturesEnabled {
+  AUDIT_LOG             @map("AUDIT_LOG")
+  AUTO_DELETE           @map("AUTO_DELETE")
+  CUSTOM_COMMANDS       @map("CUSTOM_COMMANDS")
+  DEBUG                 @map("DEBUG")
+  DYNAMIC_CHANNEL_NAMES @map("DYNAMIC_CHANNEL_NAMES")
+  ECONOMY               @map("ECONOMY")
+  INVITE_TRACKING       @map("INVITE_TRACKING")
+  LEVELING              @map("LEVELING")
+  MODERATION            @map("MODERATION")
+  REDDIT                @map("REDDIT")
+  STARBOARD             @map("STARBOARD")
+  VOID                  @map("VOID")
+  WELCOME               @map("WELCOME")
 }

@@ -1,4 +1,4 @@
-import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import { ChannelType, TextChannel } from 'discord.js';
 import { ArgsOf, Discord, On } from 'discordx';
@@ -15,7 +15,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled('customCommand', message.guild?.id)) return;
+        if (!await isFeatureEnabled(Features.CUSTOM_COMMANDS, message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -32,11 +32,9 @@ export class Feature {
         // Check if this is the custom commands channel and if if this is a valid custom commands message
         const customCommand = await prisma.customCommand.findFirst({
             where: {
-                CustomCommandSettings: {
-                    settings: {
-                        guild: {
-                            id: message.guild.id
-                        }
+                settings: {
+                    guild: {
+                        id: message.guild.id
                     }
                 },
                 triggerMessage: message.content.trim(),

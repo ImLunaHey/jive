@@ -42,6 +42,7 @@ class Service {
             create: {
                 id: userId,
                 xp,
+                coins: 0,
                 guild: {
                     connect: {
                         id: guild.id

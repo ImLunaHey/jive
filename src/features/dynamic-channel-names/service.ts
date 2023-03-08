@@ -18,13 +18,9 @@ class DynamicChannelNamesService {
 
         const dynamicChannels = await prisma.dynamicChannel.findMany({
             include: {
-                DynamicChannelNamesSettings: {
+                settings: {
                     include: {
-                        settings: {
-                            include: {
-                                guild: true
-                            }
-                        }
+                        guild: true
                     }
                 }
             }
@@ -33,7 +29,7 @@ class DynamicChannelNamesService {
         // Update all dynamic channel names
         for (const dynamicChannel of dynamicChannels) {
             // Get the guild
-            const guildId = dynamicChannel.DynamicChannelNamesSettings?.settings?.guild?.id;
+            const guildId = dynamicChannel.settings?.guild?.id;
             if (!guildId) continue;
             const guild = await client.guilds.fetch(guildId);
 
@@ -42,7 +38,7 @@ class DynamicChannelNamesService {
             if (!channel) continue;
 
             // Don't update the name if it's the same
-            const newName = await replaceVariablesForGuild(dynamicChannel.channelTemplate, guild);
+            const newName = await replaceVariablesForGuild(dynamicChannel.template, guild);
             if ((channel.type === ChannelType.GuildVoice ? channel.name : channel.name.replace(/\-/g, ' ')) === newName) continue;
 
             // Update the channel name

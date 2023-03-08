@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { ChannelType, EmbedBuilder, MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
@@ -52,7 +52,7 @@ export class Feature {
         this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) return;
+        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
@@ -84,83 +84,87 @@ export class Feature {
 
             },
             include: {
-                starboard: true
+                starboards: true
             }
         });
         if (!settings) return;
-        if (!settings.starboard.starboardChannelId) return;
+        if (settings.starboards.length === 0) return;
 
-        // Skip if this post doesn't have enough reactions
-        if ((reaction.count ?? 0) < settings.starboard.minimumReactions) return;
+        // For each starboard
+        for (const starboard of settings.starboards) {
+            // Skip if this post doesn't have enough reactions
+            if ((reaction.count ?? 0) < starboard.minimumReactions) return;
 
-        // Check if this is a valid emoji reaction
-        if (reaction.emoji.name && settings.starboard.reactions.length >= 1 && !settings.starboard.reactions.includes(reaction.emoji.name)) return;
+            // Check if this is a valid emoji reaction
+            if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
 
-        // Get the starboard channel
-        const starChannel = reaction.message.guild.channels.cache.get(settings.starboard.starboardChannelId) as TextChannel;
-        if (!starChannel) return;
-        if (starChannel.type !== ChannelType.GuildText) return;
+            // Get the starboard channel
+            const starChannel = reaction.message.guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
+            if (!starChannel) return;
+            if (starChannel.type !== ChannelType.GuildText) return;
 
-        // Log
-        this.logger.info('Adding a starboard message for %s with a reaction of %s', reaction.message.id, reaction.emoji.name);
+            // Log
+            this.logger.info('Adding a starboard message for %s with a reaction of %s', reaction.message.id, reaction.emoji.name);
 
-        // Fetch the messages in the starboard channel
-        const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
+            // Fetch the messages in the starboard channel
+            const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
 
-        // Find the starboard message
-        const starboardMessage = fetchedMessages.find(message =>
-            message.author.id === client.user!.id &&
-            message.content.startsWith("**⭐") &&
-            message.embeds[0].description?.includes(reaction.message.url)
-        );
+            // Find the starboard message
+            const starboardMessage = fetchedMessages.find(message =>
+                message.author.id === client.user!.id &&
+                message.content.startsWith("**⭐") &&
+                message.embeds[0].description?.includes(reaction.message.url)
+            );
 
-        // If there's already a starboard message, edit it
-        if (starboardMessage) {
-            const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) + 1;
-            const foundStar = starboardMessage.embeds[0];
-            const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
-            const embed = new EmbedBuilder()
-                .setColor(foundStar.color)
-                .setDescription(foundStar.description)
-                .setAuthor({
-                    name: reaction.message.author.tag,
-                    iconURL: reaction.message.author.displayAvatarURL(),
-                })
-                .setTimestamp();
-            if (image) embed.setImage(image);
-            await starboardMessage.edit({ content: `**⭐ ${starCount}** | <#${reaction.message.channel.id}>`, embeds: [embed] });
-        }
+            // If there's already a starboard message, edit it
+            if (starboardMessage) {
+                const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) + 1;
+                const foundStar = starboardMessage.embeds[0];
+                const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
+                const embed = new EmbedBuilder()
+                    .setColor(foundStar.color)
+                    .setDescription(foundStar.description)
+                    .setAuthor({
+                        name: reaction.message.author.tag,
+                        iconURL: reaction.message.author.displayAvatarURL(),
+                    })
+                    .setTimestamp();
+                if (image) embed.setImage(image);
+                await starboardMessage.edit({ content: `**⭐ ${starCount}** | <#${reaction.message.channel.id}>`, embeds: [embed] });
+            }
 
-        // If there's no starboard message, create one
-        if (!starboardMessage) {
-            const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
-            const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com') ?? false;
-            const embed = new EmbedBuilder()
-                .setColor(15844367)
-                .setDescription(outdent`
-                    **[Jump to message](${reaction.message.url})**
+            // If there's no starboard message, create one
+            if (!starboardMessage) {
+                const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
+                const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com') ?? false;
+                const embed = new EmbedBuilder()
+                    .setColor(15844367)
+                    .setDescription(outdent`
+             **[Jump to message](${reaction.message.url})**
 
-                    ${tenorGif ? '' : reaction.message.content}
-                `)
-                .setAuthor({
-                    name: reaction.message.author.tag,
-                    iconURL: reaction.message.author.displayAvatarURL(),
-                })
-                .setTimestamp(new Date());
-            if (image) embed.setImage(image);
-            if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
-            const starboardMessage = await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
+             ${tenorGif ? '' : reaction.message.content}
+         `)
+                    .setAuthor({
+                        name: reaction.message.author.tag,
+                        iconURL: reaction.message.author.displayAvatarURL(),
+                    })
+                    .setTimestamp(new Date());
+                if (image) embed.setImage(image);
+                if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
+                await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
 
-            // Ping the user if the feature is enabled
-            // if (features.starboard.pingUser) {
-            const reply = await starboardMessage.reply(`<@${reaction.message.author.id}> you made it on the starboard`);
-            // Wait 10 seconds and then delete the message
-            void sleep(10_000).then(async () => {
-                await reply.delete().catch(() => {
-                    this.logger.warn('Failed to delete message %s', reply.id);
-                });
-            });
-            // }
+                // @TODO: Add support for pinging the user
+                // Ping the user if the feature is enabled
+                // if (features.starboard.pingUser) {
+                // const reply = await starboardMessage.reply(`<@${reaction.message.author.id}> you made it on the starboard`);
+                // // Wait 10 seconds and then delete the message
+                // void sleep(10_000).then(async () => {
+                //     await reply.delete().catch(() => {
+                //         this.logger.warn('Failed to delete message %s', reply.id);
+                //     });
+                // });
+                // }
+            }
         }
     }
 
@@ -169,7 +173,7 @@ export class Feature {
         this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled('starboard', reaction.message.guild?.id)) {
+        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) {
             this.logger.info('Starboard feature is not enabled');
             return;
         }
@@ -214,55 +218,56 @@ export class Feature {
 
             },
             include: {
-                starboard: true
+                starboards: true
             }
         });
         if (!settings) return;
-        if (!settings.starboard.starboardChannelId) {
-            this.logger.debug('Starboard is not setup for %s', reaction.message.guild.name);
-            return;
-        }
+        if (settings.starboards.length === 0) return;
 
-        // Check if this is a valid emoji reaction
-        if (reaction.emoji.name && settings.starboard.reactions.length >= 1 && !settings.starboard.reactions.includes(reaction.emoji.name)) return;
+        // For each starboard
+        for (const starboard of settings.starboards) {
 
-        // Get the starboard channel
-        const starChannel = reaction.message.guild.channels.cache.get(settings.starboard.starboardChannelId) as TextChannel;
-        if (!starChannel) return;
-        if (starChannel.type !== ChannelType.GuildText) return;
+            // Check if this is a valid emoji reaction
+            if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
 
-        // Fetch the messages in the starboard channel
-        const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
+            // Get the starboard channel
+            const starChannel = reaction.message.guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
+            if (!starChannel) return;
+            if (starChannel.type !== ChannelType.GuildText) return;
 
-        // Find the starboard message
-        const starboardMessage = fetchedMessages.find(message =>
-            message.author.id === client.user!.id &&
-            message.content.startsWith("**⭐") &&
-            message.embeds[0].description?.includes(reaction.message.url)
-        );
+            // Fetch the messages in the starboard channel
+            const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
 
-        // If there's already a starboard message, edit it
-        if (starboardMessage) {
-            const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) - 1;
-            const foundStar = starboardMessage.embeds[0];
-            const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : null;
-            const embed = new EmbedBuilder()
-                .setColor(foundStar.color)
-                .setDescription(foundStar.description)
-                .setAuthor({
-                    name: reaction.message.author.tag,
-                    iconURL: reaction.message.author.displayAvatarURL(),
-                })
-                .setTimestamp();
-            if (image) embed.setImage(image);
-            await starboardMessage.edit({ content: `⭐ ${starCount} | <#${reaction.message.channel.id}>`, embeds: [embed] });
+            // Find the starboard message
+            const starboardMessage = fetchedMessages.find(message =>
+                message.author.id === client.user!.id &&
+                message.content.startsWith("**⭐") &&
+                message.embeds[0].description?.includes(reaction.message.url)
+            );
 
-            // If the starboard message has no stars, delete it
-            if (starCount === 0) {
-                await sleep(1_000);
-                await starboardMessage.delete().catch(() => {
-                    this.logger.error('Failed to delete starboard message', starboardMessage.id);
-                });
+            // If there's already a starboard message, edit it
+            if (starboardMessage) {
+                const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) - 1;
+                const foundStar = starboardMessage.embeds[0];
+                const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : null;
+                const embed = new EmbedBuilder()
+                    .setColor(foundStar.color)
+                    .setDescription(foundStar.description)
+                    .setAuthor({
+                        name: reaction.message.author.tag,
+                        iconURL: reaction.message.author.displayAvatarURL(),
+                    })
+                    .setTimestamp();
+                if (image) embed.setImage(image);
+                await starboardMessage.edit({ content: `⭐ ${starCount} | <#${reaction.message.channel.id}>`, embeds: [embed] });
+
+                // If the starboard message has no stars, delete it
+                if (starCount === 0) {
+                    await sleep(1_000);
+                    await starboardMessage.delete().catch(() => {
+                        this.logger.error('Failed to delete starboard message', starboardMessage.id);
+                    });
+                }
             }
         }
     }

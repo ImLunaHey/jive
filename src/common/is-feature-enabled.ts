@@ -1,19 +1,21 @@
 import { prisma } from '@app/common/prisma-client';
+import { globalLogger } from '@app/logger';
 
 const globallyEnabled: string[] = [];
 
-export type globalFeatures =
-    'auditLog' |
-    'autoDelete' |
-    'customCommand' |
-    'dynamicChannelNames' |
-    'inviteTracking' |
-    'leveling' |
-    'starboard' |
-    'welcome'
-    ;
+export enum Features {
+    AUDIT_LOG = 'AUDIT_LOG',
+    AUTO_DELETE = 'AUTO_DELETE',
+    CUSTOM_COMMANDS = 'CUSTOM_COMMANDS',
+    DYNAMIC_CHANNEL_NAMES = 'DYNAMIC_CHANNEL_NAMES',
+    INVITE_TRACKING = 'INVITE_TRACKING',
+    LEVELING = 'LEVELING',
+    MODERATION = 'MODERATION',
+    STARBOARD = 'STARBOARD',
+    WELCOME = 'WELCOME',
+}
 
-export const isFeatureEnabled = async (id: globalFeatures, guildId?: string) => {
+export const isFeatureEnabled = async (id: Features, guildId?: string) => {
     const check = async () => {
         if (!guildId) return false;
 
@@ -26,24 +28,13 @@ export const isFeatureEnabled = async (id: globalFeatures, guildId?: string) => 
                 guild: {
                     id: guildId
                 }
-            },
-            select: {
-                auditLog: true,
-                autoDelete: true,
-                customCommand: true,
-                dynamicChannelNames: true,
-                inviteTracking: true,
-                leveling: true,
-                starboard: true,
-                welcome: true,
             }
         });
 
         try {
-            const feature = settings?.[id as keyof typeof settings];
-            return feature?.enabled ?? false;
+            return settings?.featuresEnabled.includes(id);
         } catch (error) {
-            console.log(error);
+            globalLogger.error(error);
 
             return false;
         }

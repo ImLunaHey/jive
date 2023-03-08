@@ -39,19 +39,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
                 },
                 update: {},
                 create: {
-                    id: guild.id,
-                    settings: {
-                        create: {
-                            auditLog: { create: {} },
-                            autoDelete: { create: {} },
-                            customCommand: { create: {} },
-                            dynamicChannelNames: { create: {} },
-                            inviteTracking: { create: {} },
-                            leveling: { create: {} },
-                            starboard: { create: {} },
-                            welcome: { create: {} },
-                        }
-                    }
+                    id: guild.id
                 }
             });
         }

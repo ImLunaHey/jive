@@ -1,3 +1,4 @@
+import { Features } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { CommandInteraction, PermissionFlagsBits } from 'discord.js';
@@ -52,16 +53,6 @@ export class Feature {
                 guild: {
                     id: guild.id
                 }
-            },
-            include: {
-                auditLog: true,
-                autoDelete: true,
-                customCommand: true,
-                dynamicChannelNames: true,
-                inviteTracking: true,
-                leveling: true,
-                starboard: true,
-                welcome: true,
             }
         });
 
@@ -73,35 +64,39 @@ export class Feature {
                 fields: [
                     {
                         name: 'Audit Log',
-                        value: settings?.auditLog?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.AUDIT_LOG) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Auto Delete',
-                        value: settings?.autoDelete?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.AUTO_DELETE) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Custom Commands',
-                        value: settings?.customCommand?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.CUSTOM_COMMANDS) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Dynamic Channel Names',
-                        value: settings?.dynamicChannelNames?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Invite Tracking',
-                        value: settings?.inviteTracking?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.INVITE_TRACKING) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Leveling',
-                        value: settings?.leveling?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.LEVELING) ? 'Enabled ✅' : 'Disabled ❌',
+                    },
+                    {
+                        name: 'Moderation',
+                        value: settings?.featuresEnabled.includes(Features.MODERATION) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Starboard',
-                        value: settings?.starboard?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.STARBOARD) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Welcome',
-                        value: settings?.welcome?.enabled ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(Features.WELCOME) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                 ]
             }],

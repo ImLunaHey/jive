@@ -1,6 +1,6 @@
 import '@total-typescript/ts-reset';
 import { client } from '@app/client';
-import { globalFeatures } from '@app/common/is-feature-enabled';
+import { Features } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
@@ -96,13 +96,13 @@ export class Feature {
                     }
                 },
                 include: {
-                    auditLog: true,
-                    autoDelete: true,
-                    customCommand: true,
-                    dynamicChannelNames: true,
+                    auditLogs: true,
+                    // autoDelete: true,
+                    customCommands: true,
+                    // dynamicChannelNames: true,
                     inviteTracking: true,
                     leveling: true,
-                    starboard: true,
+                    starboards: true,
                     welcome: true,
                 }
             });
@@ -121,7 +121,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('auditLog', 'AuditLog', settings.auditLog.enabled),
+                            this.createToggleButton('auditLog', 'AuditLog', settings.featuresEnabled.includes(Features.AUDIT_LOG)),
                         ),
                 ]);
 
@@ -129,7 +129,7 @@ export class Feature {
                     .setTitle('AuditLog')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.auditLog.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.AUDIT_LOG) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -140,7 +140,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('autoDelete', 'AutoDelete', settings.autoDelete.enabled),
+                            this.createToggleButton('autoDelete', 'AutoDelete', settings.featuresEnabled.includes(Features.AUTO_DELETE)),
                         ),
                 ]);
 
@@ -148,7 +148,7 @@ export class Feature {
                     .setTitle('AutoDelete')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.autoDelete.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.AUTO_DELETE) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -159,7 +159,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('customCommand', 'CustomCommands', settings.customCommand.enabled),
+                            this.createToggleButton('customCommand', 'CustomCommands', settings.featuresEnabled.includes(Features.CUSTOM_COMMANDS)),
                         ),
                 ]);
 
@@ -167,7 +167,7 @@ export class Feature {
                     .setTitle('CustomCommands')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.customCommand.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.CUSTOM_COMMANDS) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -178,7 +178,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('dynamicChannelNames', 'DynamicChannelNames', settings.dynamicChannelNames.enabled),
+                            this.createToggleButton('dynamicChannelNames', 'DynamicChannelNames', settings.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES)),
                         ),
                 ]);
 
@@ -186,7 +186,7 @@ export class Feature {
                     .setTitle('DynamicChannelNames')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.dynamicChannelNames.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -197,7 +197,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('inviteTracking', 'InviteTracking', settings.inviteTracking.enabled),
+                            this.createToggleButton('inviteTracking', 'InviteTracking', settings.featuresEnabled.includes(Features.INVITE_TRACKING)),
                         ),
                 ]);
 
@@ -205,7 +205,7 @@ export class Feature {
                     .setTitle('InviteTracking')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.inviteTracking.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.INVITE_TRACKING) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -216,7 +216,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('leveling', 'Leveling', settings.leveling.enabled),
+                            this.createToggleButton('leveling', 'Leveling', settings.featuresEnabled.includes(Features.LEVELING)),
                         ),
                 ]);
 
@@ -224,7 +224,7 @@ export class Feature {
                     .setTitle('Leveling')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.leveling.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.LEVELING) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -235,7 +235,7 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('starboard', 'Starboard', settings.starboard.enabled),
+                            this.createToggleButton('starboard', 'Starboard', settings.featuresEnabled.includes(Features.STARBOARD)),
                         ),
                 ]);
 
@@ -243,7 +243,7 @@ export class Feature {
                     .setTitle('Starboard')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.starboard.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.STARBOARD) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }]);
             },
@@ -254,11 +254,11 @@ export class Feature {
                 builder.setComponents([
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
-                            this.createToggleButton('welcome', 'Welcome', settings.welcome.enabled),
+                            this.createToggleButton('welcome', 'Welcome', settings.featuresEnabled.includes(Features.WELCOME)),
                             new ButtonBuilder()
                                 .setCustomId('welcome-waitUntilGate')
-                                .setLabel(settings.welcome.waitUntilGate ? 'Disable gate' : 'Enable gate')
-                                .setStyle(settings.welcome.waitUntilGate ? ButtonStyle.Danger : ButtonStyle.Success),
+                                .setLabel(settings.welcome?.waitUntilGate ? 'Disable gate' : 'Enable gate')
+                                .setStyle(settings.welcome?.waitUntilGate ? ButtonStyle.Danger : ButtonStyle.Success),
                             new ButtonBuilder()
                                 .setCustomId('welcome-joinMessage-button')
                                 .setLabel('Set join message')
@@ -274,38 +274,46 @@ export class Feature {
                     .setTitle('Welcome')
                     .addFields([{
                         name: 'Enabled',
-                        value: settings.welcome.enabled ? 'Yes ✅' : 'No ❌',
+                        value: settings.featuresEnabled.includes(Features.WELCOME) ? 'Yes ✅' : 'No ❌',
                         inline: true
                     }, {
                         name: 'Wait until gate',
-                        value: settings.welcome.waitUntilGate ? `Yes ✅` : 'No ❌',
+                        value: settings.welcome?.waitUntilGate ? `Yes ✅` : 'No ❌',
                         inline: true,
                     }, {
                         name: 'Send join message via DM?',
-                        value: settings.welcome.joinDm ? `Yes ✅` : 'No ❌',
+                        value: settings.welcome?.joinDm ? `Yes ✅` : 'No ❌',
                         inline: true,
-                    }, settings.welcome.joinDm ? null : {
+                    }, settings.welcome?.joinDm ? null : {
                         name: 'Join channel',
-                        value: settings.welcome.joinChannelId ? `<#${settings.welcome.joinChannelId}>` : 'None',
+                        value: settings.welcome?.joinChannelId ? `<#${settings.welcome.joinChannelId}>` : 'None',
                         inline: true,
-                    }, settings.welcome.leaveDm ? null : {
+                    }, settings.welcome?.leaveDm ? null : {
                         name: 'Leave channel',
-                        value: settings.welcome.leaveChannelId ? `<#${settings.welcome.leaveChannelId}>` : 'None',
+                        value: settings.welcome?.leaveChannelId ? `<#${settings.welcome.leaveChannelId}>` : 'None',
                         inline: true,
                     }, {
                         name: 'Join message',
-                        value: settings.welcome.joinMessage ? settings.welcome.joinMessage : 'None',
+                        value: settings.welcome?.joinMessage ? settings.welcome.joinMessage : 'None',
                     }, {
                         name: 'Leave message',
-                        value: settings.welcome.leaveMessage ? settings.welcome.leaveMessage : 'None',
+                        value: settings.welcome?.leaveMessage ? settings.welcome.leaveMessage : 'None',
                     }].filter(Boolean));
             },
         ]);
 
-        const generateTrigger = (id: globalFeatures, enabled: boolean) => {
+        const generateTrigger = (id: Features, enabled: boolean) => {
             return {
                 name: `${id}-${enabled ? 'disable' : 'enable'}`,
                 async callback(interaction) {
+                    // Get the features enabled
+                    const featuresEnabled = await prisma.settings.findFirst({
+                        where: {
+                            guildId: guild.id
+                        }
+                    }).then(settings => settings?.featuresEnabled ?? []);
+                    if (!featuresEnabled) return;
+
                     // Update the database
                     await prisma.guild.update({
                         where: {
@@ -314,10 +322,8 @@ export class Feature {
                         data: {
                             settings: {
                                 update: {
-                                    [id]: {
-                                        update: {
-                                            enabled: !enabled
-                                        }
+                                    featuresEnabled: {
+                                        set: enabled ? featuresEnabled.filter(f => f !== id) : [...featuresEnabled, id],
                                     }
                                 }
                             }
@@ -334,22 +340,22 @@ export class Feature {
         };
 
         builder.setTriggers([
-            generateTrigger('auditLog', true),
-            generateTrigger('auditLog', false),
-            generateTrigger('autoDelete', true),
-            generateTrigger('autoDelete', false),
-            generateTrigger('customCommand', true),
-            generateTrigger('customCommand', false),
-            generateTrigger('dynamicChannelNames', true),
-            generateTrigger('dynamicChannelNames', false),
-            generateTrigger('inviteTracking', true),
-            generateTrigger('inviteTracking', false),
-            generateTrigger('leveling', true),
-            generateTrigger('leveling', false),
-            generateTrigger('starboard', true),
-            generateTrigger('starboard', false),
-            generateTrigger('welcome', true),
-            generateTrigger('welcome', false),
+            generateTrigger(Features.AUDIT_LOG, true),
+            generateTrigger(Features.AUDIT_LOG, false),
+            generateTrigger(Features.AUTO_DELETE, true),
+            generateTrigger(Features.AUTO_DELETE, false),
+            generateTrigger(Features.CUSTOM_COMMANDS, true),
+            generateTrigger(Features.CUSTOM_COMMANDS, false),
+            generateTrigger(Features.DYNAMIC_CHANNEL_NAMES, true),
+            generateTrigger(Features.DYNAMIC_CHANNEL_NAMES, false),
+            generateTrigger(Features.INVITE_TRACKING, true),
+            generateTrigger(Features.INVITE_TRACKING, false),
+            generateTrigger(Features.LEVELING, true),
+            generateTrigger(Features.LEVELING, false),
+            generateTrigger(Features.STARBOARD, true),
+            generateTrigger(Features.STARBOARD, false),
+            generateTrigger(Features.WELCOME, true),
+            generateTrigger(Features.WELCOME, false),
             {
                 name: 'welcome-waitUntilGate',
                 async callback(interaction) {
@@ -366,7 +372,7 @@ export class Feature {
                                 update: {
                                     welcome: {
                                         update: {
-                                            waitUntilGate: !settings.welcome.waitUntilGate
+                                            waitUntilGate: !settings.welcome?.waitUntilGate
                                         }
                                     }
                                 }
@@ -402,7 +408,7 @@ export class Feature {
                                 .setCustomId('joinMessage')
                                 .setLabel(`What's the join message?`)
                                 .setPlaceholder('<@{{ member.id }}> welcome to {{ guild.name }}!')
-                                .setValue(settings.welcome.joinMessage ?? '')
+                                .setValue(settings.welcome?.joinMessage ?? '')
                                 .setStyle(TextInputStyle.Paragraph)
                         ),
                     ]);

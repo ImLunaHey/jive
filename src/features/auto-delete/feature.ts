@@ -1,4 +1,4 @@
-import { isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
@@ -25,60 +25,59 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
-        // Check if the feature is enabled
-        if (!await isFeatureEnabled('autoDelete', message.guild?.id)) return;
+        // // Check if the feature is enabled
+        // if (!await isFeatureEnabled(Features.AUTO_DELETE, message.guild?.id)) return;
 
-        // Skip own messages
-        if (message.author.id === message.client.user?.id) return;
+        // // Skip own messages
+        // if (message.author.id === message.client.user?.id) return;
 
-        // Check if the message is in a guild
-        if (!message.guild) return;
+        // // Check if the message is in a guild
+        // if (!message.guild) return;
 
-        // Fetch all auto-delete settings for this channel
-        const autoDeleteChannels = await prisma.autoDelete.findMany({
-            where: {
-                AutoDeleteSettings: {
-                    settings: {
-                        guild: {
-                            id: message.guild.id
-                        }
-                    }
-                },
-                OR: [{
-                    triggerChannelId: message.channel.id
-                }, {
-                    triggerChannelId: null
-                }]
-            }
-        });
+        // // Fetch all auto-delete settings for this channel
+        // const autoDeleteChannels = await prisma.autoDelete.findMany({
+        //     where: {
+        //         // settings: {
+        //         //     guild: {
+        //         //         id: message.guild.id
+        //         //     },
+        //         // },
 
-        // Check if there are any auto-delete settings for this channel
-        if (!autoDeleteChannels.length) return;
+        //         OR: [{
+        //             triggerChannelId: message.channel.id
+        //         }, {
+        //             triggerChannelId: null
+        //         }]
+        //     }
+        // });
 
-        for (const autoDeleteChannel of autoDeleteChannels) {
-            // Check if message matches trigger
-            if (!autoDeleteChannel.inverted && autoDeleteChannel.triggerMessage && message.content.trim() !== autoDeleteChannel.triggerMessage) continue;
-            if (autoDeleteChannel.inverted && autoDeleteChannel.triggerMessage && message.content.trim() === autoDeleteChannel.triggerMessage) continue;
+        // // Check if there are any auto-delete settings for this channel
+        // if (!autoDeleteChannels.length) return;
 
-            // If we have a reply send it then wait the specified amount of time and then delete the message
-            if (autoDeleteChannel.replyMessage) {
-                const reply = await message.reply(autoDeleteChannel.replyMessage).catch(() => {
-                    this.logger.warn('Failed to send reply message to %s', message.id);
-                });
+        // for (const autoDeleteChannel of autoDeleteChannels) {
+        //     // Check if message matches trigger
+        //     if (!autoDeleteChannel.inverted && autoDeleteChannel.triggerMessage && message.content.trim() !== autoDeleteChannel.triggerMessage) continue;
+        //     if (autoDeleteChannel.inverted && autoDeleteChannel.triggerMessage && message.content.trim() === autoDeleteChannel.triggerMessage) continue;
 
-                void sleep(autoDeleteChannel.replyTimeout).then(async () => {
-                    await reply?.delete().catch(() => {
-                        this.logger.warn('Failed to delete reply message %s', reply?.id);
-                    });
-                });
-            }
+        //     // If we have a reply send it then wait the specified amount of time and then delete the message
+        //     if (autoDeleteChannel.replyMessage) {
+        //         const reply = await message.reply(autoDeleteChannel.replyMessage).catch(() => {
+        //             this.logger.warn('Failed to send reply message to %s', message.id);
+        //         });
 
-            // If we have a timeout then wait the specified amount of time and then delete the message
-            void sleep(autoDeleteChannel.timeout).then(async () => {
-                await message.delete().catch(() => {
-                    this.logger.warn('Failed to delete message %s', message.id);
-                });
-            });
-        }
+        //         void sleep(autoDeleteChannel.replyTimeout).then(async () => {
+        //             await reply?.delete().catch(() => {
+        //                 this.logger.warn('Failed to delete reply message %s', reply?.id);
+        //             });
+        //         });
+        //     }
+
+        //     // If we have a timeout then wait the specified amount of time and then delete the message
+        //     void sleep(autoDeleteChannel.timeout).then(async () => {
+        //         await message.delete().catch(() => {
+        //             this.logger.warn('Failed to delete message %s', message.id);
+        //         });
+        //     });
+        // }
     }
 }
