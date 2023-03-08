@@ -128,7 +128,7 @@ export class Feature {
                 const code = interaction.fields.getTextInputValue('code');
 
                 // Evaluate our input
-                const evaled = eval(code);
+                const evaled = eval(`(async () => { ${code} })()`);
 
                 // Cleanup result
                 let result = evaled;
