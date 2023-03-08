@@ -1,8 +1,11 @@
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
+import { Category, Rarity } from '@prisma/client';
 import { ApplicationCommandOptionType, CommandInteraction, GuildMember } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
+
+class UserError extends Error { };
 
 @Discord()
 export class Feature {
@@ -286,11 +289,149 @@ export class Feature {
                     filtered.map(choice => ({ name: choice.name, value: choice.id })),
                 );
             },
-        }) item: string,
+        }) itemId: string,
+        @SlashOption({
+            name: 'quantity',
+            description: 'How many you want to buy',
+            type: ApplicationCommandOptionType.Number,
+            required: false,
+            async autocomplete(interaction, command) {
+                await interaction.respond([{
+                    name: '1',
+                    value: 1,
+                }, {
+                    name: '100',
+                    value: 100,
+                }, {
+                    name: '1k',
+                    value: 1_000,
+                }, {
+                    name: '10k',
+                    value: 10_000,
+                }]);
+            },
+        }) quantity: number = 1,
         interaction: CommandInteraction
     ) {
-        // @TODO: this
-        await interaction.reply('Not implemented yet');
+        if (!interaction.guild?.id) return;
+
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the item
+        const item = await prisma.item.findUnique({ where: { id: itemId } });
+        if (!item) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Buy',
+                    description: 'That item does not exist.',
+                }],
+            });
+            return;
+        }
+
+        try {
+            // Handle the transaction
+            const newItem = await prisma.$transaction(async prisma => {
+                if (!interaction.guild?.id) throw new Error('Guild ID is null');
+
+                // If this is a consumable item decrement the quantity
+                if (item.quantity !== null) {
+                    // Decrement the item's quantity by the amount the user wants to buy
+                    const updatedItem = await prisma.item.update({
+                        where: { id: item.id },
+                        data: {
+                            quantity: {
+                                decrement: quantity,
+                            }
+                        },
+                    });
+
+                    // If the item is out of stock, don't let the user buy it
+                    if (updatedItem.quantity && updatedItem.quantity < 0) throw new UserError(`There's only \`${updatedItem.quantity}\` of this item left, you cannot buy \`${quantity}\`.`);
+                } else {
+                    // If the item is not a consumable, make sure the user isn't trying to buy more than 1
+                    if (quantity > 1) throw new UserError('You can\'t buy more than \`1\` of this item.');
+                }
+
+                // Take the user's coins
+                await prisma.guildMember.update({
+                    where: { id: interaction.member?.user.id },
+                    data: {
+                        coins: {
+                            decrement: item?.price * quantity,
+                        },
+                    },
+                });
+
+                // Add the coins to the guild
+                await prisma.guild.update({
+                    where: { id: interaction.guild.id },
+                    data: {
+                        coins: {
+                            increment: item?.price * quantity,
+                        },
+                    },
+                });
+
+                // Give the user the item
+                const newItem = await prisma.item.create({
+                    data: {
+                        category: item.category,
+                        name: item.name,
+                        description: item.description,
+                        price: item.price,
+                        quantity,
+                        bonus: item.bonus,
+                        chance: item.chance,
+                        cooldown: item.cooldown,
+                        damage: item.damage,
+                        defense: item.defense,
+                        // If the item is a collectable, give it the same rarity as the item
+                        // Otherwise, give it a random rarity
+                        ...(item.category === Category.COLLECTABLES ? {
+                            rarity: item.rarity,
+                        } : {
+                            rarity: Object.keys(Rarity).find((_, i, ar) => Math.random() < 1 / (ar.length - i)) as Rarity,
+                        }),
+                        owner: {
+                            connect: {
+                                id: interaction.member?.user.id,
+                            },
+                        },
+                    },
+                });
+
+                return newItem;
+            });
+
+            // Tell the user they bought the item
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Buy',
+                    description: `You bought \`${quantity}\`x ${newItem.rarity} ${item.name} for \`${item.price * quantity}\` coins.`
+                }],
+            });
+        } catch (error: unknown) {
+            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+
+            // If the error is a user error, send it to the user
+            if (error instanceof UserError) {
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Buy',
+                        description: error.message,
+                    }],
+                });
+                return;
+            }
+
+            this.logger.error('Failed to buy item', error);
+            await interaction.editReply({
+                content: 'Failed to buy item, please let a member of staff know.'
+            });
+            return;
+        }
     }
 }
 

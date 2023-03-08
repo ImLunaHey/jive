@@ -16,12 +16,14 @@ model GuildMember {
   guildId    String
   xp         Int         @default(0)
   coins      Int         @default(0)
+  items      Item[]
   rateLimits RateLimit[]
 }
 
 model Guild {
   id       String        @id @unique
   invites  Invite[]
+  coins    Int           @default(0)
   members  GuildMember[]
   settings Settings?
 }
@@ -220,10 +222,40 @@ enum Category {
   TOOLS        @map("TOOLS") // Tools are items that can be used to help you in your adventures
 }
 
+enum Rarity {
+  COMMON    @map("COMMON")
+  UNCOMMON  @map("UNCOMMON")
+  RARE      @map("RARE")
+  EPIC      @map("EPIC")
+  LEGENDARY @map("LEGENDARY")
+}
+
 model Item {
   id          String   @id @unique @default(uuid())
   name        String   @unique
   description String
   category    Category
+  rarity      Rarity
   price       Int
+
+  // If the item is a consumable, it will have a quantity
+  quantity Int?
+
+  // If the item is a consumable, it will have a cooldown
+  cooldown Int?
+
+  // If the item is a weapon, it will have a damage value
+  damage Int?
+
+  // If the item is armor, it will have a defense value
+  defense Int?
+
+  // If the item is a tool, it will have a bonus value
+  bonus Int?
+
+  // If the item is a collectable, it will have a chance value
+  chance Int?
+
+  owner   GuildMember? @relation(fields: [ownerId], references: [id])
+  ownerId String?
 }
