@@ -473,7 +473,7 @@ export class Feature {
             skip: (page - 1) * 25,
         });
 
-        // Send the shop
+        // Send your inventory
         await interaction.editReply({
             embeds: [{
                 title: 'Inventory',
