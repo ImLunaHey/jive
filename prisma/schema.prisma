@@ -18,6 +18,32 @@ model GuildMember {
   coins      Int         @default(0)
   items      Item[]
   rateLimits RateLimit[]
+
+  // Stats
+  attack       Int @default(0)
+  defence      Int @default(0)
+  strength     Int @default(0)
+  agility      Int @default(0)
+  intelligence Int @default(0)
+  wisdom       Int @default(0)
+  charisma     Int @default(0)
+  luck         Int @default(0)
+  health       Int @default(100)
+
+  // Skills
+  mining      Int @default(0)
+  woodcutting Int @default(0)
+  fishing     Int @default(0)
+  farming     Int @default(0)
+  cooking     Int @default(0)
+  smithing    Int @default(0)
+  crafting    Int @default(0)
+  alchemy     Int @default(0)
+  summoning   Int @default(0)
+  enchanting  Int @default(0)
+  hunter      Int @default(0)
+  magic       Int @default(0)
+  combat      Int @default(0)
 }
 
 model Guild {
@@ -257,9 +283,27 @@ model Item {
   // If the item is a tool, it will have a bonus value
   bonus Int?
 
+  // If the item is a healing item, it will have a heal value
+  heal Int?
+
   // If the item is a collectable, it will have a chance value
   chance Int?
 
-  owner   GuildMember? @relation(fields: [ownerId], references: [id])
-  ownerId String?
+  // Who owns this item
+  owner   GuildMember @relation(fields: [ownerId], references: [id])
+  ownerId String
+}
+
+model Creature {
+  id          String @id @unique @default(uuid())
+  name        String
+  emoji       String
+  description String
+  rarity      Rarity @default(COMMON)
+
+  // How much health does this creature have
+  health Int?
+
+  // How much damage does this creature do
+  damage Int?
 }
