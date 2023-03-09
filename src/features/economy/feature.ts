@@ -148,7 +148,11 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the weapon
-        const weapon = await prisma.item.findUnique({ where: { id: weaponId } });
+        const weapon = await prisma.item.findUnique({ where: { id: weaponId } }) ?? {
+            name: 'Fists',
+            emoji: '👊',
+            damage: 1
+        };
 
         // Generate a random creature for them to hunt
         const rarity = createRarity();
@@ -173,7 +177,7 @@ export class Feature {
         });
 
         // Respond with the creature
-        await interaction.editReply({
+        await interaction.reply({
             embeds: [{
                 title: 'Hunt',
                 description: `You go hunting with your ${weapon?.emoji} ${weapon?.name} and find a ${creature.emoji} ${creature.name} [${creature.rarity}].`
@@ -182,20 +186,20 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('attack')
+                            .setCustomId(`hunt:attack:${creature.id}`)
                             .setLabel('Attack')
                             .setStyle(ButtonStyle.Danger),
                         new ButtonBuilder()
-                            .setCustomId('run')
+                            .setCustomId('hunt:run')
                             .setLabel('Run')
                             .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
-                            .setCustomId('heal')
+                            .setCustomId('hunt:heal')
                             .setLabel('Heal')
                             .setStyle(ButtonStyle.Success)
                             .setDisabled(healItems.length === 0),
                         new ButtonBuilder()
-                            .setCustomId('inventory')
+                            .setCustomId('hunt:inventory')
                             .setLabel('Inventory')
                             .setStyle(ButtonStyle.Secondary)
                     ])
