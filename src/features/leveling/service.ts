@@ -21,13 +21,21 @@ class Service {
     }
 
     public getLevelProgress(xp: number): number {
-        const currentLevelXP = this.convertLevelToXp(this.getLevel(xp));
-        const nextLevelXP = this.convertLevelToXp(this.getLevel(xp) + 1);
+        const currentLevelXP = this.getCurrentLevelXp(xp);
+        const nextLevelXP = this.getNextLevelXp(xp);
 
         const neededXP = nextLevelXP - currentLevelXP;
         const earnedXP = nextLevelXP - xp;
 
         return 100 - Math.ceil((earnedXP / neededXP) * 100);
+    }
+
+    getCurrentLevelXp(xp: number) {
+        return this.convertLevelToXp(this.getLevel(xp));
+    }
+
+    getNextLevelXp(xp: number) {
+        return this.convertLevelToXp(this.getLevel(xp) + 1);
     }
 
     public async grantXp(userId: string, xp: number): Promise<void> {
