@@ -312,6 +312,9 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
         // Get the encounterId
         const encounterId = getEncounterIdFromButton('encounter:attack', interaction.customId);
 
