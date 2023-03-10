@@ -353,9 +353,6 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
-        // Show the bot thinking
-        await interaction.deferUpdate();
-
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
