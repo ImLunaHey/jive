@@ -11,47 +11,86 @@ datasource db {
 }
 
 model GuildMember {
-  id         String      @id @unique
-  guild      Guild       @relation(fields: [guildId], references: [id])
-  guildId    String
-  xp         Int         @default(0)
-  coins      Int         @default(0)
-  items      Item[]
+  id      String @id @unique
+  guild   Guild  @relation(fields: [guildId], references: [id])
+  guildId String
+  xp      Int    @default(0)
+  coins   Int    @default(0)
+
+  // The user's inventory
+  inventory Item[] @relation("inventory")
+
   rateLimits RateLimit[]
 
   // Stats
-  attack       Int @default(0)
-  defence      Int @default(0)
   strength     Int @default(0)
-  agility      Int @default(0)
+  dexterity    Int @default(0)
+  constitution Int @default(100)
   intelligence Int @default(0)
   wisdom       Int @default(0)
   charisma     Int @default(0)
-  luck         Int @default(0)
-  health       Int @default(100)
 
-  // Skills
-  mining      Int @default(0)
+  // Untouchable stats
+  luck Int @default(0)
+
+  // Strength
   woodcutting Int @default(0)
-  fishing     Int @default(0)
-  farming     Int @default(0)
-  cooking     Int @default(0)
   smithing    Int @default(0)
-  crafting    Int @default(0)
-  alchemy     Int @default(0)
-  summoning   Int @default(0)
-  enchanting  Int @default(0)
-  hunter      Int @default(0)
-  magic       Int @default(0)
-  combat      Int @default(0)
+
+  // Dexterity
+  crafting Int @default(0)
+  stealth  Int @default(0)
+
+  // Constitution
+  mining  Int @default(0)
+  farming Int @default(0)
+
+  // Intelligence
+  alchemy  Int @default(0)
+  research Int @default(0)
+
+  // Wisdom
+  enchanting Int @default(0)
+  fishing    Int @default(0) // <-- not sure about this one being wisdom
+
+  // Charisma
+  summoning  Int @default(0)
+  performing Int @default(0)
+
+  // Others?
+  cooking Int @default(0)
+
+  // The encounters the user has participated in
+  encounter Encounter[]
+
+  // Purchases
+  purchases Purchase[]
+
+  // Has the user setup their character?
+  setup Boolean @default(false)
+}
+
+model Purchase {
+  id String @id @unique @default(uuid())
+
+  member   GuildMember @relation(fields: [memberId], references: [id])
+  memberId String
+
+  shopItem   ShopItem @relation(fields: [shopItemId], references: [id])
+  shopItemId String
+
+  quantity Int
+
+  purchased DateTime @default(now())
 }
 
 model Guild {
-  id       String        @id @unique
-  invites  Invite[]
-  coins    Int           @default(0)
-  members  GuildMember[]
-  settings Settings?
+  id         String        @id @unique
+  invites    Invite[]
+  coins      Int           @default(0)
+  members    GuildMember[]
+  settings   Settings?
+  encounters Encounter[]
 }
 
 model Invite {
@@ -259,6 +298,63 @@ enum Rarity {
   MYTHIC    @map("MYTHIC")
 }
 
+enum Slot {
+  // Weapon
+  MAIN_HAND @map("MAIN_HAND")
+  // Offhand
+  OFF_HAND  @map("OFF_HAND")
+
+  // Helmet
+  HEAD @map("HEAD")
+  // Necklace
+  NECK @map("NECK")
+  // Chestplate
+  BODY @map("BODY")
+  // Ring
+  RING @map("RING")
+  // Leggings
+  LEGS @map("LEGS")
+  // Shoes
+  FEET @map("FEET")
+}
+
+model ShopItem {
+  id          String   @id @unique @default(uuid())
+  name        String
+  emoji       String
+  description String
+  category    Category
+  rarity      Rarity   @default(COMMON)
+  price       Int
+
+  // If the item is a consumable, it will have a quantity
+  quantity Int?
+
+  // If the item is a consumable, it will have a cooldown
+  cooldown Int?
+
+  // If the item is a weapon, it will have a damage value
+  damage Int?
+
+  // If the item is armor, it will have a defense value
+  defense Int?
+
+  // If the item is a tool, it will have a bonus value
+  bonus Int?
+
+  // If the item is a healing item, it will have a heal value
+  heal Int?
+
+  // If the item is a collectable, it will have a chance value
+  chance Int?
+
+  // Which slot does this item belong to
+  slot Slot?
+
+  // Sales history
+  purchases Purchase[]
+}
+
 model Item {
   id          String   @id @unique @default(uuid())
   name        String
@@ -289,9 +385,15 @@ model Item {
   // If the item is a collectable, it will have a chance value
   chance Int?
 
-  // Who owns this item
-  owner   GuildMember @relation(fields: [ownerId], references: [id])
+  // Who does this item belong to
+  owner   GuildMember @relation("inventory", fields: [ownerId], references: [id])
   ownerId String
+
+  // Is this item equipped
+  equipped Boolean @default(false)
+
+  // Which slot does this item belong to
+  slot Slot?
 }
 
 model Creature {
@@ -302,8 +404,39 @@ model Creature {
   rarity      Rarity @default(COMMON)
 
   // How much health does this creature have
-  health Int?
+  health Int
 
   // How much damage does this creature do
-  damage Int?
+  damage Int
+
+  // The encounters that this creature has been a part of
+  encounters Encounter[]
+}
+
+model Encounter {
+  id String @id @unique @default(uuid())
+
+  // The creature that is being encountered
+  creature   Creature @relation(fields: [creatureId], references: [id])
+  creatureId String
+
+  // The guild member that is encountering this creature
+  guildMember   GuildMember @relation(fields: [guildMemberId], references: [id])
+  guildMemberId String
+
+  // The guild that this encounter is taking place in
+  guild   Guild  @relation(fields: [guildId], references: [id])
+  guildId String
+
+  // The time that this encounter started
+  start DateTime @default(now())
+
+  // The time that this encounter ended
+  end DateTime?
+
+  // The amount of damage that was done to the creature
+  damage Int @default(0)
+
+  // The amount of damage that was done to the guild member
+  damageTaken Int @default(0)
 }

@@ -1,9 +1,10 @@
+import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
-import { Category, Rarity } from '@prisma/client';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, CommandInteraction, GuildMember } from 'discord.js';
-import { Discord, Slash, SlashOption } from 'discordx';
+import { Rarity } from '@prisma/client';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember } from 'discord.js';
+import { ButtonComponent, Discord, Guard, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
 const getClosest = (array: number[], goal: number) => array.reduce((prev, curr) => Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
@@ -22,7 +23,31 @@ const createRarity = createChance({
     100: Rarity.MYTHIC,
 });
 
+const getEncounterIdFromButton = (buttonId: string, input: string): string => input.replace(buttonId, '').trim();
+
 @Discord()
+@Guard(GuildMemberGuard)
+@Guard(async (interaction: CommandInteraction, _client, next) => {
+    if (!interaction.guild?.id) return;
+    if (!interaction.member?.user.id) return;
+
+    // Skip this if it's the create-character command
+    if (interaction.commandName === 'create-character') return next();
+
+    // Ensure the user has setup their character
+    const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+    if (!user?.setup) {
+        interaction.reply({
+            embeds: [{
+                title: 'Character',
+                description: 'You don\'t have a character yet. Please create one with `/create-character`.'
+            }]
+        });
+        return;
+    }
+
+    return next();
+})
 export class Feature {
     private logger = globalLogger.scope('Economy');
 
@@ -31,25 +56,117 @@ export class Feature {
     }
 
     @Slash({
-        name: 'balance',
-        description: 'Check your balance',
+        name: 'create-character',
+        description: 'Create your character',
     })
-    async balance(
-        interaction: CommandInteraction
+    async createCharacter(
+        interaction: CommandInteraction,
     ) {
-        // Show the bot thinking
-        await interaction.deferReply({ ephemeral: false });
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
 
-        // Get the user's balance
+        // Get the user's character
         const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
-        const balance = user?.coins ?? 0;
+        if (!user) return;
 
-        // Send the balance
-        await interaction.editReply({
+        // Send the embed
+        await interaction.reply({
             embeds: [{
-                title: 'Balance',
-                description: `Your balance is ${balance} coins.`
-            }]
+                title: 'Create character',
+                description: outdent`
+                    Create your character by assigning your stats. You have 10 points to spend.
+                    You can assign points to your stats by clicking the buttons below.
+
+                    **Strength** - Increases your damage.
+                    **Dexterity** - Increases your critical hit chance.
+                    **Intelligence** - Increases your mana.
+                    **Wisdom** - Increases your mana regeneration.
+                    **Charisma** - Increases your gold gain.
+                `,
+            }],
+            components: [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('create-character-strength-up')
+                            .setLabel('💪 ⬆️')
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-dexterity-up')
+                            .setLabel('🤸‍♂️ ⬆️')
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-intelligence-up')
+                            .setLabel('🧠 ⬆️')
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-wisdom-up')
+                            .setLabel('🧠 ⬆️')
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-charisma-up')
+                            .setLabel('🧠 ⬆️')
+                            .setStyle(ButtonStyle.Success),
+                    ]),
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('create-character-strength-down')
+                            .setLabel(`💪 ${user?.strength}`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-dexterity-down')
+                            .setLabel(`🤸‍♂️ ${user?.dexterity}`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-intelligence-down')
+                            .setLabel(`🧠 ${user?.intelligence}`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-wisdom-down')
+                            .setLabel(`🧠 ${user?.wisdom}`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-charisma-down')
+                            .setLabel(`🧠 ${user?.charisma}`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true),
+                    ]),
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('create-character-strength-down')
+                            .setLabel(`💪 ⬇️ ${user?.strength}`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-dexterity-down')
+                            .setLabel(`🤸‍♂️ ⬇️ ${user?.dexterity}`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-intelligence-down')
+                            .setLabel(`🧠 ⬇️ ${user?.intelligence}`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-wisdom-down')
+                            .setLabel(`🧠 ⬇️ ${user?.wisdom}`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('create-character-charisma-down')
+                            .setLabel(`🧠 ⬇️ ${user?.charisma}`)
+                            .setStyle(ButtonStyle.Success),
+                    ]),
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('create-character-submit')
+                            .setLabel('Submit')
+                            .setStyle(ButtonStyle.Success),
+                    ]),
+            ]
         });
     }
 
@@ -84,21 +201,11 @@ export class Feature {
         const random = Math.floor(Math.random() * 100);
 
         // Otherwise, let them beg
-        await prisma.guildMember.upsert({
+        await prisma.guildMember.update({
             where: { id: interaction.member?.user.id },
-            update: {
+            data: {
                 coins: {
                     increment: random
-                }
-            },
-            create: {
-                id: interaction.member?.user.id,
-                xp: 0,
-                coins: random,
-                guild: {
-                    connect: {
-                        id: interaction.guild.id
-                    }
                 }
             }
         });
@@ -113,32 +220,10 @@ export class Feature {
     }
 
     @Slash({
-        name: 'hunt',
-        description: 'Hunt in the wilderness',
+        name: 'explore',
+        description: 'Explore the world',
     })
-    async hunt(
-        @SlashOption({
-            name: 'weapon',
-            description: 'The weapon you want to take with you',
-            type: ApplicationCommandOptionType.String,
-            required: false,
-            async autocomplete(interaction) {
-                const weapons = await prisma.item.findMany({
-                    where: {
-                        owner: {
-                            id: interaction.member?.user.id
-                        },
-                        category: Category.WEAPONS
-                    }
-                });
-
-                // Respond with the weapons
-                await interaction.respond(weapons.map(weapon => ({
-                    name: `${weapon.emoji} ${weapon.name} (${weapon.damage})`,
-                    value: weapon.id
-                })));
-            },
-        }) weaponId: string,
+    async explore(
         interaction: CommandInteraction,
     ) {
         if (!interaction.guild?.id) return;
@@ -147,14 +232,7 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the weapon
-        const weapon = await prisma.item.findUnique({ where: { id: weaponId } }) ?? {
-            name: 'Fists',
-            emoji: '👊',
-            damage: 1
-        };
-
-        // Generate a random creature for them to hunt
+        // Generate a random creature for this encounter
         const rarity = createRarity();
         const creatures = await prisma.creature.findMany({
             where: {
@@ -163,48 +241,174 @@ export class Feature {
         });
         const creature = creatures[Math.floor(Math.random() * creatures.length)];
 
-        // Check if they have something to heal with
-        const healItems = await prisma.item.findMany({
-            where: {
-                owner: {
-                    id: interaction.member?.user.id
+        // Save the encounter
+        const encounter = await prisma.encounter.create({
+            data: {
+                creature: {
+                    connect: {
+                        id: creature.id
+                    }
                 },
-                category: Category.CONSUMABLES,
-                heal: {
-                    gt: 0
+                guild: {
+                    connect: {
+                        id: interaction.guild.id
+                    }
+                },
+                guildMember: {
+                    connect: {
+                        id: interaction.member?.user.id
+                    }
                 }
             }
         });
 
-        // Respond with the creature
+        // Respond with their encounter
         await interaction.reply({
             embeds: [{
-                title: 'Hunt',
-                description: `You go hunting with your ${weapon?.emoji} ${weapon?.name} and find a ${creature.emoji} ${creature.name} [${creature.rarity}].`
+                title: 'Encounter',
+                description: outdent`
+                    You encounter a [${creature.rarity}] **${creature.name}**!
+                    It has **${creature.health - encounter.damageTaken}** health and **${creature.damage}** attack.
+                `
             }],
             components: [
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId(`hunt:attack:${creature.id}`)
-                            .setLabel('Attack')
+                            .setCustomId('encounter-start-battle')
+                            .setLabel('Start battle')
                             .setStyle(ButtonStyle.Danger),
+                    ]),
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('hunt:run')
+                            .setCustomId('encounter-run')
                             .setLabel('Run')
                             .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
-                            .setCustomId('hunt:heal')
-                            .setLabel('Heal')
-                            .setStyle(ButtonStyle.Success)
-                            .setDisabled(healItems.length === 0),
-                        new ButtonBuilder()
-                            .setCustomId('hunt:inventory')
+                            .setCustomId('encounter-inventory')
                             .setLabel('Inventory')
                             .setStyle(ButtonStyle.Secondary)
                     ])
             ]
         });
+    }
+
+    @ButtonComponent({
+        id: /^encounter-start-battle [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i
+    })
+    async attack(
+        interaction: ButtonInteraction,
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the encounterId
+        const encounterId = getEncounterIdFromButton('encounter:attack', interaction.customId);
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId,
+            },
+            include: {
+                creature: true,
+                guild: true,
+                guildMember: true
+            }
+        });
+        if (!encounter) return;
+
+        // Get the user's details
+        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        if (!user) return;
+
+        // Roll a d20 to see who goes first
+        const roll = Math.floor(Math.random() * 20) + 1;
+
+        // If the user goes first
+        if (roll >= 10) {
+            // Get the user's damage
+            // @TODO: Add damage modifiers
+            const damage = 1;
+
+            // Update the encounter
+            await prisma.encounter.update({
+                where: {
+                    id: encounter.id
+                },
+                data: {
+                    damageTaken: {
+                        increment: damage
+                    }
+                }
+            });
+
+            // If the creature is dead
+            if (encounter.creature.health - (encounter.damageTaken + damage) <= 0) {
+                // // Get the user's xp
+                // @TODO: Add xp modifiers
+                const xp = 1;
+
+                // // Update the user's xp
+                // await prisma.guildMember.update({
+                //     where: {
+                //         id: interaction.member?.user.id
+                //     },
+                //     data: {
+                //         xp: {
+                //             increment: xp
+                //         }
+                //     }
+                // });
+
+                // Respond with the result
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            You attack the **${encounter.creature.name}** and kill it!
+                            You gain **${xp}** xp.
+                        `
+                    }],
+                    components: []
+                });
+            } else {
+                // Respond with the result
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            You attack the **${encounter.creature.name}** and deal **${damage}** damage.
+                            It now has **${encounter.creature.health - (encounter.damageTaken + damage)}** health.
+                        `
+                    }],
+                    components: [
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-attack')
+                                    .setLabel('Start battle')
+                                    .setStyle(ButtonStyle.Danger),
+                            ]),
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-run')
+                                    .setLabel('Run')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-inventory')
+                                    .setLabel('Inventory')
+                                    .setStyle(ButtonStyle.Secondary)
+                            ])
+                    ]
+                });
+            }
+        }
     }
 
     @Slash({
@@ -223,7 +427,6 @@ export class Feature {
 
         // Get the level details
         const currentLevelXp = levelService.getCurrentLevelXp(user.xp);
-        const nextLevelXP = levelService.getNextLevelXp(user.xp);
         const levelProgress = levelService.getLevelProgress(user.xp);
 
         // Send the balance
@@ -233,36 +436,39 @@ export class Feature {
                     name: `${interaction.member?.user.username}'s profile`,
                     icon_url: interaction.user.avatarURL() ?? undefined
                 },
-                title: 'Standard player',
+                title: 'Player',
                 fields: [{
                     name: 'PROGRESS',
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
-                        **XP:** ${currentLevelXp}/${nextLevelXP} (${levelProgress})
+                        **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress})
                     `
                 }, {
                     name: 'STATS',
                     value: outdent`
-                        🤺 **Attack:** ${user.attack}
-                        🛡️ **Defence:** ${user.defence}
                         🏋️ **Strength:** ${user.strength}
-                        🏃 ** Agility:** ${user.agility}
+                        🦓 **Dexterity:** ${user.dexterity}
                         🧠 **Intelligence:** ${user.intelligence}
                         📖 **Wisdom:** ${user.wisdom}
                         😎 **Charisma:** ${user.charisma}
                         🍀 **Luck:** ${user.luck}
-                        💗 **Health:** ${user.health}/100
                     `
                 }, {
                     name: 'SKILLS',
                     value: outdent`
-                        🪓 **Woodcutting:** ${user.woodcutting}
-                        ⛏️ **Mining:** ${user.mining}
-                        🌾 **Farming:** ${user.farming}
-                        🎣 **Fishing:** ${user.fishing}
-                        👩‍🍳 **Cooking:** ${user.cooking}
-                        ⚒️ **Smithing:** ${user.smithing}
-                        🧵 **Crafting:** ${user.crafting}
+                        🪓 **Woodcutting:** ${user.woodcutting - levelService.getCurrentLevelXp(user.woodcutting)}/${levelService.getCurrentLevelXp(user.woodcutting)}
+                        ⛏️ **Mining:** ${user.mining - levelService.getCurrentLevelXp(user.mining)}/${levelService.getCurrentLevelXp(user.mining)}
+                        🌾 **Farming:** ${user.farming - levelService.getCurrentLevelXp(user.farming)}/${levelService.getCurrentLevelXp(user.farming)}
+                        🎣 **Fishing:** ${user.fishing - levelService.getCurrentLevelXp(user.fishing)}/${levelService.getCurrentLevelXp(user.fishing)}
+                        👩‍🍳 **Cooking:** ${user.cooking - levelService.getCurrentLevelXp(user.cooking)}/${levelService.getCurrentLevelXp(user.cooking)}
+                        ⚒️ **Smithing:** ${user.smithing - levelService.getCurrentLevelXp(user.smithing)}/${levelService.getCurrentLevelXp(user.smithing)}
+                        🧵 **Crafting:** ${user.crafting - levelService.getCurrentLevelXp(user.crafting)}/${levelService.getCurrentLevelXp(user.crafting)}
+                        🧪 **Alchemy:** ${user.alchemy - levelService.getCurrentLevelXp(user.alchemy)}/${levelService.getCurrentLevelXp(user.alchemy)}
+                        🧩 **Enchanting:** ${user.enchanting - levelService.getCurrentLevelXp(user.enchanting)}/${levelService.getCurrentLevelXp(user.enchanting)}
+                        🧙‍♂️ **Summoning:** ${user.summoning - levelService.getCurrentLevelXp(user.summoning)}/${levelService.getCurrentLevelXp(user.summoning)}
+                        💃 **Performing:** ${user.performing - levelService.getCurrentLevelXp(user.performing)}/${levelService.getCurrentLevelXp(user.performing)}
+                        🥷 **Stealth:** ${user.stealth - levelService.getCurrentLevelXp(user.stealth)}/${levelService.getCurrentLevelXp(user.stealth)}
+                        📖 **Research:** ${user.research - levelService.getCurrentLevelXp(user.research)}/${levelService.getCurrentLevelXp(user.research)}
                     `
                 }, {
                     name: 'MONEY',
