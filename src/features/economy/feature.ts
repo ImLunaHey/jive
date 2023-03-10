@@ -272,7 +272,7 @@ export class Feature {
         });
 
         // Respond with their encounter
-        await interaction.reply({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: outdent`
