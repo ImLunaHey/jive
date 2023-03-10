@@ -232,13 +232,22 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Generate a random creature for this encounter
-        const rarity = createRarity();
-        const creatures = await prisma.creature.findMany({
-            where: {
-                rarity
-            }
-        });
+        // Grab a list of creatures that can be encountered
+        const creatures = await prisma.creature.findMany();
+
+        // Check if we found a creature
+        if (creatures.length === 0) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Explore',
+                    description: 'You explore the world, but you don\'t find anything.'
+                }]
+            });
+
+            return;
+        }
+
+        // Get a random creature
         const creature = creatures[Math.floor(Math.random() * creatures.length)];
 
         // Save the encounter
