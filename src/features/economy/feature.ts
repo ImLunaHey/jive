@@ -325,7 +325,7 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('encounter-start-battle')
+                            .setCustomId('encounter-attack')
                             .setLabel('Start battle')
                             .setStyle(ButtonStyle.Primary),
                     ]),
@@ -345,7 +345,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: 'encounter-start-battle',
+        id: 'encounter-attack',
     })
     async attack(
         interaction: ButtonInteraction,
