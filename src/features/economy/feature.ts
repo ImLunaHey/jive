@@ -354,7 +354,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot thinking
-        await interaction.deferReply({ ephemeral: false });
+        await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
@@ -635,7 +635,7 @@ export class Feature {
         ];
 
         // Respond with the result
-        await interaction.reply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 description: 'You open your inventory.'
