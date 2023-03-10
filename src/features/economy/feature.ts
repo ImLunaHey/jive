@@ -1,9 +1,10 @@
+import { client } from '@app/client';
 import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
 import { Rarity } from '@prisma/client';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, MessageComponentInteraction } from 'discord.js';
 import { ButtonComponent, Discord, Guard, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -23,7 +24,47 @@ const createRarity = createChance({
     100: Rarity.MYTHIC,
 });
 
-const getEncounterIdFromButton = (buttonId: string, input: string): string => input.replace(buttonId, '').trim();
+// emojibar('<:lb_g:1083768174383726673>', '<:l_g:1083768215324340344>', '<:lb4_g:1083768231346577509>', '<:lb2_g:1083768151629635604>', '<:l2_g:1083768196236050442>', '<:lb3_g:1083768245489778798>', 10, 100, 5)
+// 
+const emojibar = (value: number, options?: {
+    bars?: {
+        full: {
+            start: string;
+            bar: string;
+            end: string;
+        };
+        empty: {
+            start: string;
+            bar: string;
+            end: string;
+        };
+    };
+    maxValue?: number;
+    size?: number;
+}) => {
+    const bars = options?.bars ?? {
+        full: {
+            start: '<:lb_g:1083768174383726673>',
+            bar: '<:l_g:1083768215324340344>',
+            end: '<:lb4_g:1083768231346577509>',
+        },
+        empty: {
+            start: '<:lb2_g:1083768151629635604>',
+            bar: '<:l2_g:1083768196236050442>',
+            end: '<:lb3_g:1083768245489778798>',
+        },
+    };
+    const maxValue = options?.maxValue ?? 100;
+    const size = options?.size ?? 10;
+    const bar = [];
+    const full = Math.round(size * (value / maxValue > 1 ? 1 : value / maxValue));
+    const empty = size - full > 0 ? size - full : 0;
+    for (let i = 1; i <= full; i++) bar.push(bars.full.bar);
+    for (let i = 1; i <= empty; i++) bar.push(bars.empty.bar);
+    bar[0] = bar[0] == bars.full.bar ? bars.full.start : bars.empty.start;
+    bar[bar.length - 1] = bar[bar.length - 1] == bars.full.bar ? bars.full.end : bars.empty.end;
+    return bar.join('');
+}
 
 @Discord()
 @Guard(GuildMemberGuard)
@@ -224,7 +265,7 @@ export class Feature {
         description: 'Explore the world',
     })
     async explore(
-        interaction: CommandInteraction,
+        interaction: MessageComponentInteraction,
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
@@ -272,7 +313,7 @@ export class Feature {
         });
 
         // Respond with their encounter
-        await interaction.editReply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 description: outdent`
@@ -374,7 +415,7 @@ export class Feature {
                 // });
 
                 // Respond with the result
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -386,7 +427,7 @@ export class Feature {
                 });
             } else {
                 // Respond with the result
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -448,7 +489,7 @@ export class Feature {
             // If the user is dead
             if (encounter.guildMember.constitution - (encounter.damage + damage) <= 0) {
                 // Respond with the result
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -459,7 +500,7 @@ export class Feature {
                 });
             } else {
                 // Respond with the result
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -492,6 +533,117 @@ export class Feature {
         }
     }
 
+    @ButtonComponent({
+        id: 'encounter-run',
+    })
+    async run(
+        interaction: ButtonInteraction
+    ) {
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMember: {
+                    id: interaction.member?.user.id
+                }
+            },
+            include: {
+                creature: true,
+                guild: true,
+                guildMember: true
+            }
+        });
+
+        // If there is no encounter
+        if (!encounter) return;
+
+        // Delete the encounter
+        await prisma.encounter.delete({
+            where: {
+                id: encounter.id
+            }
+        });
+
+        // Respond with the result
+        await interaction.update({
+            embeds: [{
+                title: 'Encounter',
+                description: `You run away from the **${encounter.creature.name}**.`
+            }],
+        });
+    }
+
+    @ButtonComponent({
+        id: 'encounter-inventory',
+    })
+    async encounterInventory(
+        interaction: ButtonInteraction
+    ) {
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMember: {
+                    id: interaction.member?.user.id
+                }
+            }
+        });
+
+        // If there is no encounter
+        if (!encounter) {
+            // Respond with the result
+            await interaction.update({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You are not in an encounter.'
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Get the user's inventory
+        const user = await prisma.guildMember.findUnique({
+            where: {
+                id: interaction.member?.user.id
+            },
+            include: {
+                inventory: true,
+            },
+        });
+        if (!user) return;
+
+        const components = [
+            ...(user.inventory.length >= 0 ? [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(
+                        user.inventory.slice(0, 5).map(item => {
+                            const [_, emojiName, emojiId] = item.emoji.split(':');
+                            console.log({
+                                name: emojiName,
+                                id: emojiId || undefined,
+                            })
+                            return new ButtonBuilder()
+                                .setCustomId(`encounter-inventory-${item.id}`)
+                                .setLabel(item.name)
+                                .setEmoji({
+                                    name: emojiName,
+                                    id: emojiId || undefined,
+                                })
+                                .setStyle(ButtonStyle.Primary);
+                        })
+                    )
+            ] : []),
+        ];
+
+        // Respond with the result
+        await interaction.reply({
+            embeds: [{
+                title: 'Encounter',
+                description: 'You open your inventory.'
+            }],
+            components,
+        });
+    }
+
     @Slash({
         name: 'profile',
         description: 'Check your profile',
@@ -522,16 +674,10 @@ export class Feature {
                     name: 'PROGRESS',
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
-                        **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress})
+                        **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress}%)
+                        ${emojibar(levelProgress)}
                     `,
-                    inline: true,
-                }, {
-                    name: 'MONEY',
-                    value: outdent`
-                        <:coins:1083037299220152351> **Coins:** ${Intl.NumberFormat().format(user?.coins)}
-                        🏦 **Bank:** 0
-                    `,
-                    inline: true,
+                    inline: false,
                 }, {
                     name: 'STATS',
                     value: outdent`
@@ -542,7 +688,7 @@ export class Feature {
                         😎 **Charisma:** ${user.charisma}
                         🍀 **Luck:** ${user.luck}
                     `,
-                    inline: true,
+                    inline: false,
                 }, {
                     name: 'SKILLS',
                     value: outdent`
@@ -559,6 +705,13 @@ export class Feature {
                         💃 **Performing:** ${user.performing - levelService.getCurrentLevelXp(user.performing)}/${levelService.getCurrentLevelXp(user.performing)}
                         🥷 **Stealth:** ${user.stealth - levelService.getCurrentLevelXp(user.stealth)}/${levelService.getCurrentLevelXp(user.stealth)}
                         📖 **Research:** ${user.research - levelService.getCurrentLevelXp(user.research)}/${levelService.getCurrentLevelXp(user.research)}
+                    `,
+                    inline: false,
+                }, {
+                    name: 'MONEY',
+                    value: outdent`
+                        <:coins:1083037299220152351> **Coins:** ${Intl.NumberFormat().format(user?.coins)}
+                        🏦 **Bank:** 0
                     `,
                     inline: true,
                 }]
