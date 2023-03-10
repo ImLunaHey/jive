@@ -537,7 +537,8 @@ export class Feature {
                         📖 **Wisdom:** ${user.wisdom}
                         😎 **Charisma:** ${user.charisma}
                         🍀 **Luck:** ${user.luck}
-                    `
+                    `,
+                    inline: true
                 }, {
                     name: 'SKILLS',
                     value: outdent`
@@ -554,7 +555,8 @@ export class Feature {
                         💃 **Performing:** ${user.performing - levelService.getCurrentLevelXp(user.performing)}/${levelService.getCurrentLevelXp(user.performing)}
                         🥷 **Stealth:** ${user.stealth - levelService.getCurrentLevelXp(user.stealth)}/${levelService.getCurrentLevelXp(user.stealth)}
                         📖 **Research:** ${user.research - levelService.getCurrentLevelXp(user.research)}/${levelService.getCurrentLevelXp(user.research)}
-                    `
+                    `,
+                    inline: true
                 }, {
                     name: 'MONEY',
                     value: outdent`
