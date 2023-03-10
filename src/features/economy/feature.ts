@@ -55,7 +55,7 @@ const emojibar = (value: number, options?: {
         },
     };
     const maxValue = options?.maxValue ?? 100;
-    const size = options?.size ?? 10;
+    const size = options?.size ?? 5;
     const bar = [];
     const full = Math.round(size * (value / maxValue > 1 ? 1 : value / maxValue));
     const empty = size - full > 0 ? size - full : 0;
@@ -569,6 +569,7 @@ export class Feature {
                 title: 'Encounter',
                 description: `You run away from the **${encounter.creature.name}**.`
             }],
+            components: []
         });
     }
 
