@@ -152,27 +152,27 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('create-character-strength-down')
+                            .setCustomId('create-character-strength')
                             .setLabel(`💪 ${user?.strength}`)
                             .setStyle(ButtonStyle.Secondary)
                             .setDisabled(true),
                         new ButtonBuilder()
-                            .setCustomId('create-character-dexterity-down')
+                            .setCustomId('create-character-dexterity')
                             .setLabel(`🤸‍♂️ ${user?.dexterity}`)
                             .setStyle(ButtonStyle.Secondary)
                             .setDisabled(true),
                         new ButtonBuilder()
-                            .setCustomId('create-character-intelligence-down')
+                            .setCustomId('create-character-intelligence')
                             .setLabel(`🧠 ${user?.intelligence}`)
                             .setStyle(ButtonStyle.Secondary)
                             .setDisabled(true),
                         new ButtonBuilder()
-                            .setCustomId('create-character-wisdom-down')
+                            .setCustomId('create-character-wisdom')
                             .setLabel(`🧠 ${user?.wisdom}`)
                             .setStyle(ButtonStyle.Secondary)
                             .setDisabled(true),
                         new ButtonBuilder()
-                            .setCustomId('create-character-charisma-down')
+                            .setCustomId('create-character-charisma')
                             .setLabel(`🧠 ${user?.charisma}`)
                             .setStyle(ButtonStyle.Secondary)
                             .setDisabled(true),
