@@ -286,7 +286,7 @@ export class Feature {
                         new ButtonBuilder()
                             .setCustomId('encounter-start-battle')
                             .setLabel('Start battle')
-                            .setStyle(ButtonStyle.Danger),
+                            .setStyle(ButtonStyle.Primary),
                     ]),
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
@@ -304,7 +304,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^encounter-start-battle [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i
+        id: 'encounter-start-battle',
     })
     async attack(
         interaction: ButtonInteraction,
@@ -400,8 +400,8 @@ export class Feature {
                             .addComponents([
                                 new ButtonBuilder()
                                     .setCustomId('encounter-attack')
-                                    .setLabel('Start battle')
-                                    .setStyle(ButtonStyle.Danger),
+                                    .setLabel('Attack')
+                                    .setStyle(ButtonStyle.Primary),
                             ]),
                         new ActionRowBuilder<ButtonBuilder>()
                             .addComponents([
