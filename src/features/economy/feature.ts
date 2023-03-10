@@ -312,9 +312,6 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
-        // Show the bot thinking
-        await interaction.deferReply({ ephemeral: false });
-
         // Get the encounterId
         const encounterId = getEncounterIdFromButton('encounter:attack', interaction.customId);
 
@@ -393,6 +390,82 @@ export class Feature {
                         description: outdent`
                             You attack the **${encounter.creature.name}** and deal **${damage}** damage.
                             It now has **${encounter.creature.health - (encounter.damageTaken + damage)}** health.
+                        `
+                    }],
+                    components: [
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-attack')
+                                    .setLabel('Attack')
+                                    .setStyle(ButtonStyle.Primary),
+                            ]),
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-run')
+                                    .setLabel('Run')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-inventory')
+                                    .setLabel('Inventory')
+                                    .setStyle(ButtonStyle.Secondary)
+                            ])
+                    ]
+                });
+            }
+        }
+
+        // If the creature goes first
+        if (roll < 10) {
+            // Get the creature's damage
+            // @TODO: Add damage modifiers
+            const damage = 1;
+
+            // Update the encounter
+            await prisma.encounter.update({
+                where: {
+                    id: encounter.id
+                },
+                data: {
+                    damage: {
+                        increment: damage
+                    }
+                }
+            });
+
+            // Update the user's health
+            await prisma.guildMember.update({
+                where: {
+                    id: interaction.member?.user.id
+                },
+                data: {
+                    constitution: {
+                        decrement: damage
+                    }
+                }
+            });
+
+            // If the user is dead
+            if (encounter.guildMember.constitution - (encounter.damage + damage) <= 0) {
+                // Respond with the result
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            The **${encounter.creature.name}** attacks you dealing **${damage}** damage.
+                            You are now dead. 🪦
+                        `
+                    }]
+                });
+            } else {
+                // Respond with the result
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            The **${encounter.creature.name}** attacks you dealing **${damage}** damage.
+                            You now have **${encounter.guildMember.constitution - (encounter.damage + damage)}** health.
                         `
                     }],
                     components: [
