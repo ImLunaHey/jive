@@ -643,6 +643,96 @@ export class Feature {
     }
 
     @Slash({
+        name: 'creature',
+        description: 'Check a creature\'s details',
+    })
+    async creature(
+        @SlashOption({
+            name: 'name',
+            description: 'The name of the creature',
+            required: true,
+            type: ApplicationCommandOptionType.String,
+            async autocomplete(interaction) {
+                const name = interaction.options.getString('name');
+                const creatures = await prisma.creature.findMany({
+                    where: name ? {
+                        name: {
+                            contains: name
+                        }
+                    } : {}
+                });
+
+                await interaction.respond(creatures.map(creature => {
+                    return {
+                        name: creature.name,
+                        value: creature.id,
+                    };
+                }));
+            },
+        })
+        creatureId: string,
+        interaction: CommandInteraction
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the creature
+        const creature = await prisma.creature.findUnique({
+            where: {
+                id: creatureId,
+            }
+        });
+
+        // If the creature doesn't exist
+        if (!creature) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Creature',
+                    description: 'That creature doesn\'t exist.'
+                }],
+            });
+            return;
+        }
+
+        // Get the number of times the user has encountered the creature
+        const previousEncounterCount = await prisma.encounter.count({
+            where: {
+                creature: {
+                    id: creature.id
+                },
+                guildMember: {
+                    id: interaction.member?.user.id
+                }
+            }
+        });
+
+        // Respond with the result
+        await interaction.editReply({
+            embeds: [{
+                title: 'Creature',
+                fields: [{
+                    name: 'NAME',
+                    value: creature.name,
+                    inline: true,
+                }, {
+                    name: 'HEALTH',
+                    value: String(creature.health),
+                    inline: true,
+                }, {
+                    name: 'DAMAGE',
+                    value: String(creature.damage),
+                    inline: true,
+                }, {
+                    name: 'PREVIOUSLY ENCOUNTERED',
+                    value: String(previousEncounterCount),
+                    inline: true,
+                }],
+            }],
+        });
+    }
+
+    @Slash({
         name: 'profile',
         description: 'Check your profile',
     })
