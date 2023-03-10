@@ -610,7 +610,7 @@ export class Feature {
         if (!user) return;
 
         const components = [
-            ...(user.inventory.length >= 0 ? [
+            ...(user.inventory.length >= 1 ? [
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(
                         user.inventory.slice(0, 5).map(item => {
