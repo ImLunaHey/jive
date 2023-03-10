@@ -265,7 +265,7 @@ export class Feature {
         description: 'Explore the world',
     })
     async explore(
-        interaction: MessageComponentInteraction,
+        interaction: CommandInteraction,
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
@@ -313,7 +313,7 @@ export class Feature {
         });
 
         // Respond with their encounter
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: outdent`
