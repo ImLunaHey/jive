@@ -315,13 +315,12 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the encounterId
-        const encounterId = getEncounterIdFromButton('encounter:attack', interaction.customId);
-
         // Get the encounter
-        const encounter = await prisma.encounter.findUnique({
+        const encounter = await prisma.encounter.findFirst({
             where: {
-                id: encounterId,
+                guildMember: {
+                    id: interaction.member?.user.id
+                }
             },
             include: {
                 creature: true,
@@ -417,10 +416,7 @@ export class Feature {
                     ]
                 });
             }
-        }
-
-        // If the creature goes first
-        if (roll < 10) {
+        } else {
             // Get the creature's damage
             // @TODO: Add damage modifiers
             const damage = 1;
