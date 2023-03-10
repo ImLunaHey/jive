@@ -527,7 +527,15 @@ export class Feature {
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
                         **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress})
-                    `
+                    `,
+                    inline: true,
+                }, {
+                    name: 'MONEY',
+                    value: outdent`
+                        <:coins:1083037299220152351> **Coins:** ${Intl.NumberFormat().format(user?.coins)}
+                        🏦 **Bank:** 0
+                    `,
+                    inline: true,
                 }, {
                     name: 'STATS',
                     value: outdent`
@@ -538,7 +546,7 @@ export class Feature {
                         😎 **Charisma:** ${user.charisma}
                         🍀 **Luck:** ${user.luck}
                     `,
-                    inline: true
+                    inline: true,
                 }, {
                     name: 'SKILLS',
                     value: outdent`
@@ -556,13 +564,7 @@ export class Feature {
                         🥷 **Stealth:** ${user.stealth - levelService.getCurrentLevelXp(user.stealth)}/${levelService.getCurrentLevelXp(user.stealth)}
                         📖 **Research:** ${user.research - levelService.getCurrentLevelXp(user.research)}/${levelService.getCurrentLevelXp(user.research)}
                     `,
-                    inline: true
-                }, {
-                    name: 'MONEY',
-                    value: outdent`
-                        <:coins:1083037299220152351> **Coins:** ${Intl.NumberFormat().format(user?.coins)}
-                        🏦 **Bank:** 0
-                    `
+                    inline: true,
                 }]
             }]
         });
