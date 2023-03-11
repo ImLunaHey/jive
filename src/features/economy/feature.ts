@@ -606,6 +606,9 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
+        // Show the bot is thinking
+        await interaction.deferReply();
+
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
@@ -673,6 +676,9 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
+        // Show the bot is thinking
+        await interaction.deferReply();
+
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
@@ -738,6 +744,9 @@ export class Feature {
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        await interaction.deferReply();
 
         this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a melee attack`);
 
