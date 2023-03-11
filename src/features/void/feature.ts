@@ -21,9 +21,13 @@ export class Feature {
         const voidChannel = channels?.find(channel => channel?.id === '1081483175202660403') as TextChannel | null;
         if (!voidChannel) return;
 
+        this.logger.info('Void channel found');
+
         // Fetch all the messages in the channel
         const messages = await voidChannel?.messages.fetch();
         if (!messages) return;
+
+        this.logger.info('Deleting %s messages', messages.size);
 
         // Delete all the messages in the channel
         for (const message of messages.values()) {
@@ -52,7 +56,12 @@ export class Feature {
             lastMessage?.embeds[0]?.description === embed.description &&
             lastMessage?.embeds[0]?.color === embed.color
         );
-        if (isVoidMessage) return;
+        if (isVoidMessage) {
+            this.logger.info('Void message already exists');
+            return;
+        }
+
+        this.logger.info('Sending void message');
 
         // Send the embed
         await voidChannel.send({
@@ -64,6 +73,9 @@ export class Feature {
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
         if (message.channel.id !== '1081483175202660403') return;
         if (message.author.bot && message.embeds[0].title === 'Void') return;
+
+        this.logger.info('Deleting message %s in 60s', message.id);
+
         await sleep(60_000);
         await message.delete().catch(() => {
             this.logger.warn('Failed to delete message %s', message.id);
