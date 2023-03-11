@@ -394,7 +394,7 @@ export class Feature {
                         ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - getDamageTaken(creature.id)}`).join('\n')}
 
                         Damage dealt to guild members:
-                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - getDamageTaken(guildMember.id)}`).join('\n')}
+                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${getDamageTaken(guildMember.id)}`).join('\n')}
                     `,
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
