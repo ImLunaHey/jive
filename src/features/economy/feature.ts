@@ -1135,16 +1135,23 @@ export class Feature {
 
     @Slash({
         name: 'profile',
-        description: 'Check your profile',
+        description: 'Check a profile',
     })
     async profile(
+        @SlashOption({
+            name: 'user',
+            description: 'The user to check',
+            required: false,
+            type: ApplicationCommandOptionType.User,
+        })
+        guildMember: GuildMember | undefined,
         interaction: CommandInteraction
     ) {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's details
-        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await prisma.guildMember.findUnique({ where: { id: guildMember?.id ?? interaction.member?.user.id } });
         if (!user) return;
 
         // Get the level details
