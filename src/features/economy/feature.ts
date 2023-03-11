@@ -453,7 +453,7 @@ export class Feature {
         // If they use an item, they will use the item they select
         // If they run, they will run away from the encounter
 
-        const encounter = await prisma.encounter.findUnique({
+        const initialEncounter = await prisma.encounter.findUnique({
             where: {
                 id: encounterId,
             },
@@ -469,28 +469,33 @@ export class Feature {
         });
 
         // @TODO: Handle this
-        if (!encounter) return;
+        if (!initialEncounter) return;
 
         // @TODO: Handle this
-        if (encounter?.initatives.length === 0) return;
+        if (initialEncounter?.initatives.length === 0) return;
 
         // Check if the encounter is over
-        if (await this.checkForTheDead(encounter.id, interaction)) return;
+        if (await this.checkForTheDead(initialEncounter.id, interaction)) return;
 
         // Remove the turns that have already happened
-        const initatives = encounter.initatives.slice(encounter.turn);
+        const initatives = initialEncounter.initatives.slice(initialEncounter.turn);
 
         // Loop through each initative
         for (const initiative of initatives) {
             // Increment the turn
-            await prisma.encounter.update({
+            const encounter = await prisma.encounter.update({
                 where: {
-                    id: encounter.id,
+                    id: initialEncounter.id,
                 },
                 data: {
                     turn: {
                         increment: 1,
                     },
+                },
+                include: {
+                    creatures: true,
+                    guildMembers: true,
+                    initatives: true,
                 },
             });
 
@@ -613,6 +618,19 @@ export class Feature {
                 break;
             }
         }
+
+        // Refetch the encounter
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId,
+            },
+            include: {
+                creatures: true,
+                guildMembers: true,
+                initatives: true,
+            }
+        });
+        if (!encounter) return;
 
         // If there are no more initatives, reset the turn
         if (encounter.initatives.length === encounter.turn) {
