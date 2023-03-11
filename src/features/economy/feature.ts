@@ -359,7 +359,7 @@ export class Feature {
         // Check if the encounter is over
         if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
             // End the encounter
-            await prisma.encounter.update({
+            await prisma.encounter.editReply({
                 where: {
                     id: encounter.id,
                 },
@@ -385,7 +385,7 @@ export class Feature {
             };
 
             // Respond with the end of the encounter
-            await interaction[interaction.replied ? 'editReply' : 'reply']({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Encounter',
                     description: outdent`
@@ -505,7 +505,7 @@ export class Feature {
                 });
 
                 // Show the attack
-                await interaction.update({
+                await interaction.editReply({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -526,7 +526,7 @@ export class Feature {
                 const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
 
                 // Show them a list of actions they can take
-                await interaction.update({
+                await interaction.editReply({
                     embeds: [{
                         title: 'Encounter',
                         fields: [{
@@ -607,7 +607,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferReply();
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
