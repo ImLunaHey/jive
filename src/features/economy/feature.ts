@@ -175,10 +175,10 @@ export class Feature {
                                 .setCustomId('encounter-button-melee-attack')
                                 .setLabel('Punch')
                                 .setStyle(ButtonStyle.Primary),
-                            // new ButtonBuilder()
-                            //     .setCustomId('encounter-ranged-attack')
-                            //     .setLabel('Throw a rock')
-                            //     .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('encounter-button-ranged-attack')
+                                .setLabel('Throw a rock')
+                                .setStyle(ButtonStyle.Primary),
                         ]),
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents([
@@ -519,10 +519,10 @@ export class Feature {
                                     .setCustomId('encounter-button-melee-attack')
                                     .setLabel('Punch')
                                     .setStyle(ButtonStyle.Primary),
-                                // new ButtonBuilder()
-                                //     .setCustomId('encounter-ranged-attack')
-                                //     .setLabel('Throw a rock')
-                                //     .setStyle(ButtonStyle.Primary),
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-button-ranged-attack')
+                                    .setLabel('Throw a rock')
+                                    .setStyle(ButtonStyle.Primary),
                             ]),
                         new ActionRowBuilder<ButtonBuilder>()
                             .addComponents([
@@ -695,7 +695,7 @@ export class Feature {
     @SelectMenuComponent({
         id: 'encounter-select-melee-attack',
     })
-    async meleeAttack(
+    async selectMeleeAttack(
         interaction: StringSelectMenuInteraction,
     ) {
         if (!interaction.guild?.id) return;
@@ -727,6 +727,171 @@ export class Feature {
                 slot: Slot.MAIN_HAND,
                 type: ItemType.WEAPON,
                 subType: ItemSubType.FIST,
+            },
+        });
+
+        // Get the creature
+        const creature = await prisma.creature.findFirst({
+            where: {
+                id: interaction.values[0]
+            }
+        });
+
+        // If the creature doesn't exist, return
+        if (!creature) {
+            await interaction.update({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'That creature doesn\'t exist',
+                    footer: {
+                        text: `Encounter ID: ${encounter.id}`
+                    }
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Attack the creature
+        await prisma.creature.update({
+            where: {
+                id: interaction.values[0]
+            },
+            data: {
+                health: {
+                    decrement: weapon?.damage ?? 1
+                }
+            }
+        });
+
+        // Update the encounter
+        await prisma.encounter.update({
+            where: {
+                id: encounter.id
+            },
+            data: {
+                turn: {
+                    increment: 1
+                },
+                attacks: {
+                    create: {
+                        attackerId: interaction.member?.user.id,
+                        attackerType: EntityType.GUILD_MEMBER,
+                        defenderId: interaction.values[0],
+                        defenderType: EntityType.CREATURE,
+                        damage: weapon?.damage ?? 1,
+                    }
+                }
+            }
+        });
+
+        // Start the battle loop
+        await this.handleBattleLoop(interaction, encounter.id);
+    }
+
+    @ButtonComponent({
+        id: 'encounter-button-ranged-attack',
+    })
+    async buttonRangedAttack(
+        interaction: ButtonInteraction,
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id,
+                    },
+                },
+            },
+            include: {
+                creatures: {
+                    where: {
+                        health: {
+                            gt: 0,
+                        },
+                    },
+                    include: {
+                        template: true,
+                    },
+                },
+            },
+        });
+        if (!encounter) return;
+
+        // Check if it's the user's turn
+        if (!await this.isUserTurn(interaction, encounter.id)) return;
+
+        // Show the user a list of creatures
+        const creatures = encounter.creatures.map(creature => ({
+            label: `${creature.name} (${creature.health}/${creature.template.health} HP) - ATK: ${creature.template.attack} DEF: ${creature.template.defence}`,
+            value: creature.id
+        }));
+
+        // Show them a list of actions they can take
+        await interaction.update({
+            embeds: [{
+                title: 'Encounter',
+                fields: [{
+                    name: 'Turn',
+                    value: `<@${interaction.member?.user.id}>`,
+                }],
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                }
+            }],
+            components: [
+                new ActionRowBuilder<StringSelectMenuBuilder>()
+                    .addComponents([
+                        new StringSelectMenuBuilder()
+                            .setCustomId('encounter-select-ranged-attack')
+                            .setPlaceholder('Select a creature')
+                            .addOptions(creatures)
+                    ])
+            ]
+        });
+    }
+
+    @SelectMenuComponent({
+        id: 'encounter-select-ranged-attack',
+    })
+    async selectRangedAttack(
+        interaction: StringSelectMenuInteraction,
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id
+                    }
+                }
+            },
+            include: {
+                initatives: true,
+            }
+        });
+        if (!encounter) return;
+
+        // Check if it's the user's turn
+        if (!await this.isUserTurn(interaction, encounter.id)) return;
+
+        // Get the user's ranged weapon
+        const weapon = await prisma.item.findFirst({
+            where: {
+                ownerId: interaction.member?.user.id,
+                equipped: true,
+                slot: Slot.MAIN_HAND,
+                type: ItemType.WEAPON,
+                subType: {
+                    in: [ItemSubType.BOW, ItemSubType.CROSSBOW]
+                }
             },
         });
 
