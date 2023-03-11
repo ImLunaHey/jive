@@ -385,7 +385,7 @@ export class Feature {
             };
 
             // Respond with the end of the encounter
-            await interaction.editReply({
+            await interaction[interaction.replied ? 'editReply' : 'reply']({
                 embeds: [{
                     title: 'Encounter',
                     description: outdent`
