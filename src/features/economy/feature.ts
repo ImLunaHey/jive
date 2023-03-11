@@ -60,12 +60,13 @@ const emojibar = (value: number, options?: {
     return bar.join('');
 };
 
+const capitalise = (string: string) => string && string[0].toUpperCase() + string.slice(1);
 const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     const selected = interaction.options.getString('location');
     const locations = selected ? Object.values(Location).filter(location => location.startsWith(selected)) : Object.values(Location);
     await interaction.respond(locations.slice(0, 25).map(location => {
         return {
-            name: location,
+            name: capitalise(location.toLowerCase()),
             value: location,
         };
     }));
@@ -1374,7 +1375,6 @@ export class Feature {
                     name: `${interaction.member?.user.username}'s profile`,
                     icon_url: interaction.user.avatarURL() ?? undefined
                 },
-                title: 'Player',
                 fields: [{
                     name: 'PROGRESS',
                     value: outdent`
@@ -1386,7 +1386,7 @@ export class Feature {
                 }, {
                     name: 'STATS',
                     value: outdent`
-                        🗺️ **Location:** ${user.location}
+                        🗺️ **Location:** ${capitalise(user.location.toLowerCase())}
                         💗 **Health:** ${user.health}
 
                         🏋️ **Strength:** ${user.strength}
