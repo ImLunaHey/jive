@@ -960,7 +960,9 @@ export class Feature {
             required: true,
             type: ApplicationCommandOptionType.String,
             async autocomplete(interaction) {
-                await interaction.respond(Object.keys(Location).map(location => {
+                const selected = interaction.options.getString('location');
+                const locations = selected ? Object.values(Location).filter(location => location.startsWith(selected)) : Object.values(Location);
+                await interaction.respond(locations.slice(0, 25).map(location => {
                     return {
                         name: location,
                         value: location,
