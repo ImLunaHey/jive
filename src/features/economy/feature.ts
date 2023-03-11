@@ -833,7 +833,7 @@ export class Feature {
         });
 
         // Send them a message
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
@@ -971,7 +971,7 @@ export class Feature {
 
         // If the creature doesn't exist, return
         if (!creature) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Encounter',
                     description: 'That creature doesn\'t exist',
