@@ -525,7 +525,7 @@ model Creature {
   defence Int
 
   // The encounter that this creature is a part of
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
   encounterId String
 
   // What is the template for this creature

@@ -250,7 +250,7 @@ export class Feature {
                 title: 'Encounter',
                 description: outdent`
                     You encounter ${encounterCreatures.map(creature => creature.name).join(', ')}.
-                    Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}.
+                    Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}. ${emojibar(100)}
                 `,
                 footer: {
                     text: `Encounter ID: ${encounter.id}`
@@ -260,7 +260,7 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('encounter-attack')
+                            .setCustomId('encounter-battle-start')
                             .setLabel('Start battle')
                             .setStyle(ButtonStyle.Primary),
                     ]),
@@ -330,12 +330,16 @@ export class Feature {
 
         const encounter = await prisma.encounter.findUnique({
             where: {
-                id: encounterId
+                id: encounterId,
             },
             include: {
-                creatures: true,
+                creatures: {
+                    include: {
+                        template: true,
+                    },
+                },
                 guildMembers: true,
-                initatives: true
+                initatives: true,
             }
         });
 
@@ -353,14 +357,50 @@ export class Feature {
             // Increment the turn
             await prisma.encounter.update({
                 where: {
-                    id: encounter.id
+                    id: encounter.id,
                 },
                 data: {
                     turn: {
-                        increment: 1
-                    }
-                }
+                        increment: 1,
+                    },
+                },
             });
+
+            // Check if either team is dead
+            const deadCreatures = encounter.creatures.filter(creature => creature.health <= 0);
+            const deadGuildMembers = encounter.guildMembers.filter(guildMember => guildMember.health <= 0);
+
+            // Check if the encounter is over
+            if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
+                // End the encounter
+                await prisma.encounter.delete({
+                    where: {
+                        id: encounter.id,
+                    },
+                });
+
+                // Respond with the end of the encounter
+                await interaction.followUp({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
+
+                            Damage dealt to creatures:
+                            ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - creature.health}`).join('\n')}
+
+                            Damage dealt to guild members:
+                            ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - guildMember.health}`).join('\n')}
+                        `,
+                        footer: {
+                            text: `Encounter ID: ${encounter.id}`
+                        }
+                    }],
+                });
+
+                // Stop the loop
+                break;
+            }
 
             if (initiative.entityType === EntityType.CREATURE) {
                 // Get the creature
