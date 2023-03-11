@@ -505,7 +505,7 @@ export class Feature {
                 });
 
                 // Show the attack
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -526,7 +526,7 @@ export class Feature {
                 const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
 
                 // Show them a list of actions they can take
-                await interaction.editReply({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         fields: [{
@@ -677,7 +677,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferReply();
+        await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
@@ -713,7 +713,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.editReply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
@@ -746,7 +746,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferReply();
+        await interaction.deferUpdate();
 
         this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a melee attack`);
 
@@ -833,7 +833,7 @@ export class Feature {
         });
 
         // Send them a message
-        await interaction.editReply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
@@ -856,6 +856,9 @@ export class Feature {
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
@@ -891,7 +894,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.editReply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
@@ -922,6 +925,9 @@ export class Feature {
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        await interaction.deferUpdate();
 
         this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a ranged attack`);
 
@@ -965,7 +971,7 @@ export class Feature {
 
         // If the creature doesn't exist, return
         if (!creature) {
-            await interaction.editReply({
+            await interaction.update({
                 embeds: [{
                     title: 'Encounter',
                     description: 'That creature doesn\'t exist',
