@@ -17,6 +17,12 @@ model GuildMember {
   xp      Int    @default(0)
   coins   Int    @default(0)
 
+  // Health 
+  health Int @default(100)
+
+  // Their current location
+  location Location @default(FOREST)
+
   // The user's inventory
   inventory Item[] @relation("inventory")
 
@@ -25,7 +31,7 @@ model GuildMember {
   // Stats
   strength     Int @default(0)
   dexterity    Int @default(0)
-  constitution Int @default(100)
+  constitution Int @default(0)
   intelligence Int @default(0)
   wisdom       Int @default(0)
   charisma     Int @default(0)
@@ -60,14 +66,12 @@ model GuildMember {
   // Others?
   cooking Int @default(0)
 
-  // The encounters the user has participated in
-  encounter Encounter[]
+  // The user's current encounter
+  encounter   Encounter? @relation(fields: [encounterId], references: [id])
+  encounterId String?
 
   // Purchases
   purchases Purchase[]
-
-  // Has the user setup their character?
-  setup Boolean @default(false)
 }
 
 model Purchase {
@@ -76,7 +80,7 @@ model Purchase {
   member   GuildMember @relation(fields: [memberId], references: [id])
   memberId String
 
-  shopItem   ShopItem @relation(fields: [shopItemId], references: [id])
+  shopItem   ItemTemplate @relation(fields: [shopItemId], references: [id])
   shopItemId String
 
   quantity Int
@@ -280,13 +284,32 @@ enum FeaturesEnabled {
   WELCOME               @map("WELCOME")
 }
 
-enum Category {
-  CONSUMABLES  @map("CONSUMABLES") // Consumables are items that can be used once and then disappear
-  COLLECTABLES @map("COLLECTABLES") // Collectables are rare/epic items
-  WEAPONS      @map("WEAPONS") // Weapons are items that can be used to attack other players
-  ARMOR        @map("ARMOR") // Armor is items that can be used to protect yourself from attacks
-  TOOLS        @map("TOOLS") // Tools are items that can be used to help you in your adventures
-  JUNK         @map("JUNK") // Junk is items that are useless
+enum ItemType {
+  WEAPON @map("WEAPON")
+  ARMOR  @map("ARMOR")
+  FOOD   @map("FOOD")
+}
+
+enum ItemSubType {
+  // Weapon
+  SWORD    @map("SWORD")
+  AXE      @map("AXE")
+  BOW      @map("BOW")
+  STAFF    @map("STAFF")
+  DAGGER   @map("DAGGER")
+  SPEAR    @map("SPEAR")
+  WAND     @map("WAND")
+  FIST     @map("FIST")
+  CROSSBOW @map("CROSSBOW")
+
+  // Armor
+  HELMET @map("HELMET")
+  CHEST  @map("CHEST")
+  LEGS   @map("LEGS")
+  FEET   @map("FEET")
+  NECK   @map("NECK")
+  RING   @map("RING")
+  SHIELD @map("SHIELD")
 }
 
 enum Rarity {
@@ -318,13 +341,21 @@ enum Slot {
   FEET @map("FEET")
 }
 
-model ShopItem {
+model Shop {
   id          String   @id @unique @default(uuid())
+  name        String
+  description String
+  location    Location
+
+  items ItemTemplate[]
+}
+
+model ItemTemplate {
+  id          String @id @unique @default(uuid())
   name        String
   emoji       String
   description String
-  category    Category
-  rarity      Rarity   @default(COMMON)
+  rarity      Rarity @default(COMMON)
   price       Int
 
   // If the item is a consumable, it will have a quantity
@@ -336,8 +367,8 @@ model ShopItem {
   // If the item is a weapon, it will have a damage value
   damage Int?
 
-  // If the item is armor, it will have a defense value
-  defense Int?
+  // If the item is armor, it will have a defence value
+  defence Int?
 
   // If the item is a tool, it will have a bonus value
   bonus Int?
@@ -348,20 +379,29 @@ model ShopItem {
   // If the item is a collectable, it will have a chance value
   chance Int?
 
+  // What type of item is this
+  type ItemType
+
+  // The sub-type of the item
+  subType ItemSubType
+
   // Which slot does this item belong to
   slot Slot?
 
   // Sales history
   purchases Purchase[]
+
+  // Which shop does this item belong to
+  shop   Shop   @relation(fields: [shopId], references: [id])
+  shopId String
 }
 
 model Item {
-  id          String   @id @unique @default(uuid())
+  id          String @id @unique @default(uuid())
   name        String
   emoji       String
   description String
-  category    Category
-  rarity      Rarity   @default(COMMON)
+  rarity      Rarity @default(COMMON)
   price       Int
 
   // If the item is a consumable, it will have a quantity
@@ -373,8 +413,8 @@ model Item {
   // If the item is a weapon, it will have a damage value
   damage Int?
 
-  // If the item is armor, it will have a defense value
-  defense Int?
+  // If the item is armor, it will have a defence value
+  defence Int?
 
   // If the item is a tool, it will have a bonus value
   bonus Int?
@@ -392,37 +432,136 @@ model Item {
   // Is this item equipped
   equipped Boolean @default(false)
 
+  // What type of item is this
+  type ItemType
+
+  // The sub-type of the item
+  subType ItemSubType
+
   // Which slot does this item belong to
   slot Slot?
 }
 
+enum Location {
+  FOREST          @map("FOREST")
+  DESERT          @map("DESERT")
+  CAVE            @map("CAVE")
+  MOUNTAIN        @map("MOUNTAIN")
+  BEACH           @map("BEACH")
+  TOWN            @map("TOWN")
+  CITY            @map("CITY")
+  VILLAGE         @map("VILLAGE")
+  FARM            @map("FARM")
+  RIVER           @map("RIVER")
+  LAKE            @map("LAKE")
+  OCEAN           @map("OCEAN")
+  VOLCANO         @map("VOLCANO")
+  ICEBERG         @map("ICEBERG")
+  SNOWY_MOUNTAIN  @map("SNOWY_MOUNTAIN")
+  SNOWY_FOREST    @map("SNOWY_FOREST")
+  SNOWY_BEACH     @map("SNOWY_BEACH")
+  SNOWY_RIVER     @map("SNOWY_RIVER")
+  SNOWY_LAKE      @map("SNOWY_LAKE")
+  SNOWY_OCEAN     @map("SNOWY_OCEAN")
+  SNOWY_VOLCANO   @map("SNOWY_VOLCANO")
+  SNOWY_ICEBERG   @map("SNOWY_ICEBERG")
+  SNOWY_TOWN      @map("SNOWY_TOWN")
+  SNOWY_CITY      @map("SNOWY_CITY")
+  SNOWY_VILLAGE   @map("SNOWY_VILLAGE")
+  SNOWY_FARM      @map("SNOWY_FARM")
+  SNOWY_DESERT    @map("SNOWY_DESERT")
+  SNOWY_CAVE      @map("SNOWY_CAVE")
+  SNOWY_PLAINS    @map("SNOWY_PLAINS")
+  SNOWY_HILLS     @map("SNOWY_HILLS")
+  SNOWY_SWAMP     @map("SNOWY_SWAMP")
+  SNOWY_JUNGLE    @map("SNOWY_JUNGLE")
+  SNOWY_TAIGA     @map("SNOWY_TAIGA")
+  SNOWY_SAVANNA   @map("SNOWY_SAVANNA")
+  SNOWY_BADLANDS  @map("SNOWY_BADLANDS")
+  SNOWY_WASTELAND @map("SNOWY_WASTELAND")
+}
+
 model Creature {
-  id          String @id @unique @default(uuid())
+  id          String   @id @unique @default(uuid())
   name        String
   emoji       String
   description String
-  rarity      Rarity @default(COMMON)
+  location    Location
+  rarity      Rarity   @default(COMMON)
 
   // How much health does this creature have
   health Int
 
   // How much damage does this creature do
-  damage Int
+  attack Int @default(1)
+
+  // How much defence does this creature have
+  defence Int @default(5)
 
   // The encounters that this creature has been a part of
-  encounters Encounter[]
+  encounters EncounterCreature[]
+}
+
+model EncounterCreature {
+  id String @id @unique @default(uuid())
+
+  // The name of the creature
+  name String
+
+  // How much health does this creature have
+  health Int
+
+  // How much damage does this creature do
+  attack Int
+
+  // How much defence does this creature have
+  defence Int
+
+  // The encounter that this creature is a part of
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounterId String
+
+  // The creature that is being encountered
+  creature   Creature @relation(fields: [creatureId], references: [id])
+  creatureId String
+}
+
+enum EntityType {
+  CREATURE     @map("CREATURE")
+  GUILD_MEMBER @map("GUILD_MEMBER")
+}
+
+model Initative {
+  id String @id @unique @default(uuid())
+
+  // The encounter that this is a part of
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounterId String
+
+  // Their roll
+  roll Int
+
+  // The order that they are taking their turn
+  order Int
+
+  // The ID of the creature or guild member that is taking their turn
+  entityId String
+
+  // The type of entity that is taking their turn
+  entityType EntityType
 }
 
 model Encounter {
   id String @id @unique @default(uuid())
 
-  // The creature that is being encountered
-  creature   Creature @relation(fields: [creatureId], references: [id])
-  creatureId String
+  // Where is this encounter taking place
+  location Location
 
-  // The guild member that is encountering this creature
-  guildMember   GuildMember @relation(fields: [guildMemberId], references: [id])
-  guildMemberId String
+  // The creatures that are being encountered
+  creatures EncounterCreature[]
+
+  // The guild members that are encountering the creatures
+  guildMembers GuildMember[]
 
   // The guild that this encounter is taking place in
   guild   Guild  @relation(fields: [guildId], references: [id])
@@ -434,9 +573,34 @@ model Encounter {
   // The time that this encounter ended
   end DateTime?
 
-  // The amount of damage that was done to the creature
-  damage Int @default(0)
+  // Inititive order
+  initatives Initative[]
 
-  // The amount of damage that was done to the guild member
-  damageTaken Int @default(0)
+  // Attacks that have happened during this encounter
+  attacks Attack[]
+
+  // The current turn
+  turn Int @default(0)
+}
+
+model Attack {
+  id String @id @unique @default(uuid())
+
+  // The encounter that this event is a part of
+  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounterId String
+
+  // The time that this event happened
+  time DateTime @default(now())
+
+  // The attacker
+  attackerId   String?
+  attackerType EntityType?
+
+  // The defender
+  defenderId   String?
+  defenderType EntityType?
+
+  // The damage that was done
+  damage Int
 }

@@ -1,11 +1,10 @@
-import { client } from '@app/client';
 import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
-import { Rarity } from '@prisma/client';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, MessageComponentInteraction } from 'discord.js';
-import { ButtonComponent, Discord, Guard, Slash, SlashOption } from 'discordx';
+import { Attack, EntityType, ItemSubType, ItemType, Rarity, Slot } from '@prisma/client';
+import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, StringSelectMenuInteraction } from 'discord.js';
+import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
 const getClosest = (array: number[], goal: number) => array.reduce((prev, curr) => Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
@@ -68,147 +67,11 @@ const emojibar = (value: number, options?: {
 
 @Discord()
 @Guard(GuildMemberGuard)
-@Guard(async (interaction: CommandInteraction, _client, next) => {
-    if (!interaction.guild?.id) return;
-    if (!interaction.member?.user.id) return;
-
-    // Skip this if it's the create-character command
-    if (interaction.commandName === 'create-character') return next();
-
-    // Ensure the user has setup their character
-    const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
-    if (!user?.setup) {
-        interaction.reply({
-            embeds: [{
-                title: 'Character',
-                description: 'You don\'t have a character yet. Please create one with `/create-character`.'
-            }]
-        });
-        return;
-    }
-
-    return next();
-})
 export class Feature {
     private logger = globalLogger.scope('Economy');
 
     constructor() {
         this.logger.success('Feature initialized');
-    }
-
-    @Slash({
-        name: 'create-character',
-        description: 'Create your character',
-    })
-    async createCharacter(
-        interaction: CommandInteraction,
-    ) {
-        if (!interaction.guild?.id) return;
-        if (!interaction.member?.user.id) return;
-
-        // Get the user's character
-        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
-        if (!user) return;
-
-        // Send the embed
-        await interaction.reply({
-            embeds: [{
-                title: 'Create character',
-                description: outdent`
-                    Create your character by assigning your stats. You have 10 points to spend.
-                    You can assign points to your stats by clicking the buttons below.
-
-                    **Strength** - Increases your damage.
-                    **Dexterity** - Increases your critical hit chance.
-                    **Intelligence** - Increases your mana.
-                    **Wisdom** - Increases your mana regeneration.
-                    **Charisma** - Increases your gold gain.
-                `,
-            }],
-            components: [
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents([
-                        new ButtonBuilder()
-                            .setCustomId('create-character-strength-up')
-                            .setLabel('💪 ⬆️')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-dexterity-up')
-                            .setLabel('🤸‍♂️ ⬆️')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-intelligence-up')
-                            .setLabel('🧠 ⬆️')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-wisdom-up')
-                            .setLabel('🧠 ⬆️')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-charisma-up')
-                            .setLabel('🧠 ⬆️')
-                            .setStyle(ButtonStyle.Success),
-                    ]),
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents([
-                        new ButtonBuilder()
-                            .setCustomId('create-character-strength')
-                            .setLabel(`💪 ${user?.strength}`)
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(true),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-dexterity')
-                            .setLabel(`🤸‍♂️ ${user?.dexterity}`)
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(true),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-intelligence')
-                            .setLabel(`🧠 ${user?.intelligence}`)
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(true),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-wisdom')
-                            .setLabel(`🧠 ${user?.wisdom}`)
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(true),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-charisma')
-                            .setLabel(`🧠 ${user?.charisma}`)
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(true),
-                    ]),
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents([
-                        new ButtonBuilder()
-                            .setCustomId('create-character-strength-down')
-                            .setLabel(`💪 ⬇️ ${user?.strength}`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-dexterity-down')
-                            .setLabel(`🤸‍♂️ ⬇️ ${user?.dexterity}`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-intelligence-down')
-                            .setLabel(`🧠 ⬇️ ${user?.intelligence}`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-wisdom-down')
-                            .setLabel(`🧠 ⬇️ ${user?.wisdom}`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('create-character-charisma-down')
-                            .setLabel(`🧠 ⬇️ ${user?.charisma}`)
-                            .setStyle(ButtonStyle.Success),
-                    ]),
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents([
-                        new ButtonBuilder()
-                            .setCustomId('create-character-submit')
-                            .setLabel('Submit')
-                            .setStyle(ButtonStyle.Success),
-                    ]),
-            ]
-        });
     }
 
     @Slash({
@@ -273,42 +136,58 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Grab a list of creatures that can be encountered
-        const creatures = await prisma.creature.findMany();
+        // Find where the user is
+        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        if (!user) return;
+
+        // Grab a list of creatures that can be encountered in this area
+        const creatures = await prisma.creature.findMany({
+            where: {
+                location: user.location
+            }
+        });
 
         // Check if we found a creature
         if (creatures.length === 0) {
             await interaction.editReply({
                 embeds: [{
                     title: 'Explore',
-                    description: 'You explore the world, but you don\'t find anything.'
+                    description: `You explore ${user.location}, but you don\'t find anything.`
                 }]
             });
 
             return;
         }
 
-        // Get a random creature
-        const creature = creatures[Math.floor(Math.random() * creatures.length)];
+        // Get a random amount of creatures
+        const creatureCount = Math.floor(Math.random() * 3) + 1;
+        const encounterCreatures = Array.from({ length: creatureCount }, () => creatures[Math.floor(Math.random() * creatures.length)]);
 
         // Save the encounter
         const encounter = await prisma.encounter.create({
             data: {
-                creature: {
-                    connect: {
-                        id: creature.id
-                    }
+                location: user.location,
+                creatures: {
+                    createMany: {
+                        data: encounterCreatures.map(creature => ({
+                            health: creature.health,
+                            name: creature.name,
+                            attack: creature.attack,
+                            defence: creature.defence,
+                            creatureId: creature.id,
+                        })),
+                    },
                 },
                 guild: {
                     connect: {
                         id: interaction.guild.id
                     }
                 },
-                guildMember: {
+                guildMembers: {
                     connect: {
                         id: interaction.member?.user.id
                     }
-                }
+                },
             }
         });
 
@@ -317,9 +196,12 @@ export class Feature {
             embeds: [{
                 title: 'Encounter',
                 description: outdent`
-                    You encounter a [${creature.rarity}] **${creature.name}**!
-                    It has **${creature.health - encounter.damageTaken}** health and **${creature.damage}** attack.
-                `
+                    You encounter ${encounterCreatures.map(creature => creature.name).join(', ')}.
+                    Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}.
+                `,
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                }
             }],
             components: [
                 new ActionRowBuilder<ButtonBuilder>()
@@ -344,10 +226,234 @@ export class Feature {
         });
     }
 
+    async isUserTurn(interaction: ButtonInteraction | AnySelectMenuInteraction, encounterId: string) {
+        // Get the encounter
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId
+            },
+            include: {
+                initatives: true,
+            },
+        });
+
+        // Check if we found an encounter
+        if (!encounter) {
+            await interaction.followUp({
+                ephemeral: true,
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You are not in an encounter.'
+                }]
+            });
+            return false;
+        }
+
+        // Check if it's the user's turn
+        const initiative = encounter.initatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initatives[0].entityId === interaction.member?.user.id;
+        if (!initiative) {
+            await interaction.followUp({
+                ephemeral: true,
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'It\'s not your turn.'
+                }]
+            });
+            return false;
+        }
+
+        // It's the user's turn
+        return true;
+    }
+
+    async handleBattleLoop(interaction: ButtonInteraction | StringSelectMenuInteraction, encounterId: string) {
+        // For each initative, go through the list and have them take their turn
+        // If they are a creature, they will attack a random member of the party
+        // If they are a guild member, we need to show them a list of actions they can take
+        // If they are a guild member, they can attack, use an item, or run
+        // If they attack, they will attack the creature they select (or a random one if they don't select one)
+        // If they use an item, they will use the item they select
+        // If they run, they will run away from the encounter
+
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId
+            },
+            include: {
+                creatures: true,
+                guildMembers: true,
+                initatives: true
+            }
+        });
+
+        // @TODO: Handle this
+        if (!encounter) return;
+
+        // @TODO: Handle this
+        if (encounter?.initatives.length === 0) return;
+
+        // Remove the turns that have already happened
+        const initatives = encounter.initatives.slice(encounter.turn);
+
+        // Loop through each initative
+        for (const initiative of initatives) {
+            // Increment the turn
+            await prisma.encounter.update({
+                where: {
+                    id: encounter.id
+                },
+                data: {
+                    turn: {
+                        increment: 1
+                    }
+                }
+            });
+
+            if (initiative.entityType === EntityType.CREATURE) {
+                // Get the creature
+                const creature = encounter.creatures.find(creature => creature.id === initiative.entityId)!;
+
+                // Get a random guild member
+                const guildMember = encounter.guildMembers[Math.floor(Math.random() * encounter.guildMembers.length)];
+
+                // Get the damage done
+                const damage = creature.attack >= guildMember.health ? guildMember.health : creature.attack;
+
+                // Attack the guild member
+                await prisma.guildMember.update({
+                    where: {
+                        id: guildMember.id,
+                    },
+                    data: {
+                        health: {
+                            decrement: damage,
+                        },
+                    },
+                });
+
+                // Save the attack event
+                await prisma.encounter.update({
+                    where: {
+                        id: encounter.id,
+                    },
+                    data: {
+                        attacks: {
+                            create: {
+                                attackerId: creature.id,
+                                attackerType: EntityType.CREATURE,
+                                defenderId: guildMember.id,
+                                defenderType: EntityType.GUILD_MEMBER,
+                                damage,
+                            },
+                        },
+                    },
+                });
+            } else if (initiative.entityType === EntityType.GUILD_MEMBER) {
+                // Get the guild member
+                const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
+
+                // Get all the attacks that've happened in this encounter
+                const attacks = await prisma.attack.findMany({
+                    where: {
+                        encounter: {
+                            id: encounter.id,
+                        }
+                    },
+                }) ?? [];
+
+                const generateAttackDetails = (attack: Attack) => {
+                    if (attack.attackerType === EntityType.CREATURE) {
+                        const creature = encounter.creatures.find(creature => creature.id === attack.attackerId)!;
+                        return creature.name;
+                    }
+
+                    const member = encounter.guildMembers.find(member => member.id === attack.attackerId)!;
+                    return `<@${member.id}>`;
+                };
+                const generateDefenderDetails = (attack: Attack) => {
+                    if (attack.defenderType === EntityType.CREATURE) {
+                        const creature = encounter.creatures.find(creature => creature.id === attack.defenderId)!;
+                        return creature.name;
+                    }
+
+                    const member = encounter.guildMembers.find(member => member.id === attack.defenderId)!;
+                    return `<@${member.id}>`;
+                };
+                const attackDetails = attacks.map(attack => {
+                    const attacker = generateAttackDetails(attack);
+                    const defender = generateDefenderDetails(attack);
+
+                    return outdent`
+                        ${attacker} attacks ${defender} for ${attack.damage} damage.
+                    `;
+                }).join('\n');
+
+                // Show them a list of actions they can take
+                await interaction.update({
+                    embeds: [{
+                        title: 'Encounter',
+                        fields: [{
+                            name: 'Turn',
+                            value: `<@${guildMember.id}>`,
+                        }],
+                        ...(attacks.length >= 1 ? {
+                            description: outdent`
+                                **Attacks**
+                                ${attackDetails}
+                            `,
+                        } : {}),
+                        footer: {
+                            text: `Encounter ID: ${encounter.id}`
+                        }
+                    }],
+                    components: [
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-melee-attack')
+                                    .setLabel('Punch')
+                                    .setStyle(ButtonStyle.Primary),
+                                // new ButtonBuilder()
+                                //     .setCustomId('encounter-ranged-attack')
+                                //     .setLabel('Throw a rock')
+                                //     .setStyle(ButtonStyle.Primary),
+                            ]),
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents([
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-run')
+                                    .setLabel('Run')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('encounter-inventory')
+                                    .setLabel('Inventory')
+                                    .setStyle(ButtonStyle.Secondary)
+                            ])
+                    ]
+                });
+
+                // Exit the loop
+                break;
+            }
+        }
+
+        // If there are no more initatives, reset the turn
+        if (encounter.initatives.length === encounter.turn) {
+            await prisma.encounter.update({
+                where: {
+                    id: encounter.id
+                },
+                data: {
+                    turn: 0
+                }
+            });
+        }
+    }
+
     @ButtonComponent({
-        id: 'encounter-attack',
+        id: 'encounter-battle-start',
     })
-    async attack(
+    async battleStart(
         interaction: ButtonInteraction,
     ) {
         if (!interaction.guild?.id) return;
@@ -356,14 +462,20 @@ export class Feature {
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
-                guildMember: {
-                    id: interaction.member?.user.id
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id
+                    }
                 }
             },
             include: {
-                creature: true,
+                creatures: {
+                    include: {
+                        creature: true
+                    }
+                },
                 guild: true,
-                guildMember: true
+                guildMembers: true
             }
         });
         if (!encounter) return;
@@ -372,162 +484,204 @@ export class Feature {
         const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
         if (!user) return;
 
-        // Roll a d20 to see who goes first
-        const roll = Math.floor(Math.random() * 20) + 1;
+        // Roll initative for everyone
+        const guildMembersInitative = encounter.guildMembers.map(member => ({
+            entityType: EntityType.GUILD_MEMBER,
+            entityId: member.id,
+            roll: Math.floor(Math.random() * 20) + 1
+        }));
 
-        // If the user goes first
-        if (roll >= 10) {
-            // Get the user's damage
-            // @TODO: Add damage modifiers
-            const damage = 1;
+        const creaturesInitiative = encounter.creatures.map(creature => ({
+            entityType: EntityType.CREATURE,
+            entityId: creature.id,
+            roll: Math.floor(Math.random() * 20) + 1,
+        }));
 
-            // Update the encounter
-            await prisma.encounter.update({
-                where: {
-                    id: encounter.id
-                },
-                data: {
-                    damageTaken: {
-                        increment: damage
+        // Sort the initiative
+        const initiatives = [...guildMembersInitative, ...creaturesInitiative].sort((a, b) => b.roll - a.roll).map((initiative, index) => ({
+            ...initiative,
+            order: index
+        }));
+
+        // Update the encounter
+        await prisma.encounter.update({
+            where: {
+                id: encounter.id
+            },
+            data: {
+                initatives: {
+                    createMany: {
+                        data: initiatives
                     }
                 }
-            });
-
-            // If the creature is dead
-            if (encounter.creature.health - (encounter.damageTaken + damage) <= 0) {
-                // // Get the user's xp
-                // @TODO: Add xp modifiers
-                const xp = 1;
-
-                // // Update the user's xp
-                // await prisma.guildMember.update({
-                //     where: {
-                //         id: interaction.member?.user.id
-                //     },
-                //     data: {
-                //         xp: {
-                //             increment: xp
-                //         }
-                //     }
-                // });
-
-                // Respond with the result
-                await interaction.update({
-                    embeds: [{
-                        title: 'Encounter',
-                        description: outdent`
-                            You attack the **${encounter.creature.name}** and kill it!
-                            You gain **${xp}** xp.
-                        `
-                    }],
-                    components: []
-                });
-            } else {
-                // Respond with the result
-                await interaction.update({
-                    embeds: [{
-                        title: 'Encounter',
-                        description: outdent`
-                            You attack the **${encounter.creature.name}** and deal **${damage}** damage.
-                            It now has **${encounter.creature.health - (encounter.damageTaken + damage)}** health.
-                        `
-                    }],
-                    components: [
-                        new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents([
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-attack')
-                                    .setLabel('Attack')
-                                    .setStyle(ButtonStyle.Primary),
-                            ]),
-                        new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents([
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-run')
-                                    .setLabel('Run')
-                                    .setStyle(ButtonStyle.Secondary),
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-inventory')
-                                    .setLabel('Inventory')
-                                    .setStyle(ButtonStyle.Secondary)
-                            ])
-                    ]
-                });
             }
-        } else {
-            // Get the creature's damage
-            // @TODO: Add damage modifiers
-            const damage = 1;
+        });
 
-            // Update the encounter
-            await prisma.encounter.update({
-                where: {
-                    id: encounter.id
-                },
-                data: {
-                    damage: {
-                        increment: damage
+        // Start the battle loop
+        await this.handleBattleLoop(interaction, encounter.id);
+    }
+
+    @ButtonComponent({
+        id: 'encounter-button-melee-attack',
+    })
+    async buttonMeleeAttack(
+        interaction: ButtonInteraction,
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id
                     }
                 }
-            });
-
-            // Update the user's health
-            await prisma.guildMember.update({
-                where: {
-                    id: interaction.member?.user.id
-                },
-                data: {
-                    constitution: {
-                        decrement: damage
-                    }
-                }
-            });
-
-            // If the user is dead
-            if (encounter.guildMember.constitution - (encounter.damage + damage) <= 0) {
-                // Respond with the result
-                await interaction.update({
-                    embeds: [{
-                        title: 'Encounter',
-                        description: outdent`
-                            The **${encounter.creature.name}** attacks you dealing **${damage}** damage.
-                            You are now dead. 🪦
-                        `
-                    }]
-                });
-            } else {
-                // Respond with the result
-                await interaction.update({
-                    embeds: [{
-                        title: 'Encounter',
-                        description: outdent`
-                            The **${encounter.creature.name}** attacks you dealing **${damage}** damage.
-                            You now have **${encounter.guildMember.constitution - (encounter.damage + damage)}** health.
-                        `
-                    }],
-                    components: [
-                        new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents([
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-attack')
-                                    .setLabel('Attack')
-                                    .setStyle(ButtonStyle.Primary),
-                            ]),
-                        new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents([
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-run')
-                                    .setLabel('Run')
-                                    .setStyle(ButtonStyle.Secondary),
-                                new ButtonBuilder()
-                                    .setCustomId('encounter-inventory')
-                                    .setLabel('Inventory')
-                                    .setStyle(ButtonStyle.Secondary)
-                            ])
-                    ]
-                });
+            },
+            include: {
+                initatives: true,
             }
+        });
+        if (!encounter) return;
+
+        // Check if it's the user's turn
+        if (!await this.isUserTurn(interaction, encounter.id)) return;
+
+        // Get the initiatives left in the encounter
+        const initiatives = encounter.initatives.slice(encounter.turn);
+
+        // Show the user a list of creatures
+        const creatures = initiatives.filter(initiative => initiative.entityType === EntityType.CREATURE).map(initiative => ({
+            label: initiative.entityId,
+            value: initiative.id
+        }));
+
+        // Show them a list of actions they can take
+        await interaction.update({
+            embeds: [{
+                title: 'Encounter',
+                fields: [{
+                    name: 'Turn',
+                    value: `<@${interaction.member?.user.id}>`,
+                }],
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                }
+            }],
+            components: [
+                new ActionRowBuilder<StringSelectMenuBuilder>()
+                    .addComponents([
+                        new StringSelectMenuBuilder()
+                            .setCustomId('encounter-select-melee-attack')
+                            .setPlaceholder('Select a creature')
+                            .addOptions(creatures)
+                    ])
+            ]
+        });
+    }
+
+    @SelectMenuComponent({
+        id: 'encounter-select-melee-attack',
+    })
+    async meleeAttack(
+        interaction: StringSelectMenuInteraction,
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id
+                    }
+                }
+            },
+            include: {
+                initatives: true,
+            }
+        });
+        if (!encounter) return;
+
+        // Check if it's the user's turn
+        if (!await this.isUserTurn(interaction, encounter.id)) return;
+
+        // Get the user's weapon
+        const weapon = await prisma.item.findFirst({
+            where: {
+                ownerId: interaction.member?.user.id,
+                equipped: true,
+                slot: Slot.MAIN_HAND,
+                type: ItemType.WEAPON,
+                subType: ItemSubType.FIST,
+            },
+        });
+
+        // If the user doesn't have a weapon, return
+        if (!weapon) {
+            await interaction.update({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You don\'t have a weapon equipped',
+                    footer: {
+                        text: `Encounter ID: ${encounter.id}`
+                    }
+                }],
+                components: []
+            });
+            return;
         }
+
+        // Get the creature
+        const creature = await prisma.encounterCreature.findFirst({
+            where: {
+                id: interaction.values[0]
+            }
+        });
+
+        // If the creature doesn't exist, return
+        if (!creature) {
+            await interaction.update({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'That creature doesn\'t exist',
+                    footer: {
+                        text: `Encounter ID: ${encounter.id}`
+                    }
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Attack the creature
+        await prisma.encounterCreature.update({
+            where: {
+                id: interaction.values[0]
+            },
+            data: {
+                health: {
+                    decrement: weapon.damage!
+                }
+            }
+        });
+
+        // Update the encounter
+        await prisma.encounter.update({
+            where: {
+                id: encounter.id
+            },
+            data: {
+                turn: {
+                    increment: 1
+                },
+            }
+        });
+
+        // Start the battle loop
+        await this.handleBattleLoop(interaction, encounter.id);
     }
 
     @ButtonComponent({
@@ -539,19 +693,34 @@ export class Feature {
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
-                guildMember: {
-                    id: interaction.member?.user.id
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id
+                    }
                 }
             },
             include: {
-                creature: true,
+                creatures: true,
                 guild: true,
-                guildMember: true
+                guildMembers: true
             }
         });
 
         // If there is no encounter
-        if (!encounter) return;
+        if (!encounter) {
+            // Respond with the result
+            await interaction.update({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You are not in an encounter.',
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Check if it's the user's turn
+        if (!await this.isUserTurn(interaction, encounter.id)) return;
 
         // Delete the encounter
         await prisma.encounter.delete({
@@ -564,7 +733,10 @@ export class Feature {
         await interaction.update({
             embeds: [{
                 title: 'Encounter',
-                description: `You run away from the **${encounter.creature.name}**.`
+                description: 'You run away from the encounter.',
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                }
             }],
             components: []
         });
@@ -579,10 +751,12 @@ export class Feature {
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
-                guildMember: {
-                    id: interaction.member?.user.id
-                }
-            }
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id,
+                    },
+                },
+            },
         });
 
         // If there is no encounter
@@ -695,18 +869,6 @@ export class Feature {
             return;
         }
 
-        // Get the number of times the user has encountered the creature
-        const previousEncounterCount = await prisma.encounter.count({
-            where: {
-                creature: {
-                    id: creature.id
-                },
-                guildMember: {
-                    id: interaction.member?.user.id
-                }
-            }
-        });
-
         // Respond with the result
         await interaction.editReply({
             embeds: [{
@@ -720,12 +882,20 @@ export class Feature {
                     value: String(creature.health),
                     inline: true,
                 }, {
-                    name: 'DAMAGE',
-                    value: String(creature.damage),
+                    name: 'ATTACK',
+                    value: String(creature.attack),
                     inline: true,
                 }, {
-                    name: 'PREVIOUSLY ENCOUNTERED',
-                    value: String(previousEncounterCount),
+                    name: 'DEFENCE',
+                    value: String(creature.defence),
+                    inline: true,
+                }, {
+                    name: 'LOCATION',
+                    value: creature.location,
+                    inline: true,
+                }, {
+                    name: 'RARITY',
+                    value: creature.rarity,
                     inline: true,
                 }],
             }],
@@ -924,16 +1094,16 @@ export class Feature {
                         coins: amount,
                         guild: {
                             connect: {
-                                id: interaction.guild.id
-                            }
-                        }
+                                id: interaction.guild.id,
+                            },
+                        },
                     },
                     update: {
                         coins: {
-                            increment: amount
-                        }
-                    }
-                })
+                            increment: amount,
+                        },
+                    },
+                }),
             ]);
 
             // Send the balance
@@ -1115,7 +1285,7 @@ export class Feature {
     //                     chance: item.chance,
     //                     cooldown: item.cooldown,
     //                     damage: item.damage,
-    //                     defense: item.defense,
+    //                     defence: item.defence,
     //                     // If the item is a collectable, give it the same rarity as the item
     //                     // Otherwise, give it a random rarity
     //                     ...(item.category === Category.COLLECTABLES ? {
