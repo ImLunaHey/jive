@@ -505,7 +505,7 @@ export class Feature {
                 });
 
                 // Show the attack
-                await interaction[interaction.replied ? 'editReply' : 'reply']({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         description: outdent`
@@ -526,7 +526,7 @@ export class Feature {
                 const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
 
                 // Show them a list of actions they can take
-                await interaction[interaction.replied ? 'editReply' : 'reply']({
+                await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         fields: [{
