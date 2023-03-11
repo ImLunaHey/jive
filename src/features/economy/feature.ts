@@ -809,6 +809,18 @@ export class Feature {
             }
         });
 
+        // Send them a message
+        await interaction.update({
+            embeds: [{
+                title: 'Encounter',
+                description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                }
+            }],
+            components: []
+        });
+
         // Start the battle loop
         await this.handleBattleLoop(interaction, encounter.id);
     }
