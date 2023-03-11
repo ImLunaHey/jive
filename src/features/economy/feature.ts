@@ -323,6 +323,61 @@ export class Feature {
         return true;
     }
 
+    async checkForTheDead(encounterId: string, interaction: ButtonInteraction | AnySelectMenuInteraction) {
+        // Get the encounter
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId
+            },
+            include: {
+                creatures: {
+                    include: {
+                        template: true,
+                    },
+                },
+                guildMembers: true,
+            },
+        });
+        if (!encounter) return;
+
+        // Check if either team is dead
+        const deadCreatures = encounter.creatures.filter(creature => creature.health <= 0);
+        const deadGuildMembers = encounter.guildMembers.filter(guildMember => guildMember.health <= 0);
+
+        // Check if the encounter is over
+        if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
+            // End the encounter
+            await prisma.encounter.delete({
+                where: {
+                    id: encounter.id,
+                },
+            });
+
+            // Respond with the end of the encounter
+            await interaction.followUp({
+                embeds: [{
+                    title: 'Encounter',
+                    description: outdent`
+                        ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
+
+                        Damage dealt to creatures:
+                        ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - creature.health}`).join('\n')}
+
+                        Damage dealt to guild members:
+                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - guildMember.health}`).join('\n')}
+                    `,
+                    footer: {
+                        text: `Encounter ID: ${encounter.id}`
+                    }
+                }],
+            });
+
+            return true;
+        }
+
+        return false;
+    }
+
     async handleBattleLoop(interaction: ButtonInteraction | StringSelectMenuInteraction, encounterId: string) {
         // For each initative, go through the list and have them take their turn
         // If they are a creature, they will attack a random member of the party
@@ -353,6 +408,9 @@ export class Feature {
         // @TODO: Handle this
         if (encounter?.initatives.length === 0) return;
 
+        // Check if the encounter is over
+        if (await this.checkForTheDead(encounter.id, interaction)) return;
+
         // Remove the turns that have already happened
         const initatives = encounter.initatives.slice(encounter.turn);
 
@@ -370,41 +428,8 @@ export class Feature {
                 },
             });
 
-            // Check if either team is dead
-            const deadCreatures = encounter.creatures.filter(creature => creature.health <= 0);
-            const deadGuildMembers = encounter.guildMembers.filter(guildMember => guildMember.health <= 0);
-
             // Check if the encounter is over
-            if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
-                // End the encounter
-                await prisma.encounter.delete({
-                    where: {
-                        id: encounter.id,
-                    },
-                });
-
-                // Respond with the end of the encounter
-                await interaction.followUp({
-                    embeds: [{
-                        title: 'Encounter',
-                        description: outdent`
-                            ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
-
-                            Damage dealt to creatures:
-                            ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - creature.health}`).join('\n')}
-
-                            Damage dealt to guild members:
-                            ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - guildMember.health}`).join('\n')}
-                        `,
-                        footer: {
-                            text: `Encounter ID: ${encounter.id}`
-                        }
-                    }],
-                });
-
-                // Stop the loop
-                break;
-            }
+            if (await this.checkForTheDead(encounter.id, interaction)) break;
 
             if (initiative.entityType === EntityType.CREATURE) {
                 // Get the creature
@@ -449,56 +474,30 @@ export class Feature {
                 // Get the guild member
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
 
-                // Get all the attacks that've happened in this encounter
-                const attacks = await prisma.attack.findMany({
-                    where: {
-                        encounter: {
-                            id: encounter.id,
-                        }
-                    },
-                }) ?? [];
-
-                const generateAttackDetails = (attack: Attack) => {
-                    if (attack.attackerType === EntityType.CREATURE) {
-                        const creature = encounter.creatures.find(creature => creature.id === attack.attackerId)!;
-                        return creature.name;
-                    }
-
-                    const member = encounter.guildMembers.find(member => member.id === attack.attackerId)!;
-                    return `<@${member.id}>`;
-                };
-                const generateDefenderDetails = (attack: Attack) => {
-                    if (attack.defenderType === EntityType.CREATURE) {
-                        const creature = encounter.creatures.find(creature => creature.id === attack.defenderId)!;
-                        return creature.name;
-                    }
-
-                    const member = encounter.guildMembers.find(member => member.id === attack.defenderId)!;
-                    return `<@${member.id}>`;
-                };
-                const attackDetails = attacks.map(attack => {
-                    const attacker = generateAttackDetails(attack);
-                    const defender = generateDefenderDetails(attack);
-
-                    return outdent`
-                        ${attacker} attacks ${defender} for ${attack.damage} damage.
-                    `;
-                }).join('\n');
+                // Get the next initative
+                const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
 
                 // Show them a list of actions they can take
                 await interaction.update({
                     embeds: [{
                         title: 'Encounter',
                         fields: [{
-                            name: 'Turn',
+                            name: 'Current turn',
                             value: `<@${guildMember.id}>`,
+                            inline: true,
+                        }, {
+                            name: 'Next turn',
+                            value: nextInitiative.entityType === EntityType.CREATURE
+                                ? encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
+                                `<@${encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
+                            inline: true,
+                        }, {
+                            name: 'Party',
+                            value: encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
+                        }, {
+                            name: 'Creatures',
+                            value: encounter.creatures.map(creature => `${creature.name}: ${creature.health}`).join('\n'),
                         }],
-                        ...(attacks.length >= 1 ? {
-                            description: outdent`
-                                **Attacks**
-                                ${attackDetails}
-                            `,
-                        } : {}),
                         footer: {
                             text: `Encounter ID: ${encounter.id}`
                         }
@@ -631,13 +630,22 @@ export class Feature {
             where: {
                 guildMembers: {
                     some: {
-                        id: interaction.member?.user.id
-                    }
-                }
+                        id: interaction.member?.user.id,
+                    },
+                },
             },
             include: {
-                creatures: true,
-            }
+                creatures: {
+                    where: {
+                        health: {
+                            gt: 0,
+                        },
+                    },
+                    include: {
+                        template: true,
+                    },
+                },
+            },
         });
         if (!encounter) return;
 
@@ -646,7 +654,7 @@ export class Feature {
 
         // Show the user a list of creatures
         const creatures = encounter.creatures.map(creature => ({
-            label: creature.name,
+            label: `${creature.name} (${creature.health} HP) - ATK: ${creature.template.attack} DEF: ${creature.template.defence}`,
             value: creature.id
         }));
 
