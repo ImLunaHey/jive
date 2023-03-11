@@ -373,6 +373,16 @@ export class Feature {
                 },
             });
 
+            const attacks = await prisma.attack.findMany({
+                where: {
+                    encounterId: encounter.id,
+                },
+            });
+
+            const getDamageTaken = (entityId: string) => {
+                return attacks.filter(attack => attack.defenderId === entityId).reduce((a, b) => a + b.damage, 0);
+            };
+
             // Respond with the end of the encounter
             await interaction.update({
                 embeds: [{
@@ -381,14 +391,15 @@ export class Feature {
                         ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
 
                         Damage dealt to creatures:
-                        ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - creature.health}`).join('\n')}
+                        ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - getDamageTaken(creature.id)}`).join('\n')}
 
                         Damage dealt to guild members:
-                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - guildMember.health}`).join('\n')}
+                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${100 - getDamageTaken(guildMember.id)}`).join('\n')}
                     `,
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
-                    }
+                    },
+                    color: deadCreatures.length === encounter.creatures.length ? Colors.Green : Colors.Red,
                 }],
                 components: []
             });
