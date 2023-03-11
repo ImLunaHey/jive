@@ -137,22 +137,64 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user
-        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await prisma.guildMember.findUnique({
+            where: {
+                id: interaction.member?.user.id
+            }, include: {
+                encounter: {
+                    include: {
+                        creatures: {
+                            include: {
+                                template: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
         if (!user) return;
 
-        // Don't allow the user to explore if they're already exploring
-        if (user.encounterId) {
+        // Check if the user is already exploring
+        if (user.encounter) {
+            // Respond with their encounter
             await interaction.editReply({
                 embeds: [{
-                    title: 'Explore',
-                    description: 'You\'re already exploring. Wait until you\'re done.'
-                }]
+                    title: 'Encounter',
+                    description: outdent`
+                        You rejoin the battle against ${user.encounter.creatures.map(creature => creature.name).join(', ')}.
+                        Their health is at ${emojibar(user.encounter.creatures.reduce((a, b) => a + b.health, 0), { maxValue: user.encounter.creatures.reduce((a, b) => a + b.template.health, 0) })}.
+                    `,
+                    footer: {
+                        text: `Encounter ID: ${user.encounter.id}`
+                    }
+                }],
+                components: [
+                    new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents([
+                            new ButtonBuilder()
+                                .setCustomId('encounter-attack')
+                                .setLabel('Start battle')
+                                .setStyle(ButtonStyle.Primary),
+                        ]),
+                    new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents([
+                            new ButtonBuilder()
+                                .setCustomId('encounter-run')
+                                .setLabel('Run')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('encounter-inventory')
+                                .setLabel('Inventory')
+                                .setStyle(ButtonStyle.Secondary)
+                        ])
+                ]
             });
+
             return;
         }
 
         // Grab a list of creatures that can be encountered in this area
-        const creatures = await prisma.creature.findMany({
+        const creatures = await prisma.creatureTemplate.findMany({
             where: {
                 location: user.location
             }
@@ -180,12 +222,12 @@ export class Feature {
                 location: user.location,
                 creatures: {
                     createMany: {
-                        data: encounterCreatures.map(creature => ({
-                            health: creature.health,
-                            name: creature.name,
-                            attack: creature.attack,
-                            defence: creature.defence,
-                            creatureId: creature.id,
+                        data: encounterCreatures.map(createTemplate => ({
+                            health: createTemplate.health,
+                            name: createTemplate.name,
+                            attack: createTemplate.attack,
+                            defence: createTemplate.defence,
+                            templateId: createTemplate.id,
                         })),
                     },
                 },
@@ -480,11 +522,7 @@ export class Feature {
                 }
             },
             include: {
-                creatures: {
-                    include: {
-                        creature: true
-                    }
-                },
+                creatures: true,
                 guild: true,
                 guildMembers: true
             }
@@ -646,7 +684,7 @@ export class Feature {
         }
 
         // Get the creature
-        const creature = await prisma.encounterCreature.findFirst({
+        const creature = await prisma.creature.findFirst({
             where: {
                 id: interaction.values[0]
             }
@@ -668,7 +706,7 @@ export class Feature {
         }
 
         // Attack the creature
-        await prisma.encounterCreature.update({
+        await prisma.creature.update({
             where: {
                 id: interaction.values[0]
             },
@@ -876,8 +914,8 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the creature
-        const creature = await prisma.creature.findUnique({
+        // Get the creature template
+        const creature = await prisma.creatureTemplate.findUnique({
             where: {
                 id: creatureId,
             }

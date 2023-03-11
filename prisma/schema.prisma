@@ -394,6 +394,9 @@ model ItemTemplate {
   // Which shop does this item belong to
   shop   Shop   @relation(fields: [shopId], references: [id])
   shopId String
+
+  // The items that use this as a template
+  Item Item[]
 }
 
 model Item {
@@ -431,6 +434,10 @@ model Item {
 
   // Is this item equipped
   equipped Boolean @default(false)
+
+  // What is the template for this item
+  template   ItemTemplate @relation(fields: [templateId], references: [id])
+  templateId String
 
   // What type of item is this
   type ItemType
@@ -481,7 +488,7 @@ enum Location {
   SNOWY_WASTELAND @map("SNOWY_WASTELAND")
 }
 
-model Creature {
+model CreatureTemplate {
   id          String   @id @unique @default(uuid())
   name        String
   emoji       String
@@ -499,10 +506,10 @@ model Creature {
   defence Int @default(5)
 
   // The encounters that this creature has been a part of
-  encounters EncounterCreature[]
+  encounters Creature[]
 }
 
-model EncounterCreature {
+model Creature {
   id String @id @unique @default(uuid())
 
   // The name of the creature
@@ -521,9 +528,9 @@ model EncounterCreature {
   encounter   Encounter @relation(fields: [encounterId], references: [id])
   encounterId String
 
-  // The creature that is being encountered
-  creature   Creature @relation(fields: [creatureId], references: [id])
-  creatureId String
+  // What is the template for this creature
+  template   CreatureTemplate @relation(fields: [templateId], references: [id])
+  templateId String
 }
 
 enum EntityType {
@@ -558,7 +565,7 @@ model Encounter {
   location Location
 
   // The creatures that are being encountered
-  creatures EncounterCreature[]
+  creatures Creature[]
 
   // The guild members that are encountering the creatures
   guildMembers GuildMember[]
