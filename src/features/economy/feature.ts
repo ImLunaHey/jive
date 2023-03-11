@@ -62,8 +62,8 @@ const emojibar = (value: number, options?: {
 
 const capitalise = (string: string) => string && string[0].toUpperCase() + string.slice(1);
 const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
-    const selected = interaction.options.getString('location');
-    const locations = selected ? Object.values(Location).filter(location => location.startsWith(selected)) : Object.values(Location);
+    const selected = interaction.options.getString('location')?.toLowerCase();
+    const locations = selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location);
     await interaction.respond(locations.slice(0, 25).map(location => {
         return {
             name: capitalise(location.toLowerCase()),
