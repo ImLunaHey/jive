@@ -136,9 +136,20 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Find where the user is
+        // Get the user
         const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
         if (!user) return;
+
+        // Don't allow the user to explore if they're already exploring
+        if (user.encounterId) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Explore',
+                    description: 'You\'re already exploring. Wait until you\'re done.'
+                }]
+            });
+            return;
+        }
 
         // Grab a list of creatures that can be encountered in this area
         const creatures = await prisma.creature.findMany({
