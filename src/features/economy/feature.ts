@@ -561,7 +561,7 @@ export class Feature {
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
 
                 // Get the next initative
-                const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
+                // const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
 
                 // Show them a list of actions they can take
                 await interaction.editReply({
@@ -571,12 +571,12 @@ export class Feature {
                             name: 'Current turn',
                             value: `<@${guildMember.id}>`,
                             inline: true,
-                        }, {
-                            name: 'Next turn',
-                            value: nextInitiative.entityType === EntityType.CREATURE
-                                ? encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
-                                `<@${encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
-                            inline: true,
+                            // }, {
+                            //     name: 'Next turn',
+                            //     value: nextInitiative.entityType === EntityType.CREATURE
+                            //         ? encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
+                            //         `<@${encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
+                            //     inline: true,
                         }, {
                             name: 'Party',
                             value: encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
