@@ -1027,6 +1027,12 @@ export class Feature {
     async run(
         interaction: ButtonInteraction
     ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
@@ -1095,7 +1101,7 @@ export class Feature {
         });
 
         // Respond with the result
-        await interaction.editReply({
+        await interaction.update({
             embeds: [{
                 title: 'Encounter',
                 description: 'You run away from the encounter.',
