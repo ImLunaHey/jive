@@ -1166,9 +1166,13 @@ export class Feature {
                 }, {
                     name: 'STATS',
                     value: outdent`
+                        🗺️ **Location:** ${user.location}
+                        💗 **Health:** ${user.health}
+
                         🏋️ **Strength:** ${user.strength}
                         🦓 **Dexterity:** ${user.dexterity}
                         🧠 **Intelligence:** ${user.intelligence}
+                        ❣️ **Constitution:** ${user.constitution}
                         📖 **Wisdom:** ${user.wisdom}
                         😎 **Charisma:** ${user.charisma}
                         🍀 **Luck:** ${user.luck}
