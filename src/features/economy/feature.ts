@@ -723,6 +723,8 @@ export class Feature {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
 
+        this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a melee attack`);
+
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
@@ -885,6 +887,8 @@ export class Feature {
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
+
+        this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a ranged attack`);
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
