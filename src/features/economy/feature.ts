@@ -1119,6 +1119,12 @@ export class Feature {
     async encounterInventory(
         interaction: ButtonInteraction
     ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
             where: {
