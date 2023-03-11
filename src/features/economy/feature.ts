@@ -1101,7 +1101,7 @@ export class Feature {
         });
 
         // Respond with the result
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: 'You run away from the encounter.',
