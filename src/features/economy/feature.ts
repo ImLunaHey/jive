@@ -544,6 +544,9 @@ export class Feature {
                     turn: 0
                 }
             });
+
+            // Start the loop again
+            await this.handleBattleLoop(interaction, encounterId);
         }
     }
 
