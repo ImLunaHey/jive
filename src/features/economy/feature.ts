@@ -306,18 +306,18 @@ export class Feature {
             return false;
         }
 
-        // Check if it's the user's turn
-        const initiative = encounter.initatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initatives[0].entityId === interaction.member?.user.id;
-        if (!initiative) {
-            await interaction.reply({
-                ephemeral: true,
-                embeds: [{
-                    title: 'Encounter',
-                    description: 'It\'s not your turn.'
-                }]
-            });
-            return false;
-        }
+        // // Check if it's the user's turn
+        // const initiative = encounter.initatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initatives[0].entityId === interaction.member?.user.id;
+        // if (!initiative) {
+        //     await interaction.reply({
+        //         ephemeral: true,
+        //         embeds: [{
+        //             title: 'Encounter',
+        //             description: 'It\'s not your turn.'
+        //         }]
+        //     });
+        //     return false;
+        // }
 
         // It's the user's turn
         return true;
