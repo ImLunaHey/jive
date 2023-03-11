@@ -176,7 +176,7 @@ export class Feature {
             // Respond with their encounter
             await interaction.editReply({
                 embeds: [{
-                    title: 'Encounter',
+                    title: `Encounter [${user.encounter.turn}/${user.encounter.initatives.length}]`,
                     description: outdent`
                         You rejoin the battle against ${user.encounter.creatures.map(creature => creature.name).join(', ')}.
                         Their health is at ${emojibar(user.encounter.creatures.reduce((a, b) => a + b.health, 0), { maxValue: user.encounter.creatures.reduce((a, b) => a + b.template.health, 0) })}.
@@ -283,13 +283,14 @@ export class Feature {
             include: {
                 creatures: true,
                 guildMembers: true,
+                initatives: true,
             },
         });
 
         // Respond with their encounter
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 description: outdent`
                     You encounter ${encounterCreatures.map(creature => creature.name).join(', ')}.
                     Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}. ${emojibar(100)}
@@ -357,7 +358,7 @@ export class Feature {
         //     await interaction.reply({
         //         ephemeral: true,
         //         embeds: [{
-        //             title: 'Encounter',
+        //             title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
         //             description: 'It\'s not your turn.'
         //         }]
         //     });
@@ -381,6 +382,7 @@ export class Feature {
                     },
                 },
                 guildMembers: true,
+                initatives: true,
             },
         });
         if (!encounter) return;
@@ -420,7 +422,7 @@ export class Feature {
             // Respond with the end of the encounter
             await interaction.editReply({
                 embeds: [{
-                    title: 'Encounter',
+                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                     description: outdent`
                         ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
 
@@ -545,7 +547,7 @@ export class Feature {
                 // Show the attack
                 await interaction.editReply({
                     embeds: [{
-                        title: 'Encounter',
+                        title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                         description: outdent`
                             ${creature.name} attacks <@${guildMember.id}> for ${damage} damage.
                         `,
@@ -566,7 +568,7 @@ export class Feature {
                 // Show them a list of actions they can take
                 await interaction.editReply({
                     embeds: [{
-                        title: 'Encounter',
+                        title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                         fields: [{
                             name: 'Current turn',
                             value: `<@${guildMember.id}>`,
@@ -750,6 +752,7 @@ export class Feature {
                         template: true,
                     },
                 },
+                initatives: true,
             },
         });
         if (!encounter) return;
@@ -766,7 +769,7 @@ export class Feature {
         // Show them a list of actions they can take
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 fields: [{
                     name: 'Turn',
                     value: `<@${interaction.member?.user.id}>`,
@@ -841,7 +844,7 @@ export class Feature {
         if (!creature) {
             await interaction.editReply({
                 embeds: [{
-                    title: 'Encounter',
+                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                     description: 'That creature doesn\'t exist',
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
@@ -886,7 +889,7 @@ export class Feature {
         // Send them a message
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
                 footer: {
                     text: `Encounter ID: ${encounter.id}`
@@ -931,6 +934,7 @@ export class Feature {
                         template: true,
                     },
                 },
+                initatives: true,
             },
         });
         if (!encounter) return;
@@ -947,7 +951,7 @@ export class Feature {
         // Show them a list of actions they can take
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 fields: [{
                     name: 'Turn',
                     value: `<@${interaction.member?.user.id}>`,
@@ -1024,7 +1028,7 @@ export class Feature {
         if (!creature) {
             await interaction.editReply({
                 embeds: [{
-                    title: 'Encounter',
+                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                     description: 'That creature doesn\'t exist',
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
@@ -1089,15 +1093,16 @@ export class Feature {
             where: {
                 guildMembers: {
                     some: {
-                        id: interaction.member?.user.id
-                    }
-                }
+                        id: interaction.member?.user.id,
+                    },
+                },
             },
             include: {
                 creatures: true,
                 guild: true,
-                guildMembers: true
-            }
+                guildMembers: true,
+                initatives: true,
+            },
         });
 
         // If there is no encounter
@@ -1122,7 +1127,7 @@ export class Feature {
         //         await interaction.reply({
         //             ephemeral: true,
         //             embeds: [{
-        //                 title: 'Encounter',
+        //                 title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
         //                 description: 'It\'s not your turn.',
         //             }],
         //             components: []
@@ -1154,7 +1159,7 @@ export class Feature {
         // Respond with the result
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 description: 'You run away from the encounter.',
                 footer: {
                     text: `Encounter ID: ${encounter.id}`
@@ -1185,6 +1190,9 @@ export class Feature {
                     },
                 },
             },
+            include: {
+                initatives: true,
+            }
         });
 
         // If there is no encounter
@@ -1237,7 +1245,7 @@ export class Feature {
         // Respond with the result
         await interaction.editReply({
             embeds: [{
-                title: 'Encounter',
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
                 description: 'You open your inventory.'
             }],
             components,
