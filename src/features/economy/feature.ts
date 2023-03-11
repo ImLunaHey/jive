@@ -347,9 +347,18 @@ export class Feature {
         // Check if the encounter is over
         if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
             // End the encounter
-            await prisma.encounter.delete({
+            await prisma.encounter.update({
                 where: {
                     id: encounter.id,
+                },
+                data: {
+                    end: new Date(),
+                    guildMembers: {
+                        set: [],
+                    },
+                    previousGuildMembers: {
+                        set: encounter.guildMembers.map(guildMember => ({ id: guildMember.id }))
+                    }
                 },
             });
 
@@ -833,11 +842,24 @@ export class Feature {
         //     }
         // }
 
-        // Delete the encounter
-        await prisma.encounter.delete({
+        // Update the encounter
+        await prisma.encounter.update({
             where: {
-                id: encounter.id
-            }
+                id: encounter.id,
+            },
+            data: {
+                end: new Date(),
+                guildMembers: {
+                    disconnect: {
+                        id: interaction.member?.user.id,
+                    },
+                },
+                previousGuildMembers: {
+                    connect: {
+                        id: interaction.member?.user.id,
+                    },
+                },
+            },
         });
 
         // Respond with the result

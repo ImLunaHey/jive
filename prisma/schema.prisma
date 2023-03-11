@@ -67,11 +67,14 @@ model GuildMember {
   cooking Int @default(0)
 
   // The user's current encounter
-  encounter   Encounter? @relation(fields: [encounterId], references: [id])
+  encounter   Encounter? @relation("currentEncounter", fields: [encounterId], references: [id])
   encounterId String?
 
   // Purchases
   purchases Purchase[]
+
+  // The user's previous encounters
+  previousEncounters Encounter[] @relation("previousEncounters")
 }
 
 model Purchase {
@@ -568,7 +571,10 @@ model Encounter {
   creatures Creature[]
 
   // The guild members that are encountering the creatures
-  guildMembers GuildMember[]
+  guildMembers GuildMember[] @relation("currentEncounter")
+
+  // The members who were part of the encounter
+  previousGuildMembers GuildMember[] @relation("previousEncounters")
 
   // The guild that this encounter is taking place in
   guild   Guild  @relation(fields: [guildId], references: [id])
