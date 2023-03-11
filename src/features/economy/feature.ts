@@ -961,7 +961,7 @@ export class Feature {
             type: ApplicationCommandOptionType.String,
             async autocomplete(interaction) {
                 const name = interaction.options.getString('name');
-                const creatures = await prisma.creature.findMany({
+                const creatures = await prisma.creatureTemplate.findMany({
                     where: name ? {
                         name: {
                             contains: name
