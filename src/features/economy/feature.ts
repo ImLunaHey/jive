@@ -508,6 +508,9 @@ export class Feature {
                 // Get the creature
                 const creature = encounter.creatures.find(creature => creature.id === initiative.entityId)!;
 
+                // If the creature is dead, skip their turn
+                if (creature.health <= 0) continue;
+
                 // Get a random guild member
                 const guildMember = encounter.guildMembers[Math.floor(Math.random() * encounter.guildMembers.length)];
 
@@ -561,6 +564,9 @@ export class Feature {
             } else if (initiative.entityType === EntityType.GUILD_MEMBER) {
                 // Get the guild member
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
+
+                // If the guild member is dead, skip their turn
+                if (guildMember.health <= 0) continue;
 
                 // Get the next initative
                 // const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
