@@ -3,7 +3,7 @@ import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
 import { Attack, EntityType, ItemSubType, ItemType, Rarity, Slot } from '@prisma/client';
-import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, StringSelectMenuInteraction } from 'discord.js';
+import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, StringSelectMenuBuilder, StringSelectMenuInteraction } from 'discord.js';
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -720,18 +720,33 @@ export class Feature {
         // If there is no encounter
         if (!encounter) {
             // Respond with the result
-            await interaction.update({
+            await interaction.followUp({
+                ephemeral: true,
                 embeds: [{
                     title: 'Encounter',
-                    description: 'You are not in an encounter.',
+                    description: 'You aren\'t in this encounter.',
                 }],
                 components: []
             });
             return;
         }
 
-        // Check if it's the user's turn
-        if (!await this.isUserTurn(interaction, encounter.id)) return;
+        // Check if the battle has started
+        if (encounter.turn !== 0) {
+            // Check if it's the user's turn
+            if (!await this.isUserTurn(interaction, encounter.id)) {
+                // Respond with the result
+                await interaction.followUp({
+                    ephemeral: true,
+                    embeds: [{
+                        title: 'Encounter',
+                        description: 'It\'s not your turn.',
+                    }],
+                    components: []
+                });
+                return;
+            }
+        }
 
         // Delete the encounter
         await prisma.encounter.delete({
