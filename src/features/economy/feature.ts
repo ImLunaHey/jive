@@ -2,29 +2,24 @@ import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
-import { Attack, EntityType, ItemSubType, ItemType, Location, Rarity, Slot } from '@prisma/client';
-import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, CommandInteraction, GuildMember, StringSelectMenuBuilder, StringSelectMenuInteraction } from 'discord.js';
+import { EntityType, ItemSubType, ItemType, Location, Slot } from '@prisma/client';
+import {
+    ActionRowBuilder,
+    AnySelectMenuInteraction,
+    ApplicationCommandOptionType,
+    AutocompleteInteraction,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
+    Colors,
+    CommandInteraction,
+    GuildMember,
+    StringSelectMenuBuilder,
+    StringSelectMenuInteraction
+} from 'discord.js';
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
-const getClosest = (array: number[], goal: number) => array.reduce((prev, curr) => Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
-const createChance = <T = unknown>(results: Record<number, T>): (() => T) => () => {
-    const chance = Math.floor(Math.random() * 100);
-    const closest = getClosest(Object.keys(results).map(Number), chance);
-    return results[closest] as T;
-};
-
-const createRarity = createChance({
-    20: Rarity.COMMON,
-    40: Rarity.UNCOMMON,
-    60: Rarity.RARE,
-    80: Rarity.EPIC,
-    95: Rarity.LEGENDARY,
-    100: Rarity.MYTHIC,
-});
-
-// emojibar('<:lb_g:1083768174383726673>', '<:l_g:1083768215324340344>', '<:lb4_g:1083768231346577509>', '<:lb2_g:1083768151629635604>', '<:l2_g:1083768196236050442>', '<:lb3_g:1083768245489778798>', 10, 100, 5)
-// 
 const emojibar = (value: number, options?: {
     bars?: {
         full: {
@@ -63,8 +58,18 @@ const emojibar = (value: number, options?: {
     bar[0] = bar[0] == bars.full.bar ? bars.full.start : bars.empty.start;
     bar[bar.length - 1] = bar[bar.length - 1] == bars.full.bar ? bars.full.end : bars.empty.end;
     return bar.join('');
-}
+};
 
+const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
+    const selected = interaction.options.getString('location');
+    const locations = selected ? Object.values(Location).filter(location => location.startsWith(selected)) : Object.values(Location);
+    await interaction.respond(locations.slice(0, 25).map(location => {
+        return {
+            name: location,
+            value: location,
+        };
+    }));
+};
 @Discord()
 @Guard(GuildMemberGuard)
 export class Feature {
@@ -1124,16 +1129,7 @@ export class Feature {
             description: 'The location to travel to',
             required: true,
             type: ApplicationCommandOptionType.String,
-            async autocomplete(interaction) {
-                const selected = interaction.options.getString('location');
-                const locations = selected ? Object.values(Location).filter(location => location.startsWith(selected)) : Object.values(Location);
-                await interaction.respond(locations.slice(0, 25).map(location => {
-                    return {
-                        name: location,
-                        value: location,
-                    };
-                }));
-            },
+            autocomplete: locationAutoComplete
         })
         locationId: string,
         interaction: CommandInteraction
@@ -1216,7 +1212,7 @@ export class Feature {
         @SlashOption({
             name: 'name',
             description: 'The name of the creature',
-            required: true,
+            required: false,
             type: ApplicationCommandOptionType.String,
             async autocomplete(interaction) {
                 const name = interaction.options.getString('name');
@@ -1236,26 +1232,63 @@ export class Feature {
                 }));
             },
         })
-        creatureId: string,
+        creatureId: string | undefined,
+        @SlashOption({
+            name: 'location',
+            description: 'The location creatures are in',
+            required: false,
+            type: ApplicationCommandOptionType.String,
+            autocomplete: locationAutoComplete
+        })
+        location: Location | undefined,
         interaction: CommandInteraction
     ) {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the creature template
-        const creature = await prisma.creatureTemplate.findUnique({
-            where: {
-                id: creatureId,
-            }
-        });
-
-        // If the creature doesn't exist
-        if (!creature) {
+        // If they didn't pick a creature and didn't pick a location
+        if (!creatureId && !location) {
             // Respond with the result
             await interaction.editReply({
                 embeds: [{
                     title: 'Creature',
-                    description: 'That creature doesn\'t exist.'
+                    description: 'You must pick a creature or a location.',
+                    color: Colors.Red,
+                }]
+            });
+            return;
+        }
+
+        // Get the creature template(s)
+        const creatures = await prisma.creatureTemplate.findMany({
+            where: {
+                ...(creatureId ? { id: creatureId } : {}),
+                ...(location ? { location } : {}),
+            },
+            take: 5, // Limit to 5 results
+        });
+
+        // If they picked a creature and it doesn't exist
+        if (creatureId && creatures.length === 0) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Creature',
+                    description: 'That creature doesn\'t exist.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // If they didn't pick a creature and there are no creatures in the location
+        if (!creatureId && creatures.length === 0) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Creature',
+                    description: 'There are no creatures in that location.',
+                    color: Colors.Red,
                 }],
             });
             return;
@@ -1263,38 +1296,40 @@ export class Feature {
 
         // Respond with the result
         await interaction.editReply({
-            embeds: [{
-                title: `${creature.emoji} ${creature.name}`,
-                description: creature.description,
-                thumbnail: {
-                    url: creature.imageUrl ?? 'https://cdn.discordapp.com/embed/avatars/0.png',
-                },
-                fields: [{
-                    name: 'NAME',
-                    value: creature.name,
-                    inline: true,
-                }, {
-                    name: 'HEALTH',
-                    value: String(creature.health),
-                    inline: true,
-                }, {
-                    name: 'ATTACK',
-                    value: String(creature.attack),
-                    inline: true,
-                }, {
-                    name: 'DEFENCE',
-                    value: String(creature.defence),
-                    inline: true,
-                }, {
-                    name: 'LOCATION',
-                    value: creature.location,
-                    inline: true,
-                }, {
-                    name: 'RARITY',
-                    value: creature.rarity,
-                    inline: true,
-                }],
-            }],
+            embeds: creatures.map(creature => {
+                return {
+                    title: `${creature.emoji} ${creature.name}`,
+                    description: creature.description,
+                    thumbnail: {
+                        url: creature.imageUrl ?? 'https://cdn.discordapp.com/embed/avatars/0.png',
+                    },
+                    fields: [{
+                        name: 'NAME',
+                        value: creature.name,
+                        inline: true,
+                    }, {
+                        name: 'LOCATION',
+                        value: creature.location,
+                        inline: true,
+                    }, {
+                        name: 'RARITY',
+                        value: creature.rarity,
+                        inline: true,
+                    }, {
+                        name: 'HEALTH',
+                        value: String(creature.health),
+                        inline: true,
+                    }, {
+                        name: 'ATTACK',
+                        value: String(creature.attack),
+                        inline: true,
+                    }, {
+                        name: 'DEFENCE',
+                        value: String(creature.defence),
+                        inline: true,
+                    }],
+                };
+            })
         });
     }
 
