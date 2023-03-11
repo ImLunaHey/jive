@@ -171,7 +171,7 @@ export class Feature {
         // Check if the user is already exploring
         if (user.encounter) {
             // Get the next initative
-            const nextInitiative = user.encounter.initatives[user.encounter.turn + 1] ?? user.encounter.initatives[0];
+            // const nextInitiative = user.encounter.initatives[user.encounter.turn + 1] ?? user.encounter.initatives[0];
 
             // Respond with their encounter
             await interaction.editReply({
@@ -185,12 +185,12 @@ export class Feature {
                         name: 'Current turn',
                         value: `<@${user.id}>`,
                         inline: true,
-                    }, {
-                        name: 'Next turn',
-                        value: nextInitiative.entityType === EntityType.CREATURE
-                            ? user.encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
-                            `<@${user.encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
-                        inline: true,
+                        // }, {
+                        //     name: 'Next turn',
+                        //     value: nextInitiative.entityType === EntityType.CREATURE
+                        //         ? user.encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
+                        //         `<@${user.encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
+                        //     inline: true,
                     }, {
                         name: 'Party',
                         value: user.encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
