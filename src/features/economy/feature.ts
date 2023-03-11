@@ -354,7 +354,7 @@ export class Feature {
             });
 
             // Respond with the end of the encounter
-            await interaction.editReply({
+            await interaction.update({
                 embeds: [{
                     title: 'Encounter',
                     description: outdent`
