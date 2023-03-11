@@ -542,7 +542,7 @@ model Initative {
   id String @id @unique @default(uuid())
 
   // The encounter that this is a part of
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
   encounterId String
 
   // Their roll
@@ -594,7 +594,7 @@ model Attack {
   id String @id @unique @default(uuid())
 
   // The encounter that this event is a part of
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
   encounterId String
 
   // The time that this event happened

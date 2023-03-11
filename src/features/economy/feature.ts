@@ -172,9 +172,13 @@ export class Feature {
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents([
                             new ButtonBuilder()
-                                .setCustomId('encounter-attack')
-                                .setLabel('Start battle')
+                                .setCustomId('encounter-button-melee-attack')
+                                .setLabel('Punch')
                                 .setStyle(ButtonStyle.Primary),
+                            // new ButtonBuilder()
+                            //     .setCustomId('encounter-ranged-attack')
+                            //     .setLabel('Throw a rock')
+                            //     .setStyle(ButtonStyle.Primary),
                         ]),
                     new ActionRowBuilder<ButtonBuilder>()
                         .addComponents([
@@ -503,7 +507,7 @@ export class Feature {
                         new ActionRowBuilder<ButtonBuilder>()
                             .addComponents([
                                 new ButtonBuilder()
-                                    .setCustomId('encounter-melee-attack')
+                                    .setCustomId('encounter-button-melee-attack')
                                     .setLabel('Punch')
                                     .setStyle(ButtonStyle.Primary),
                                 // new ButtonBuilder()
