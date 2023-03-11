@@ -1,5 +1,6 @@
 import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
+import { sleep } from '@app/common/sleep';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
 import { EntityType, ItemSubType, ItemType, Location, Slot } from '@prisma/client';
@@ -502,6 +503,21 @@ export class Feature {
                         },
                     },
                 });
+
+                // Show the attack
+                await interaction.update({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: outdent`
+                            ${creature.name} attacks <@${guildMember.id}> for ${damage} damage.
+                        `,
+                        color: Colors.Red,
+                    }],
+                    components: [],
+                });
+
+                // Wait 2s before continuing
+                await sleep(2_000);
             } else if (initiative.entityType === EntityType.GUILD_MEMBER) {
                 // Get the guild member
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
