@@ -2,8 +2,8 @@ import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
-import { Attack, EntityType, ItemSubType, ItemType, Rarity, Slot } from '@prisma/client';
-import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, GuildMember, StringSelectMenuBuilder, StringSelectMenuInteraction } from 'discord.js';
+import { Attack, EntityType, ItemSubType, ItemType, Location, Rarity, Slot } from '@prisma/client';
+import { ActionRowBuilder, AnySelectMenuInteraction, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, CommandInteraction, GuildMember, StringSelectMenuBuilder, StringSelectMenuInteraction } from 'discord.js';
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -946,6 +946,98 @@ export class Feature {
                 description: 'You open your inventory.'
             }],
             components,
+        });
+    }
+
+    @Slash({
+        name: 'travel',
+        description: 'Travel to a new location',
+    })
+    async travel(
+        @SlashOption({
+            name: 'location',
+            description: 'The location to travel to',
+            required: true,
+            type: ApplicationCommandOptionType.String,
+            async autocomplete(interaction) {
+                await interaction.respond(Object.keys(Location).map(location => {
+                    return {
+                        name: location,
+                        value: location,
+                    };
+                }));
+            },
+        })
+        locationId: string,
+        interaction: CommandInteraction
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the user
+        const user = await prisma.guildMember.findUnique({
+            where: {
+                id: interaction.member?.user.id
+            },
+        });
+        if (!user) return;
+
+        // Don't allow travelling if the user's in an encounter
+        if (user.encounterId) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Travel',
+                    description: 'You can\'t travel while in an encounter.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // Get the location
+        const location = Location[locationId as keyof typeof Location];
+        if (!location) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Travel',
+                    description: 'That location doesn\'t exist.',
+                }],
+            });
+            return;
+        }
+
+        // Check if the user is already in the location
+        if (user.location === location) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Travel',
+                    description: 'You are already in that location.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // Update the user's location
+        await prisma.guildMember.update({
+            where: {
+                id: interaction.member?.user.id,
+            },
+            data: {
+                location,
+            },
+        });
+
+        // Respond with the result
+        await interaction.editReply({
+            embeds: [{
+                title: 'Travel',
+                description: `You travel to ${location}.`,
+                color: Colors.Blue,
+            }],
         });
     }
 
