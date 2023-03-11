@@ -816,22 +816,22 @@ export class Feature {
             return;
         }
 
-        // Check if the battle has started
-        if (encounter.turn !== 0) {
-            // Check if it's the user's turn
-            if (!await this.isUserTurn(interaction, encounter.id)) {
-                // Respond with the result
-                await interaction.reply({
-                    ephemeral: true,
-                    embeds: [{
-                        title: 'Encounter',
-                        description: 'It\'s not your turn.',
-                    }],
-                    components: []
-                });
-                return;
-            }
-        }
+        // // Check if the battle has started
+        // if (encounter.turn !== 0) {
+        //     // Check if it's the user's turn
+        //     if (!await this.isUserTurn(interaction, encounter.id)) {
+        //         // Respond with the result
+        //         await interaction.reply({
+        //             ephemeral: true,
+        //             embeds: [{
+        //                 title: 'Encounter',
+        //                 description: 'It\'s not your turn.',
+        //             }],
+        //             components: []
+        //         });
+        //         return;
+        //     }
+        // }
 
         // Delete the encounter
         await prisma.encounter.delete({
