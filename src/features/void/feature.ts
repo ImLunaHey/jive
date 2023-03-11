@@ -6,7 +6,6 @@ import { Colors, TextChannel } from 'discord.js';
 import { type ArgsOf, Discord, On, Guard } from 'discordx';
 
 @Discord()
-@Guard(GuildMemberGuard)
 export class Feature {
     private logger = globalLogger.scope('Void');
 
@@ -70,6 +69,7 @@ export class Feature {
     }
 
     @On({ event: 'messageCreate' })
+    @Guard(GuildMemberGuard)
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
         if (message.channel.id !== '1081483175202660403') return;
         if (message.author.bot && message.embeds[0].title === 'Void') return;
