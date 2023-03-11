@@ -359,7 +359,7 @@ export class Feature {
         // Check if the encounter is over
         if (deadCreatures.length === encounter.creatures.length || deadGuildMembers.length === encounter.guildMembers.length) {
             // End the encounter
-            await prisma.encounter.editReply({
+            await prisma.encounter.update({
                 where: {
                     id: encounter.id,
                 },
