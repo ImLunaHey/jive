@@ -292,7 +292,7 @@ export class Feature {
 
         // Check if we found an encounter
         if (!encounter) {
-            await interaction.followUp({
+            await interaction.reply({
                 ephemeral: true,
                 embeds: [{
                     title: 'Encounter',
@@ -305,7 +305,7 @@ export class Feature {
         // Check if it's the user's turn
         const initiative = encounter.initatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initatives[0].entityId === interaction.member?.user.id;
         if (!initiative) {
-            await interaction.followUp({
+            await interaction.reply({
                 ephemeral: true,
                 embeds: [{
                     title: 'Encounter',
@@ -798,7 +798,7 @@ export class Feature {
         // If there is no encounter
         if (!encounter) {
             // Respond with the result
-            await interaction.followUp({
+            await interaction.reply({
                 ephemeral: true,
                 embeds: [{
                     title: 'Encounter',
@@ -814,7 +814,7 @@ export class Feature {
             // Check if it's the user's turn
             if (!await this.isUserTurn(interaction, encounter.id)) {
                 // Respond with the result
-                await interaction.followUp({
+                await interaction.reply({
                     ephemeral: true,
                     embeds: [{
                         title: 'Encounter',
