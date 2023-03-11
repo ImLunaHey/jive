@@ -707,7 +707,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
@@ -779,7 +779,7 @@ export class Feature {
 
         // If the creature doesn't exist, return
         if (!creature) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Encounter',
                     description: 'That creature doesn\'t exist',
@@ -824,7 +824,7 @@ export class Feature {
         });
 
         // Send them a message
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
@@ -882,7 +882,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
@@ -956,7 +956,7 @@ export class Feature {
 
         // If the creature doesn't exist, return
         if (!creature) {
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Encounter',
                     description: 'That creature doesn\'t exist',
@@ -1080,7 +1080,7 @@ export class Feature {
         });
 
         // Respond with the result
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: 'You run away from the encounter.',
@@ -1112,7 +1112,7 @@ export class Feature {
         // If there is no encounter
         if (!encounter) {
             // Respond with the result
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Encounter',
                     description: 'You are not in an encounter.'
@@ -1157,7 +1157,7 @@ export class Feature {
         ];
 
         // Respond with the result
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 description: 'You open your inventory.'
