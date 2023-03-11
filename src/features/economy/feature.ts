@@ -1152,7 +1152,16 @@ export class Feature {
 
         // Get the user's details
         const user = await prisma.guildMember.findUnique({ where: { id: guildMember?.id ?? interaction.member?.user.id } });
-        if (!user) return;
+        if (!user) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Profile',
+                    description: 'No profile found for this user.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
 
         // Get the level details
         const currentLevelXp = levelService.getCurrentLevelXp(user.xp);
