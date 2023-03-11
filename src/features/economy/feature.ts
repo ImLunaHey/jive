@@ -636,7 +636,7 @@ export class Feature {
                 }
             },
             include: {
-                initatives: true,
+                creatures: true,
             }
         });
         if (!encounter) return;
@@ -644,13 +644,10 @@ export class Feature {
         // Check if it's the user's turn
         if (!await this.isUserTurn(interaction, encounter.id)) return;
 
-        // Get the initiatives left in the encounter
-        const initiatives = encounter.initatives.slice(encounter.turn);
-
         // Show the user a list of creatures
-        const creatures = initiatives.filter(initiative => initiative.entityType === EntityType.CREATURE).map(initiative => ({
-            label: initiative.entityId,
-            value: initiative.id
+        const creatures = encounter.creatures.map(creature => ({
+            label: creature.name,
+            value: creature.id
         }));
 
         // Show them a list of actions they can take
@@ -715,21 +712,6 @@ export class Feature {
             },
         });
 
-        // If the user doesn't have a weapon, return
-        if (!weapon) {
-            await interaction.update({
-                embeds: [{
-                    title: 'Encounter',
-                    description: 'You don\'t have a weapon equipped',
-                    footer: {
-                        text: `Encounter ID: ${encounter.id}`
-                    }
-                }],
-                components: []
-            });
-            return;
-        }
-
         // Get the creature
         const creature = await prisma.creature.findFirst({
             where: {
@@ -759,7 +741,7 @@ export class Feature {
             },
             data: {
                 health: {
-                    decrement: weapon.damage!
+                    decrement: weapon?.damage ?? 1
                 }
             }
         });
@@ -773,6 +755,15 @@ export class Feature {
                 turn: {
                     increment: 1
                 },
+                attacks: {
+                    create: {
+                        attackerId: interaction.member?.user.id,
+                        attackerType: EntityType.GUILD_MEMBER,
+                        defenderId: interaction.values[0],
+                        defenderType: EntityType.CREATURE,
+                        damage: weapon?.damage ?? 1,
+                    }
+                }
             }
         });
 
