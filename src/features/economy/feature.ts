@@ -713,7 +713,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
@@ -894,7 +894,7 @@ export class Feature {
         }));
 
         // Show them a list of actions they can take
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Encounter',
                 fields: [{
