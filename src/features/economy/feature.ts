@@ -677,7 +677,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferUpdate();
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
@@ -746,7 +746,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferUpdate();
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a melee attack`);
 
@@ -858,7 +858,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferUpdate();
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the encounter
         const encounter = await prisma.encounter.findFirst({
@@ -927,7 +927,7 @@ export class Feature {
         if (!interaction.member?.user.id) return;
 
         // Show the bot is thinking
-        await interaction.deferUpdate();
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         this.logger.info(`${interaction.member?.user.id} is attacking ${interaction.values[0]} with a ranged attack`);
 
