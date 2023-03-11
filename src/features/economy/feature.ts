@@ -370,6 +370,7 @@ export class Feature {
                         text: `Encounter ID: ${encounter.id}`
                     }
                 }],
+                components: []
             });
 
             return true;
