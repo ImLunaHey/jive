@@ -64,17 +64,16 @@ const capitalise = (string: string) => string && string[0].toUpperCase() + strin
 const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     const selected = interaction.options.getString('location')?.toLowerCase();
     const selectedLocations = (selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location)).slice(0, 25);
-    const locations = await Promise.all(selectedLocations.map(async location => {
-        return {
-            location,
-            count: await prisma.creatureTemplate.count({ where: { location } }),
-        }
-    })).then(locations => locations.filter(({ count }) => count >= 1).map(({ location, count }) => {
+    const selectedLocationsCreatureCounts = await prisma.$transaction(selectedLocations.map(location => prisma.creatureTemplate.count({ where: { location } })));
+    const locations = selectedLocations.map(location => ({
+        location,
+        count: selectedLocationsCreatureCounts[selectedLocations.indexOf(location)],
+    })).filter(({ count }) => count >= 1).map(({ location, count }) => {
         return {
             name: `${capitalise(location.toLowerCase())} [${count} creatures]`,
             value: location,
         };
-    }));
+    });
     await interaction.respond(locations);
 };
 @Discord()
