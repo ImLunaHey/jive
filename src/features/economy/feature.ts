@@ -63,13 +63,14 @@ const emojibar = (value: number, options?: {
 const capitalise = (string: string) => string && string[0].toUpperCase() + string.slice(1);
 const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     const selected = interaction.options.getString('location')?.toLowerCase();
-    const locations = selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location);
-    await interaction.respond(locations.slice(0, 25).map(location => {
+    const selectedLocations = (selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location)).slice(0, 25);
+    const locations = await Promise.all(selectedLocations.map(async location => {
         return {
-            name: capitalise(location.toLowerCase()),
+            name: `${capitalise(location.toLowerCase())} [${await prisma.creatureTemplate.count({ where: { location } })} creatures]`,
             value: location,
         };
     }));
+    await interaction.respond(locations);
 };
 @Discord()
 @Guard(GuildMemberGuard)
