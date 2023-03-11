@@ -391,7 +391,7 @@ export class Feature {
                         ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
 
                         Damage dealt to creatures:
-                        ${encounter.creatures.map(creature => `${creature.name}: ${creature.template.health - getDamageTaken(creature.id)}`).join('\n')}
+                        ${encounter.creatures.map(creature => `${creature.name}: ${getDamageTaken(creature.id)}`).join('\n')}
 
                         Damage dealt to guild members:
                         ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${getDamageTaken(guildMember.id)}`).join('\n')}
