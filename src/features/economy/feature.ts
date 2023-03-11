@@ -617,7 +617,7 @@ export class Feature {
                 });
 
                 // Exit the loop
-                break;
+                return;
             }
         }
 
