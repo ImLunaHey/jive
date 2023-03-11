@@ -1099,7 +1099,11 @@ export class Feature {
         // Respond with the result
         await interaction.editReply({
             embeds: [{
-                title: 'Creature',
+                title: `${creature.emoji} ${creature.name}`,
+                description: creature.description,
+                thumbnail: {
+                    url: creature.imageUrl ?? 'https://cdn.discordapp.com/embed/avatars/0.png',
+                },
                 fields: [{
                     name: 'NAME',
                     value: creature.name,

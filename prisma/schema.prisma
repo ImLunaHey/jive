@@ -499,6 +499,9 @@ model CreatureTemplate {
   location    Location
   rarity      Rarity   @default(COMMON)
 
+  // Image of the creature
+  imageUrl String?
+
   // How much health does this creature have
   health Int
 
