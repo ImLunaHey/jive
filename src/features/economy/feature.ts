@@ -66,7 +66,12 @@ const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     const selectedLocations = (selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location)).slice(0, 25);
     const locations = await Promise.all(selectedLocations.map(async location => {
         return {
-            name: `${capitalise(location.toLowerCase())} [${await prisma.creatureTemplate.count({ where: { location } })} creatures]`,
+            location,
+            count: await prisma.creatureTemplate.count({ where: { location } }),
+        }
+    })).then(locations => locations.filter(({ count }) => count >= 1).map(({ location, count }) => {
+        return {
+            name: `${capitalise(location.toLowerCase())} [${count} creatures]`,
             value: location,
         };
     }));
