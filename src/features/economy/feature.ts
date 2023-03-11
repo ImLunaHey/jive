@@ -794,9 +794,7 @@ export class Feature {
                 id: encounter.id
             },
             data: {
-                turn: {
-                    increment: 1
-                },
+                turn: encounter.turn === encounter.initatives.length - 1 ? 0 : encounter.turn + 1,
                 attacks: {
                     create: {
                         attackerId: interaction.member?.user.id,
