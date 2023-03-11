@@ -654,7 +654,7 @@ export class Feature {
 
         // Show the user a list of creatures
         const creatures = encounter.creatures.map(creature => ({
-            label: `${creature.name} (${creature.health} HP) - ATK: ${creature.template.attack} DEF: ${creature.template.defence}`,
+            label: `${creature.name} (${creature.health}/${creature.template.health} HP) - ATK: ${creature.template.attack} DEF: ${creature.template.defence}`,
             value: creature.id
         }));
 
