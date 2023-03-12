@@ -139,7 +139,7 @@ export class Feature {
             // If there's no starboard message, create one
             if (!starboardMessage) {
                 const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : "";
-                const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com') ?? false;
+                const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com/') ?? false;
                 const embed = new EmbedBuilder()
                     .setColor(15844367)
                     .setDescription(outdent`
