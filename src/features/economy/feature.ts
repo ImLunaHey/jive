@@ -589,8 +589,6 @@ export class Feature {
 
         // TODO: #1:6h/dev Handle this
         if (!initialEncounter) return;
-
-        // TODO: #2:6h/dev Handle this
         if (initialEncounter?.initatives.length === 0) return;
 
         // Check if the encounter is over
