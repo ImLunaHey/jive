@@ -208,10 +208,12 @@ export class Feature {
                         new ButtonBuilder()
                             .setCustomId('encounter-run')
                             .setLabel('Run')
+                            .setEmoji('🏃')
                             .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
                             .setCustomId('encounter-inventory')
                             .setLabel('Inventory')
+                            .setEmoji('🎒')
                             .setStyle(ButtonStyle.Secondary)
                     ])
             ]
@@ -333,10 +335,12 @@ export class Feature {
                         new ButtonBuilder()
                             .setCustomId('encounter-run')
                             .setLabel('Run')
+                            .setEmoji('🏃')
                             .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
                             .setCustomId('encounter-inventory')
                             .setLabel('Inventory')
+                            .setEmoji('🎒')
                             .setStyle(ButtonStyle.Secondary)
                     ])
             ]
