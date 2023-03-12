@@ -1,6 +1,7 @@
 import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { Discord, Slash, ModalComponent, ButtonComponent } from 'discordx';
+import { Discord, Slash, ModalComponent, ButtonComponent, Guard } from 'discordx';
+import { RateLimit, TIME_UNIT } from '@discordx/utilities';
 
 @Discord()
 export class Feature {
@@ -152,15 +153,24 @@ export class Feature {
         });
 
         // Reply with a confirmation message
-        await interaction.followUp({
-            ephemeral: true,
+        await interaction.editReply({
             content: 'Your message has been sent!',
+            embeds: [],
+            components: [],
         });
     }
+
 
     @ButtonComponent({
         id: /^looking-for-interested-in \[(\d{18})\]$/
     })
+    @Guard(
+        RateLimit(TIME_UNIT.seconds, 60, {
+            ephemeral: true,
+            message: 'You are doing this too fast! Please wait 60 seconds before trying again.',
+            rateValue: 1,
+        })
+    )
     async lookingForInterested(interaction: ButtonInteraction) {
         if (!interaction.guild) return;
 
@@ -189,7 +199,8 @@ export class Feature {
         }
 
         // Reply with a confirmation message
-        await interaction.editReply({
+        await interaction.followUp({
+            ephemeral: true,
             content: `We've sent <@${user.id}> a message for you!`,
         });
 
