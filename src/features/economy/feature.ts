@@ -460,13 +460,32 @@ export class Feature {
             for (const guildMember of encounter.guildMembers) {
                 const itemTemplate = lootTable[Math.floor(Math.random() * lootTable.length)];
                 if (itemTemplate) {
-                    await prisma.guildMember.update({
-                        where: {
-                            id: guildMember.id,
-                        },
-                        data: {
-                            inventory: {
-                                create: {
+                    // Ensure items are stacked
+                    await prisma.$transaction(async prisma => {
+                        const hasItem = await prisma.item.findFirst({
+                            where: {
+                                ownerId: guildMember.id,
+                                templateId: itemTemplate.id,
+                            }
+                        });
+
+                        if (hasItem) {
+                            // Add to the stack
+                            await prisma.item.update({
+                                where: {
+                                    id: hasItem.id,
+                                },
+                                data: {
+                                    quantity: {
+                                        increment: 1,
+                                    }
+                                }
+                            });
+                        } else {
+                            // Create a new item
+                            await prisma.item.create({
+                                data: {
+                                    ownerId: guildMember.id,
                                     templateId: itemTemplate.id,
                                     description: itemTemplate.description,
                                     name: itemTemplate.name,
@@ -484,7 +503,7 @@ export class Feature {
                                     quantity: itemTemplate.quantity,
                                     rarity: itemTemplate.rarity,
                                 }
-                            }
+                            });
                         }
                     });
                 }
