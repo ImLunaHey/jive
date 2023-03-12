@@ -587,10 +587,10 @@ export class Feature {
             }
         });
 
-        // @TODO: Handle this
+        // TODO: Handle this
         if (!initialEncounter) return;
 
-        // @TODO: Handle this
+        // TODO: Handle this
         if (initialEncounter?.initatives.length === 0) return;
 
         // Check if the encounter is over
