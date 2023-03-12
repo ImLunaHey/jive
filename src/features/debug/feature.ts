@@ -3,8 +3,20 @@ import { client } from '@app/client';
 import { prisma } from '@app/common/prisma-client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
+import Canvas, { createCanvas, Image } from '@napi-rs/canvas';
+
+const applyText = (canvas, text) => {
+    const context = canvas.getContext('2d');
+    let fontSize = 70;
+
+    do {
+        context.font = `${fontSize -= 10}px sans-serif`;
+    } while (context.measureText(text).width > canvas.width - 300);
+
+    return context.font;
+};
 
 @Discord()
 export class Feature {
@@ -60,6 +72,76 @@ export class Feature {
         await channel.send({
             embeds: [embed]
         });
+    }
+
+    @Slash({
+        name: 'reload',
+        description: 'Reload the bot',
+    })
+    async reload(interaction: CommandInteraction) {
+        // Check if the user is the owner
+        if (interaction.user.id !== env.OWNER_ID) {
+            await interaction.reply({
+                content: 'You are not the owner of the bot.',
+                ephemeral: true,
+            });
+            return;
+        }
+
+        // Reply with a confirmation message
+        await interaction.reply({
+            content: 'Reloading the bot...',
+            ephemeral: true,
+        });
+
+        // Reload the bot
+        process.exit(0);
+    }
+
+    @Slash({
+        name: 'test',
+        description: 'Test the bot',
+    })
+    async test(interaction: CommandInteraction) {
+        const canvas = createCanvas(700, 250);
+        const context = canvas.getContext('2d');
+
+        context.fillStyle = "black";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.fillStyle = 'white';
+        for (let i = 0; i < 200; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            context.fillRect(x, y, 2, 2);
+        }
+
+        context.strokeStyle = '#0099ff';
+        context.strokeRect(0, 0, canvas.width, canvas.height);
+
+        context.font = '28px sans-serif';
+        context.fillStyle = '#ffffff';
+        context.fillText('Profile', canvas.width / 2.5, canvas.height / 3.5);
+
+        context.font = applyText(canvas, `${interaction.member?.user.username}!`);
+        context.fillStyle = '#ffffff';
+        context.fillText(`${interaction.member?.user.username}!`, canvas.width / 2.5, canvas.height / 1.8);
+
+        context.beginPath();
+        context.arc(125, 125, 100, 0, Math.PI * 2, true);
+        context.closePath();
+        context.clip();
+
+        const buffer = await fetch(interaction.user.displayAvatarURL({ extension: 'jpg' })).then(response => response.arrayBuffer());
+        const avatar = await Canvas.loadImage(buffer);
+
+        context.drawImage(avatar, 25, 25, 200, 200);
+
+        // Create the attachment
+        const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'profile-image.png' });
+
+        // Send the attachment
+        await interaction.reply({ files: [attachment] });
     }
 
     @Slash({
