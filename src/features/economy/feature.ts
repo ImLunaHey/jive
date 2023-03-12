@@ -1353,7 +1353,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^encounter-inventory-item-use \[(\d{18})\]$/
+        id: /^encounter-inventory-item-use \[([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\]$/
     })
     async encounterInventoryItemUse(
         interaction: ButtonInteraction
@@ -1394,7 +1394,7 @@ export class Feature {
         }
 
         // Get the item
-        const itemId = interaction.customId.match(/^encounter-inventory-item-use \[(\d{18})\]$/)?.[1];
+        const itemId = interaction.customId.match(/^encounter-inventory-item-use \[([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\]$/)?.[1];
         if (!itemId) return;
         const item = await prisma.item.findFirst({
             where: {
