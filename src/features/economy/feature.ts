@@ -1510,7 +1510,7 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 author: {
-                    name: `${interaction.member?.user.username}'s profile`,
+                    name: `${await interaction.guild?.members.fetch(user.id).then(user => user.nickname)}'s profile`,
                     icon_url: interaction.user.avatarURL() ?? undefined
                 },
                 fields: [{
