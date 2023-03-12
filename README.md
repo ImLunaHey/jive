@@ -1,1 +1,4 @@
 # Jive
+
+## License
+MIT
