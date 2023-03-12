@@ -37,6 +37,8 @@ export class Feature {
                     .setCustomId('anon')
                     .setLabel('Should this be posted anonymously?')
                     .setValue('yes')
+                    .setMinLength(1)
+                    .setMaxLength(3)
                     .setStyle(TextInputStyle.Short)
                     .setPlaceholder('yes/no'),
             ),
@@ -82,7 +84,7 @@ export class Feature {
         this.embedCache.set(interaction.user.id, embed);
 
         // Reply with the embed so the user can confirm
-        await interaction.reply({
+        await interaction.editReply({
             embeds: [embed],
             components: [
                 new ActionRowBuilder<ButtonBuilder>()
