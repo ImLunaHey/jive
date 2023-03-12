@@ -1316,6 +1316,8 @@ export class Feature {
         });
         if (!user) return;
 
+        this.logger.info(`Showing inventory for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+
         const components = [
             ...(user.inventory.length >= 1 ? [
                 new ActionRowBuilder<ButtonBuilder>()
@@ -1416,10 +1418,14 @@ export class Feature {
             return;
         }
 
+        this.logger.info(`Using item ${item.id} (${item.name}) [${item.type}:${item.subType}] in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+
         // Check if the item is a weapon
         if (item.type === ItemType.WEAPON) {
             // Check if the item is already equipped
             if (item.equipped) {
+                this.logger.info(`Item ${item.id} (${item.name}) is already equipped for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+
                 // Respond with the result
                 await interaction.editReply({
                     embeds: [{
@@ -1444,6 +1450,7 @@ export class Feature {
             await prisma.$transaction(async prisma => {
                 // Unequip the current weapon
                 if (currentWeapon) {
+                    this.logger.info(`Unequipping weapon ${currentWeapon.id} (${currentWeapon.name}) in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
                     await prisma.item.update({
                         where: {
                             id: currentWeapon?.id,
@@ -1455,6 +1462,7 @@ export class Feature {
                 }
 
                 // Equip the new weapon
+                this.logger.info(`Equipping weapon ${item.id} (${item.name}) in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
                 await prisma.item.update({
                     where: {
                         id: item.id,
