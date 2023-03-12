@@ -201,7 +201,7 @@ export class Feature {
         // Reply with a confirmation message
         await interaction.followUp({
             ephemeral: true,
-            content: `We've sent <@${user.id}> a message for you!`,
+            content: `We've sent them a message for you!`,
         });
 
         // DM the user
