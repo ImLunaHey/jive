@@ -1436,6 +1436,13 @@ export class Feature {
                     }],
                     components: []
                 });
+
+                // Wait 1s for the message to show
+                await sleep(1_000);
+
+                // Get the encounter
+                await this.isExploring(interaction);
+
                 return;
             }
 
