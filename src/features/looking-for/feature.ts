@@ -219,13 +219,6 @@ export class Feature {
     @ButtonComponent({
         id: /^looking-for-delete \[(\d{18})\]$/
     })
-    @Guard(
-        RateLimit(TIME_UNIT.seconds, 60, {
-            ephemeral: true,
-            message: 'You are doing this too fast! Please wait 60 seconds before trying again.',
-            rateValue: 1,
-        })
-    )
     async lookingForDelete(interaction: ButtonInteraction) {
         if (!interaction.guild) return;
 
