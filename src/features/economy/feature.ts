@@ -552,7 +552,8 @@ export class Feature {
         // Remove the turns that have already happened
         const initatives = initialEncounter.initatives.slice(initialEncounter.turn);
 
-        this.logger.info(`Starting battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives, starting at turn ${initialEncounter.turn}`);
+        if (initialEncounter.turn === 0) this.logger.info(`Starting battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives`);
+        else this.logger.info(`Resuming battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives, starting at turn ${initialEncounter.turn}`);
 
         // Loop through each initative
         for (const initiative of initatives) {
@@ -583,7 +584,12 @@ export class Feature {
                 const creature = encounter.creatures.find(creature => creature.id === initiative.entityId)!;
 
                 // If the creature is dead, skip their turn
-                if (creature.health <= 0) continue;
+                if (creature.health <= 0) {
+                    this.logger.info(`Creature ${creature.id} is dead, skipping their turn`);
+                    continue;
+                } else {
+                    this.logger.info(`Creature ${creature.id} is alive, taking their turn`);
+                }
 
                 // Get a random guild member
                 const guildMember = encounter.guildMembers[Math.floor(Math.random() * encounter.guildMembers.length)];
@@ -640,7 +646,12 @@ export class Feature {
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
 
                 // If the guild member is dead, skip their turn
-                if (guildMember.health <= 0) continue;
+                if (guildMember.health <= 0) {
+                    this.logger.info(`Guild member ${guildMember.id} is dead, skipping their turn`);
+                    continue;
+                } else {
+                    this.logger.info(`Guild member ${guildMember.id} is alive, taking their turn`);
+                }
 
                 // Get the next initative
                 // const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
@@ -795,6 +806,8 @@ export class Feature {
                 }
             }
         });
+
+        this.logger.info(`Started encounter ${encounter.id} in guild ${encounter.guild.id} with ${encounter.guildMembers.length} guild members and ${encounter.creatures.length} creatures.`);
 
         // Start the battle loop
         await this.handleBattleLoop(interaction, encounter.id);
