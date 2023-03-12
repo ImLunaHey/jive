@@ -116,6 +116,8 @@ export class Feature {
         // Reply with a confirmation message
         await interaction.editReply({
             content: 'Your message has been deleted!',
+            embeds: [],
+            components: [],
         });
     }
 
@@ -124,9 +126,6 @@ export class Feature {
     })
     async lookingForButton(interaction: ModalSubmitInteraction) {
         if (!interaction.guild) return;
-
-        // Defer the reply
-        if (!interaction.deferred) await interaction.deferUpdate();
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
@@ -153,7 +152,8 @@ export class Feature {
         });
 
         // Reply with a confirmation message
-        await interaction.editReply({
+        await interaction.followUp({
+            ephemeral: true,
             content: 'Your message has been sent!',
         });
     }
@@ -181,7 +181,8 @@ export class Feature {
 
         // Check if they're the original author
         if (user.id === interaction.user.id) {
-            await interaction.editReply({
+            await interaction.followUp({
+                ephemeral: true,
                 content: 'You can\'t be interested in your own post!',
             });
             return;
