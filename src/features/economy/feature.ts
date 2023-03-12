@@ -2032,15 +2032,83 @@ export class Feature {
         }
     }
 
-    // @Slash({
-    //     name: 'shop',
-    //     description: 'View the shop'
-    // })
-    // async shop(
-    //     interaction: CommandInteraction
-    // ) {
-    //     // Show the bot thinking
-    //     await interaction.deferReply({ ephemeral: false });
+    @Slash({
+        name: 'shop',
+        description: 'View the shop'
+    })
+    async shop(
+        interaction: CommandInteraction
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the user
+        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        if (!user) return;
+
+        // Show a list of shops in the current location
+        const shops = await prisma.shop.findMany({
+            where: {
+                location: user.location,
+            },
+        });
+
+        // Send the shops
+        await interaction.editReply({
+            embeds: [{
+                title: 'Shop',
+                description: 'Select a shop to view the items in it.'
+            }],
+            components: [
+                new ActionRowBuilder<StringSelectMenuBuilder>({
+                    components: [
+                        new StringSelectMenuBuilder({
+                            customId: 'shop',
+                            placeholder: 'Select a shop',
+                            options: shops.map(shop => ({
+                                label: shop.name,
+                                value: shop.id,
+                                description: shop.description,
+                            })),
+                        }),
+                    ],
+                }),
+            ],
+        });
+    }
+
+    @SelectMenuComponent({
+        id: 'shop',
+    })
+    async shopSelectMenu(
+        interaction: StringSelectMenuInteraction
+    ) {
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the shop
+        const shop = await prisma.shop.findUnique({ where: { id: interaction.values[0] } });
+        if (!shop) return;
+
+        // Get the items
+        const items = await prisma.itemTemplate.findMany({
+            where: {
+                shopId: shop.id,
+            },
+        });
+
+        // Send the shop
+        await interaction.editReply({
+            embeds: [{
+                title: shop.name,
+                description: items.map(item => outdent`
+                    <${item.emoji}> **${item.name}**
+                    ${item.description}
+                    \`${Intl.NumberFormat('en').format(item.price)}\` <:coin~1:1083037299220152351>
+                `).join('\n\n')
+            }]
+        });
+    }
 
     //     // Get the items
     //     const items = await prisma.item.findMany({
