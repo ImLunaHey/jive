@@ -1342,7 +1342,7 @@ export class Feature {
             new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId('${customId}-close')
+                        .setCustomId(`${customId}-close`)
                         .setLabel('Close')
                         .setStyle(ButtonStyle.Danger)
                 ),
