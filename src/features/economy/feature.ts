@@ -739,10 +739,12 @@ export class Feature {
                                 new ButtonBuilder()
                                     .setCustomId('encounter-run')
                                     .setLabel('Run')
+                                    .setEmoji('🏃')
                                     .setStyle(ButtonStyle.Secondary),
                                 new ButtonBuilder()
                                     .setCustomId('encounter-inventory')
                                     .setLabel('Inventory')
+                                    .setEmoji('🎒')
                                     .setStyle(ButtonStyle.Secondary)
                             ])
                     ]
@@ -1302,6 +1304,58 @@ export class Feature {
         });
     }
 
+    async showInventory(interaction: ButtonInteraction | CommandInteraction, title: string, customId: string) {
+        // Get the user's inventory
+        const user = await prisma.guildMember.findUnique({
+            where: {
+                id: interaction.member?.user.id
+            },
+            include: {
+                inventory: true,
+            },
+        });
+        if (!user) return;
+
+        const components = [
+            ...(user.inventory.length >= 1 ? [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(
+                        user.inventory.slice(0, 5).map(item => {
+                            const [_, emojiName, emojiId] = item.emoji.split(':');
+                            console.log({
+                                name: emojiName,
+                                id: emojiId || undefined,
+                            })
+                            return new ButtonBuilder()
+                                .setCustomId(`${customId}-item-${item.id}`)
+                                .setLabel(item.name)
+                                .setEmoji({
+                                    name: emojiName,
+                                    id: emojiId || undefined,
+                                })
+                                .setStyle(ButtonStyle.Primary);
+                        })
+                    )
+            ] : []),
+            new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('${customId}-close')
+                        .setLabel('Close')
+                        .setStyle(ButtonStyle.Danger)
+                ),
+        ];
+
+        // Respond with the result
+        await interaction.editReply({
+            embeds: [{
+                title,
+                description: 'You open your inventory.'
+            }],
+            components,
+        });
+    }
+
     @ButtonComponent({
         id: 'encounter-inventory',
     })
@@ -1341,55 +1395,8 @@ export class Feature {
             return;
         }
 
-        // Get the user's inventory
-        const user = await prisma.guildMember.findUnique({
-            where: {
-                id: interaction.member?.user.id
-            },
-            include: {
-                inventory: true,
-            },
-        });
-        if (!user) return;
-
-        const components = [
-            ...(user.inventory.length >= 1 ? [
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(
-                        user.inventory.slice(0, 5).map(item => {
-                            const [_, emojiName, emojiId] = item.emoji.split(':');
-                            console.log({
-                                name: emojiName,
-                                id: emojiId || undefined,
-                            })
-                            return new ButtonBuilder()
-                                .setCustomId(`encounter-inventory-item-${item.id}`)
-                                .setLabel(item.name)
-                                .setEmoji({
-                                    name: emojiName,
-                                    id: emojiId || undefined,
-                                })
-                                .setStyle(ButtonStyle.Primary);
-                        })
-                    )
-            ] : []),
-            new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('encounter-inventory-close')
-                        .setLabel('Close')
-                        .setStyle(ButtonStyle.Danger)
-                ),
-        ];
-
-        // Respond with the result
-        await interaction.editReply({
-            embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
-                description: 'You open your inventory.'
-            }],
-            components,
-        });
+        // Show the inventory
+        await this.showInventory(interaction, `Encounter [${encounter.turn}/${encounter.initatives.length}]`, 'encounter-inventory');
     }
 
     @ButtonComponent({
@@ -2086,12 +2093,6 @@ export class Feature {
         description: 'View your inventory'
     })
     async inventory(
-        @SlashOption({
-            name: 'page',
-            description: 'The page you want to view',
-            type: ApplicationCommandOptionType.Number,
-            required: false,
-        }) page: number = 1,
         interaction: CommandInteraction
     ) {
         if (!interaction.guild?.id) return;
@@ -2099,27 +2100,7 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
-        // Get the items
-        const items = await prisma.item.findMany({
-            where: {
-                owner: {
-                    id: interaction.member?.user.id,
-                }
-            },
-            take: 25,
-            skip: (page - 1) * 25,
-        });
-
-        // Send your inventory
-        await interaction.editReply({
-            embeds: [{
-                title: 'Inventory',
-                description: items.map(item => outdent`
-                    **${item.name}** [${item.rarity}]
-                    ${item.description}
-                    \`${item.price}\` coins
-                `).join('\n\n')
-            }],
-        });
+        // Show the inventory
+        await this.showInventory(interaction, 'Inventory', 'inventory');
     }
 }
