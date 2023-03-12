@@ -1327,7 +1327,7 @@ export class Feature {
                                 id: emojiId || undefined,
                             })
                             return new ButtonBuilder()
-                                .setCustomId(`${customId}-item-${item.id}`)
+                                .setCustomId(`${customId}-item-use [${item.id}]`)
                                 .setLabel(item.name)
                                 .setEmoji({
                                     name: emojiName,
@@ -1354,6 +1354,128 @@ export class Feature {
             }],
             components,
         });
+    }
+
+    @ButtonComponent({
+        id: /^encounter-inventory-item-use \[(\d{18})\]$/
+    })
+    async encounterInventoryItemUse(
+        interaction: ButtonInteraction
+    ) {
+        if (!interaction.guild?.id) return;
+        if (!interaction.member?.user.id) return;
+
+        // Show the bot is thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        // Get the encounter
+        const encounter = await prisma.encounter.findFirst({
+            where: {
+                guildMembers: {
+                    some: {
+                        id: interaction.member?.user.id,
+                    },
+                },
+            },
+            include: {
+                initatives: true,
+            }
+        });
+
+        // If there is no encounter
+        if (!encounter) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You are not in an encounter.'
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Get the item
+        const itemId = interaction.customId.match(/^encounter-inventory-item-use \[(\d{18})\]$/)?.[1];
+        if (!itemId) return;
+        const item = await prisma.item.findFirst({
+            where: {
+                id: itemId,
+                ownerId: interaction.member?.user.id,
+            },
+        });
+        if (!item) {
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Encounter',
+                    description: 'You don\'t have that item.'
+                }],
+                components: []
+            });
+            return;
+        }
+
+        // Check if the item is a weapon
+        if (item.type === ItemType.WEAPON) {
+            // Check if the item is already equipped
+            if (item.equipped) {
+                // Respond with the result
+                await interaction.editReply({
+                    embeds: [{
+                        title: 'Encounter',
+                        description: `You already have the ${item.name} equipped.`
+                    }],
+                    components: []
+                });
+                return;
+            }
+
+            // Get the current weapon
+            const currentWeapon = await prisma.item.findFirst({
+                where: {
+                    ownerId: interaction.member?.user.id,
+                    equipped: true,
+                    slot: Slot.MAIN_HAND,
+                },
+            });
+
+            // Equip the weapon
+            await prisma.$transaction(async prisma => {
+                // Unequip the current weapon
+                if (currentWeapon) {
+                    await prisma.item.update({
+                        where: {
+                            id: currentWeapon?.id,
+                        },
+                        data: {
+                            equipped: false,
+                        },
+                    });
+                }
+
+                // Equip the new weapon
+                await prisma.item.update({
+                    where: {
+                        id: item.id,
+                    },
+                    data: {
+                        equipped: true,
+                    },
+                });
+            });
+
+            // Respond with the result
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Encounter',
+                    description: currentWeapon ? `You unequip the ${currentWeapon.name} and equip the ${item.name}.` : `You equip the ${item.name}.`
+                }],
+                components: []
+            });
+
+            return;
+        }
     }
 
     @ButtonComponent({
