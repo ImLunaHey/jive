@@ -1,0 +1,7 @@
+{
+    "@ts-ignore": "🛠 Typescript Ignore",
+    "@ts-nocheck": "🛠 Typescript Ignore",
+    "eslint-disable": "🤫 Eslint disable",
+    "eslint-disable-line": "🤫 Eslint disable",
+    "eslint-disable-next-line": "🤫 Eslint disable"
+}
