@@ -154,7 +154,7 @@ export class Feature {
         });
 
         // Reply with a confirmation message
-        await interaction.reply({
+        await interaction.editReply({
             content: 'Your message has been sent!',
         });
     }
@@ -181,13 +181,13 @@ export class Feature {
         if (!user) return;
 
         // Reply with a confirmation message
-        await interaction.reply({
+        await interaction.editReply({
             content: `We've sent <@${user.id}> a message for you!`,
         });
 
         // DM the user
         await user.send({
-            content: `Someone is interested in your post! <@${interaction.user.id}> is interested in your post!`,
+            content: `<@${interaction.user.id}> is interested in your post!`,
         });
     }
 }
