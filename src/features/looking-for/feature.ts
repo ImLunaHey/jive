@@ -128,6 +128,9 @@ export class Feature {
     async lookingForButton(interaction: ModalSubmitInteraction) {
         if (!interaction.guild) return;
 
+        // Defer the reply
+        if (!interaction.deferred) await interaction.deferUpdate();
+
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
         if (channel.type !== ChannelType.GuildText) return;
