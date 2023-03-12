@@ -144,7 +144,7 @@ export class Feature {
      * @param interaction Command interaction
      * @returns 
      */
-    async isExploring(interaction: ButtonInteraction | CommandInteraction) {
+    async isExploring(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction) {
         // Get the user's encounter
         const user = await prisma.guildMember.findUnique({
             where: { id: interaction.member?.user.id },
@@ -1042,8 +1042,8 @@ export class Feature {
         // Wait 1s before continuing
         await sleep(1_000);
 
-        // Start the battle loop
-        await this.handleBattleLoop(interaction, encounter.id);
+        // Continue the battle loop
+        await this.isExploring(interaction);
     }
 
     @ButtonComponent({
