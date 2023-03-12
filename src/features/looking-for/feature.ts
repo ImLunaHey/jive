@@ -108,7 +108,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         // Remove the embed from the cache
         this.embedCache.delete(interaction.user.id);
@@ -126,7 +126,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
@@ -165,7 +165,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
@@ -178,6 +178,14 @@ export class Feature {
         // Get the user
         const user = await interaction.client.users.fetch(userId);
         if (!user) return;
+
+        // Check if they're the original author
+        if (user.id === interaction.user.id) {
+            await interaction.editReply({
+                content: 'You can\'t be interested in your own post!',
+            });
+            return;
+        }
 
         // Reply with a confirmation message
         await interaction.editReply({
