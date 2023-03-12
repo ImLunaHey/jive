@@ -2042,7 +2042,7 @@ export class Feature {
         interaction: CommandInteraction
     ) {
         // Show the bot thinking
-        await interaction.deferReply({ ephemeral: false });
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: false });
 
         // Get the user
         const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
@@ -2097,7 +2097,7 @@ export class Feature {
         interaction: StringSelectMenuInteraction
     ) {
         // Show the bot thinking
-        await interaction.deferReply({ ephemeral: false });
+        if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the shop
         const shop = await prisma.shop.findUnique({ where: { id: interaction.values[0] } });
