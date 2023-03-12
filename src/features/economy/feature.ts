@@ -489,6 +489,15 @@ export class Feature {
                 }
             }
 
+            // Log the end of the encounter
+            if (deadCreatures.length === encounter.creatures.length) {
+                this.logger.info(`Encounter ${encounter.id} has ended. The creatures have been defeated.`);
+                this.logger.info(`XP awarded: ${xpPerGuildMember} per guild member.`);
+                this.logger.info(`Loot awarded: ${lootTable.map(lootTable => lootTable.name).join(', ')}`);
+            } else {
+                this.logger.info(`Encounter ${encounter.id} has ended. The guild members have been defeated.`);
+            }
+
             // Respond with the end of the encounter
             await interaction.editReply({
                 embeds: [{
