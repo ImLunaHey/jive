@@ -350,7 +350,7 @@ model Shop {
   description String
   location    Location
 
-  items ItemTemplate[]
+  items ItemTemplate[] @relation("shop")
 }
 
 model ItemTemplate {
@@ -395,8 +395,12 @@ model ItemTemplate {
   purchases Purchase[]
 
   // Which shop does this item belong to
-  shop   Shop   @relation(fields: [shopId], references: [id])
-  shopId String
+  shop   Shop?   @relation("shop", fields: [shopId], references: [id])
+  shopId String?
+
+  // Which creatures use this in their loot table
+  creature   CreatureTemplate? @relation("lootTable", fields: [creatureId], references: [id])
+  creatureId String?
 
   // The items that use this as a template
   Item Item[]
@@ -513,6 +517,12 @@ model CreatureTemplate {
 
   // The encounters that this creature has been a part of
   encounters Creature[]
+
+  // The amount of experience that this creature gives
+  xp Int
+
+  // The items that this creature has
+  lootTable ItemTemplate[] @relation("lootTable")
 }
 
 model Creature {

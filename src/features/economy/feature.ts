@@ -135,6 +135,91 @@ export class Feature {
         });
     }
 
+    /**
+     * Check if the user is exploring
+     * If so respond with their encounter
+     * @param interaction Command interaction
+     * @returns 
+     */
+    async isExploring(interaction: ButtonInteraction | CommandInteraction) {
+        // Get the user's encounter
+        const user = await prisma.guildMember.findUnique({
+            where: { id: interaction.member?.user.id },
+            include: {
+                encounter: {
+                    include: {
+                        creatures: {
+                            include: {
+                                template: true,
+                            }
+                        },
+                        initatives: true,
+                        guildMembers: true,
+                    },
+                },
+            },
+        });
+        if (!user?.encounter) return false;
+
+        // Respond with their encounter
+        await interaction.editReply({
+            embeds: [{
+                title: `Encounter [${user.encounter.turn}/${user.encounter.initatives.length}]`,
+                description: outdent`
+                    You rejoin the battle against ${user.encounter.creatures.map(creature => creature.name).join(', ')}.
+                    Their health is at ${emojibar(user.encounter.creatures.reduce((a, b) => a + b.health, 0), { maxValue: user.encounter.creatures.reduce((a, b) => a + b.template.health, 0) })}.
+                `,
+                fields: [{
+                    name: 'Current turn',
+                    value: `<@${user.id}>`,
+                    inline: true,
+                    // }, {
+                    //     name: 'Next turn',
+                    //     value: nextInitiative.entityType === EntityType.CREATURE
+                    //         ? user.encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
+                    //         `<@${user.encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
+                    //     inline: true,
+                }, {
+                    name: 'Party',
+                    value: user.encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
+                }, {
+                    name: 'Creatures',
+                    value: user.encounter.creatures.map(creature => `${creature.name}: ${creature.health}`).join('\n'),
+                }],
+                footer: {
+                    text: `Encounter ID: ${user.encounter.id}`
+                }
+            }],
+            components: [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('encounter-button-melee-attack')
+                            .setLabel('Punch')
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId('encounter-button-ranged-attack')
+                            .setLabel('Throw a rock')
+                            .setStyle(ButtonStyle.Primary),
+                    ]),
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('encounter-run')
+                            .setLabel('Run')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId('encounter-inventory')
+                            .setLabel('Inventory')
+                            .setStyle(ButtonStyle.Secondary)
+                    ])
+            ]
+        });
+
+        // Return true to indicate that the user is already exploring
+        return true;
+    }
+
     @Slash({
         name: 'explore',
         description: 'Explore the world',
@@ -148,88 +233,16 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
+        // Check if the user is already exploring
+        if (await this.isExploring(interaction)) return;
+
         // Get the user
         const user = await prisma.guildMember.findUnique({
             where: {
                 id: interaction.member?.user.id
-            }, include: {
-                encounter: {
-                    include: {
-                        creatures: {
-                            include: {
-                                template: true,
-                            },
-                        },
-                        guildMembers: true,
-                        initatives: true,
-                    },
-                },
-            },
+            }
         });
         if (!user) return;
-
-        // Check if the user is already exploring
-        if (user.encounter) {
-            // Get the next initative
-            // const nextInitiative = user.encounter.initatives[user.encounter.turn + 1] ?? user.encounter.initatives[0];
-
-            // Respond with their encounter
-            await interaction.editReply({
-                embeds: [{
-                    title: `Encounter [${user.encounter.turn}/${user.encounter.initatives.length}]`,
-                    description: outdent`
-                        You rejoin the battle against ${user.encounter.creatures.map(creature => creature.name).join(', ')}.
-                        Their health is at ${emojibar(user.encounter.creatures.reduce((a, b) => a + b.health, 0), { maxValue: user.encounter.creatures.reduce((a, b) => a + b.template.health, 0) })}.
-                    `,
-                    fields: [{
-                        name: 'Current turn',
-                        value: `<@${user.id}>`,
-                        inline: true,
-                        // }, {
-                        //     name: 'Next turn',
-                        //     value: nextInitiative.entityType === EntityType.CREATURE
-                        //         ? user.encounter.creatures.find(creature => creature.id === nextInitiative.entityId)!.name :
-                        //         `<@${user.encounter.guildMembers.find(guildMember => guildMember.id === nextInitiative.entityId)!.id}>`,
-                        //     inline: true,
-                    }, {
-                        name: 'Party',
-                        value: user.encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
-                    }, {
-                        name: 'Creatures',
-                        value: user.encounter.creatures.map(creature => `${creature.name}: ${creature.health}`).join('\n'),
-                    }],
-                    footer: {
-                        text: `Encounter ID: ${user.encounter.id}`
-                    }
-                }],
-                components: [
-                    new ActionRowBuilder<ButtonBuilder>()
-                        .addComponents([
-                            new ButtonBuilder()
-                                .setCustomId('encounter-button-melee-attack')
-                                .setLabel('Punch')
-                                .setStyle(ButtonStyle.Primary),
-                            new ButtonBuilder()
-                                .setCustomId('encounter-button-ranged-attack')
-                                .setLabel('Throw a rock')
-                                .setStyle(ButtonStyle.Primary),
-                        ]),
-                    new ActionRowBuilder<ButtonBuilder>()
-                        .addComponents([
-                            new ButtonBuilder()
-                                .setCustomId('encounter-run')
-                                .setLabel('Run')
-                                .setStyle(ButtonStyle.Secondary),
-                            new ButtonBuilder()
-                                .setCustomId('encounter-inventory')
-                                .setLabel('Inventory')
-                                .setStyle(ButtonStyle.Secondary)
-                        ])
-                ]
-            });
-
-            return;
-        }
 
         // Grab a list of creatures that can be encountered in this area
         const creatures = await prisma.creatureTemplate.findMany({
@@ -378,7 +391,11 @@ export class Feature {
             include: {
                 creatures: {
                     include: {
-                        template: true,
+                        template: {
+                            include: {
+                                lootTable: true
+                            }
+                        }
                     },
                 },
                 guildMembers: true,
@@ -409,15 +426,68 @@ export class Feature {
                 },
             });
 
+            // Get the attacks
             const attacks = await prisma.attack.findMany({
                 where: {
                     encounterId: encounter.id,
                 },
             });
 
-            const getDamageTaken = (entityId: string) => {
-                return attacks.filter(attack => attack.defenderId === entityId).reduce((a, b) => a + b.damage, 0);
-            };
+            // Get the total damage taken
+            const getDamageTaken = (entityId: string) => attacks.filter(attack => attack.defenderId === entityId).reduce((a, b) => a + b.damage, 0);
+
+            // Award items and XP
+            const totalXpToGain = encounter.creatures.map(creature => creature.template.xp).reduce((a, b) => a + b, 0);
+            const xpPerGuildMember = Math.floor(totalXpToGain / encounter.guildMembers.length);
+            const lootTable = encounter.creatures.map(creature => creature.template.lootTable).filter(lootTable => lootTable !== null).flat();
+
+            // Award XP
+            await prisma.guildMember.updateMany({
+                where: {
+                    id: {
+                        in: encounter.guildMembers.map(guildMember => guildMember.id)
+                    }
+                },
+                data: {
+                    xp: {
+                        increment: xpPerGuildMember,
+                    }
+                }
+            });
+
+            // Award loot
+            for (const guildMember of encounter.guildMembers) {
+                const itemTemplate = lootTable[Math.floor(Math.random() * lootTable.length)];
+                if (itemTemplate) {
+                    await prisma.guildMember.update({
+                        where: {
+                            id: guildMember.id,
+                        },
+                        data: {
+                            inventory: {
+                                create: {
+                                    templateId: itemTemplate.id,
+                                    description: itemTemplate.description,
+                                    name: itemTemplate.name,
+                                    type: itemTemplate.type,
+                                    emoji: itemTemplate.emoji,
+                                    price: itemTemplate.price,
+                                    subType: itemTemplate.subType,
+                                    slot: itemTemplate.slot,
+                                    bonus: itemTemplate.bonus,
+                                    chance: itemTemplate.chance,
+                                    damage: itemTemplate.damage,
+                                    cooldown: itemTemplate.cooldown,
+                                    defence: itemTemplate.defence,
+                                    heal: itemTemplate.heal,
+                                    quantity: itemTemplate.quantity,
+                                    rarity: itemTemplate.rarity,
+                                }
+                            }
+                        }
+                    });
+                }
+            }
 
             // Respond with the end of the encounter
             await interaction.editReply({
@@ -904,6 +974,9 @@ export class Feature {
             components: []
         });
 
+        // Wait 1s before continuing
+        await sleep(1_000);
+
         // Start the battle loop
         await this.handleBattleLoop(interaction, encounter.id);
     }
@@ -1236,7 +1309,7 @@ export class Feature {
                                 id: emojiId || undefined,
                             })
                             return new ButtonBuilder()
-                                .setCustomId(`encounter-inventory-${item.id}`)
+                                .setCustomId(`encounter-inventory-item-${item.id}`)
                                 .setLabel(item.name)
                                 .setEmoji({
                                     name: emojiName,
@@ -1246,6 +1319,13 @@ export class Feature {
                         })
                     )
             ] : []),
+            new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('encounter-inventory-close')
+                        .setLabel('Close')
+                        .setStyle(ButtonStyle.Danger)
+                ),
         ];
 
         // Respond with the result
@@ -1255,6 +1335,31 @@ export class Feature {
                 description: 'You open your inventory.'
             }],
             components,
+        });
+    }
+
+    @ButtonComponent({
+        id: 'encounter-inventory-close',
+    })
+    async closeInventory(
+        interaction: ButtonInteraction
+    ) {
+        if (!interaction.guild?.id) return;
+
+        // Show the bot is thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        // Get the encounter
+        if (await this.isExploring(interaction)) return;
+
+        // Respond with the result
+        await interaction.followUp({
+            ephemeral: true,
+            embeds: [{
+                title: 'Encounter',
+                description: `You're not in an encounter.`
+            }],
+            components: []
         });
     }
 
