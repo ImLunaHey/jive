@@ -552,6 +552,8 @@ export class Feature {
         // Remove the turns that have already happened
         const initatives = initialEncounter.initatives.slice(initialEncounter.turn);
 
+        this.logger.info(`Starting battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives, starting at turn ${initialEncounter.turn}`);
+
         // Loop through each initative
         for (const initiative of initatives) {
             // Increment the turn
@@ -570,6 +572,8 @@ export class Feature {
                     initatives: true,
                 },
             });
+
+            this.logger.info(`Starting turn ${encounter.turn} for encounter ${encounter.id} with ${encounter.initatives.length} initatives`);
 
             // Check if the encounter is over
             if (await this.checkForTheDead(encounter.id, interaction)) break;
