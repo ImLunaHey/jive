@@ -1241,7 +1241,7 @@ export class Feature {
     }
 
     // bulkMessageDelete
-    // @TODO: not working even with it enabled
+    // TODO: not working even with it enabled
     @On({ event: 'messageDeleteBulk' })
     async messageDeleteBulk([messages]: ArgsOf<'messageDeleteBulk'>) {
         // Get the first message
@@ -1257,7 +1257,7 @@ export class Feature {
         const auditLogs = await this.getAuditLogs(firstMessage.guild);
 
         // Create the embed
-        // @TODO: Fix the rest of the embed
+        // TODO: Fix the rest of the embed
         const embed = new EmbedBuilder({
             // author: {
             //     name: firstMessage.author.username,

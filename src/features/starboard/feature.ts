@@ -37,7 +37,7 @@ export class Feature {
         if (reaction.message.author?.bot) return false;
 
         // Skip non gifv embeds
-        // @TODO: Add support for embeds
+        // TODO: Add support for embeds
         if (reaction.message.embeds.length > 0 && reaction.message.embeds[0].data.type !== 'gifv') return false;
 
         // Skip private threads
@@ -156,7 +156,7 @@ export class Feature {
                 if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
                 await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
 
-                // @TODO: Add support for pinging the user
+                // TODO: Add support for pinging the user
                 // Ping the user if the feature is enabled
                 // if (features.starboard.pingUser) {
                 // const reply = await starboardMessage.reply(`<@${reaction.message.author.id}> you made it on the starboard`);
