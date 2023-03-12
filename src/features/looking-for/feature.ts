@@ -1,5 +1,5 @@
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { Discord, Slash, ModalComponent, ButtonComponent } from 'discordx';
 
 @Discord()
@@ -98,6 +98,24 @@ export class Feature {
     }
 
     @ButtonComponent({
+        id: 'looking-for-cancel',
+    })
+    async lookingForCancel(interaction: ModalSubmitInteraction) {
+        if (!interaction.guild) return;
+
+        // Defer the reply
+        await interaction.deferReply({ ephemeral: true });
+
+        // Remove the embed from the cache
+        this.embedCache.delete(interaction.user.id);
+
+        // Reply with a confirmation message
+        await interaction.reply({
+            content: 'Your message has been deleted!',
+        });
+    }
+
+    @ButtonComponent({
         id: 'looking-for-confirm',
     })
     async lookingForButton(interaction: ModalSubmitInteraction) {
@@ -119,6 +137,15 @@ export class Feature {
         // Send the embed
         await channel.send({
             embeds: [embed],
+            components: [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`looking-for-interested-in [${interaction.user.id}]`)
+                            .setLabel('I\'m interested')
+                            .setStyle(ButtonStyle.Primary),
+                    ),
+            ]
         });
 
         // Reply with a confirmation message
@@ -128,20 +155,34 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: 'looking-for-cancel',
+        id: /^looking-for-interested-in \[(\d{18})\]$/
     })
-    async lookingForCancel(interaction: ModalSubmitInteraction) {
+    async lookingForInterested(interaction: ButtonInteraction) {
         if (!interaction.guild) return;
 
         // Defer the reply
         await interaction.deferReply({ ephemeral: true });
 
-        // Remove the embed from the cache
-        this.embedCache.delete(interaction.user.id);
+        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        if (!channel) return;
+        if (channel.type !== ChannelType.GuildText) return;
+
+        // Get the ID from the button ID
+        const userId = interaction.customId.match(/^looking-for-interested-in \[(\d{18})\]$/)?.[1];
+        if (!userId) return;
+
+        // Get the user
+        const user = await interaction.client.users.fetch(userId);
+        if (!user) return;
 
         // Reply with a confirmation message
         await interaction.reply({
-            content: 'Your message has been deleted!',
+            content: `We've sent <@${user.id}> a message for you!`,
+        });
+
+        // DM the user
+        await user.send({
+            content: `Someone is interested in your post! <@${interaction.user.id}> is interested in your post!`,
         });
     }
 }
