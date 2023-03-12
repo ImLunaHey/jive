@@ -31,11 +31,14 @@ export class Feature {
                     .setLabel('What are you looking for?')
                     .setValue('')
                     .setStyle(TextInputStyle.Paragraph),
+            ),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
                 new TextInputBuilder()
                     .setCustomId('anon')
                     .setLabel('Should this be posted anonymously?')
                     .setValue('yes')
                     .setStyle(TextInputStyle.Short)
+                    .setPlaceholder('yes/no'),
             ),
         ]);
 
