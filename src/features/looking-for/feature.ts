@@ -55,7 +55,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
@@ -64,7 +64,6 @@ export class Feature {
         const anon = interaction.fields.getTextInputValue('anon').toLowerCase().trim() === 'yes';
 
         const embed = new EmbedBuilder()
-            .setTitle('Looking for someone?')
             .setDescription(description)
             .setColor(Colors.Blue);
 
@@ -109,13 +108,13 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
 
         // Remove the embed from the cache
         this.embedCache.delete(interaction.user.id);
 
         // Reply with a confirmation message
-        await interaction.reply({
+        await interaction.editReply({
             content: 'Your message has been deleted!',
         });
     }
@@ -127,7 +126,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
@@ -166,7 +165,7 @@ export class Feature {
         if (!interaction.guild) return;
 
         // Defer the reply
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
 
         const channel = interaction.guild.channels.cache.get('1084138350107185262');
         if (!channel) return;
