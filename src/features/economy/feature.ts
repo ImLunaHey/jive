@@ -1351,13 +1351,15 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^encounter-inventory-item-use \[(\d{18})\]$/g
+        id: /^encounter-inventory-item-use \[(\d{18})\]$/
     })
     async encounterInventoryItemUse(
         interaction: ButtonInteraction
     ) {
         if (!interaction.guild?.id) return;
         if (!interaction.member?.user.id) return;
+
+        this.logger.info(`Using item in encounter for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
 
         // Show the bot is thinking
         if (!interaction.deferred) await interaction.deferUpdate();
