@@ -22,6 +22,8 @@ import {
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
+const coinEmoji = '<:coins:1083037299220152351>';
+
 const emojibar = (value: number, options?: {
     bars?: {
         full: {
@@ -1878,7 +1880,7 @@ export class Feature {
                 }, {
                     name: 'MONEY',
                     value: outdent`
-                        <:coins:1083037299220152351> **Coins:** ${Intl.NumberFormat().format(user?.coins)}
+                        ${coinEmoji} **Coins:** ${Intl.NumberFormat().format(user?.coins)}
                         🏦 **Bank:** 0
                     `,
                     inline: true,
@@ -2115,32 +2117,11 @@ export class Feature {
                 description: items.map(item => outdent`
                     <${item.emoji}> **${item.name}**
                     ${item.description}
-                    \`${Intl.NumberFormat('en').format(item.price)}\` <:coin~1:1083037299220152351>
+                    \`${Intl.NumberFormat('en').format(item.price)}\` ${coinEmoji}
                 `).join('\n\n')
             }]
         });
     }
-
-    //     // Get the items
-    //     const items = await prisma.item.findMany({
-    //         where: {
-    //             owner: null
-    //         },
-    //         take: 25,
-    //     });
-
-    //     // Send the shop
-    //     await interaction.editReply({
-    //         embeds: [{
-    //             title: 'Shop',
-    //             description: items.map(item => outdent`
-    //                 <${item.emoji}> **${item.name}**
-    //                 ${item.description}
-    //                 \`${item.price}\` <:coin~1:1083037299220152351>
-    //             `).join('\n\n')
-    //         }]
-    //     });
-    // }
 
     // @Slash({
     //     name: 'buy',
