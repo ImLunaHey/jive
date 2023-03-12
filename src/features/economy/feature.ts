@@ -1510,8 +1510,8 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 author: {
-                    name: `${await interaction.guild?.members.fetch(user.id).then(user => user.nickname)}'s profile`,
-                    icon_url: interaction.user.avatarURL() ?? undefined
+                    name: `${guildMember?.nickname ?? interaction.member?.user.username}'s profile`,
+                    icon_url: guildMember?.avatarURL() ?? interaction.user.avatarURL() ?? undefined
                 },
                 fields: [{
                     name: 'PROGRESS',
