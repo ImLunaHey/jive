@@ -1481,8 +1481,6 @@ export class Feature {
                 }],
                 components: []
             });
-
-            return;
         }
 
         // Wait 1s for the message to show
