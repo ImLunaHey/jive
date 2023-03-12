@@ -1323,18 +1323,10 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(
                         user.inventory.slice(0, 5).map(item => {
-                            const [_, emojiName, emojiId] = item.emoji.split(':');
-                            console.log({
-                                name: emojiName,
-                                id: emojiId || undefined,
-                            })
                             return new ButtonBuilder()
                                 .setCustomId(`${customId}-item-use [${item.id}]`)
                                 .setLabel(item.name)
-                                .setEmoji({
-                                    name: emojiName,
-                                    id: emojiId || undefined,
-                                })
+                                .setEmoji(item.emoji)
                                 .setStyle(ButtonStyle.Primary);
                         })
                     )
@@ -1359,7 +1351,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^encounter-inventory-item-use \[(\d{18})\]$/
+        id: /^encounter-inventory-item-use \[(\d{18})\]$/g
     })
     async encounterInventoryItemUse(
         interaction: ButtonInteraction
@@ -1484,6 +1476,12 @@ export class Feature {
 
             return;
         }
+
+        // Wait 1s for the message to show
+        await sleep(1_000);
+
+        // Get the encounter
+        await this.isExploring(interaction);
     }
 
     @ButtonComponent({
@@ -1532,7 +1530,7 @@ export class Feature {
     @ButtonComponent({
         id: 'encounter-inventory-close',
     })
-    async closeInventory(
+    async closeEncounterInventory(
         interaction: ButtonInteraction
     ) {
         if (!interaction.guild?.id) return;
@@ -1551,6 +1549,27 @@ export class Feature {
                 description: `You're not in an encounter.`
             }],
             components: []
+        });
+    }
+
+    @ButtonComponent({
+        id: 'inventory-close',
+    })
+    async closeInventory(
+        interaction: ButtonInteraction
+    ) {
+        if (!interaction.guild?.id) return;
+
+        // Show the bot is thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        // Respond with the result
+        await interaction.editReply({
+            embeds: [{
+                title: 'Inventory',
+                description: 'You close your inventory.'
+            }],
+            components: [],
         });
     }
 
