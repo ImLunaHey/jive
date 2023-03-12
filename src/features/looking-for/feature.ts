@@ -151,6 +151,10 @@ export class Feature {
                             .setCustomId(`looking-for-interested-in [${interaction.user.id}]`)
                             .setLabel('I\'m interested')
                             .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(`looking-for-delete [${interaction.user.id}]`)
+                            .setLabel('Delete')
+                            .setStyle(ButtonStyle.Danger),
                     ),
             ]
         });
@@ -162,7 +166,6 @@ export class Feature {
             components: [],
         });
     }
-
 
     @ButtonComponent({
         id: /^looking-for-interested-in \[(\d{18})\]$/
@@ -210,6 +213,54 @@ export class Feature {
         // DM the user
         await user.send({
             content: `<@${interaction.user.id}> is interested in your post!`,
+        });
+    }
+
+    @ButtonComponent({
+        id: /^looking-for-delete \[(\d{18})\]$/
+    })
+    @Guard(
+        RateLimit(TIME_UNIT.seconds, 60, {
+            ephemeral: true,
+            message: 'You are doing this too fast! Please wait 60 seconds before trying again.',
+            rateValue: 1,
+        })
+    )
+    async lookingForDelete(interaction: ButtonInteraction) {
+        if (!interaction.guild) return;
+
+        // Defer the reply
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        if (!channel) return;
+        if (channel.type !== ChannelType.GuildText) return;
+
+        // Get the ID from the button ID
+        const userId = interaction.customId.match(/^looking-for-interested-in \[(\d{18})\]$/)?.[1];
+        if (!userId) return;
+
+        // Get the user
+        const user = await interaction.client.users.fetch(userId);
+        if (!user) return;
+
+        // Check if they're the original author
+        if (user.id !== interaction.user.id) {
+            await interaction.followUp({
+                ephemeral: true,
+                content: 'You can\'t delete someone else\'s post!',
+            });
+            return;
+        }
+
+        // Delete the message
+        const message = await channel.messages.fetch(interaction.message.id);
+        if (message) await message.delete();
+
+        // Reply with a confirmation message
+        await interaction.followUp({
+            ephemeral: true,
+            content: `We've deleted your post!`,
         });
     }
 }
