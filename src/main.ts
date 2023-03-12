@@ -19,6 +19,7 @@ const main = async () => {
     await import('./features/features');
     await import('./features/invite-tracking');
     await import('./features/leveling');
+    await import('./features/looking-for');
     await import('./features/moderation');
     await import('./features/reddit');
     await import('./features/setup');
