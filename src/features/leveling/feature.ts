@@ -67,9 +67,9 @@ export class Feature {
         if (message.author.bot) return;
 
         // Check if the message was sent in the #level-up channel
-        // TODO: Make this configurable
+        // TODO: #1:6h/dev Make this configurable
 
-        // TODO: This name sucks
+        // NOTE: This name sucks
         // Add the user to the usersWhoChattedThisMinute set
         const usersWhoChattedThisMinute = store.getState().usersWhoChattedThisMinute.get(message.guild.id)
         if (!usersWhoChattedThisMinute) store.setState({ usersWhoChattedThisMinute: new Map([[message.guild.id, new Set(message.author.id)]]) });

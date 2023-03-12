@@ -5,7 +5,7 @@ import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
 import { ChannelType } from 'discord.js';
 
-// TODO: Add these to the database for luna's lobby
+// NOTE: Add these to the database for luna's lobby
 // `✅ {{ guild.roles['965589467832401950'].size }}/{{ guild.roles['927462721933443082'].size }} verified members`
 // `💳 {{ guild.roles['927469767680487474'].size }} sellers`
 

@@ -18,7 +18,7 @@ export class Feature {
         // Check if there are any auto-delete settings
         if (!autoDeleteChannels.length) return;
 
-        // TODO: Add startup cleaning
+        // TODO: #1:2h/dev Add startup cleaning
     }
 
     @On({ event: 'messageCreate' })

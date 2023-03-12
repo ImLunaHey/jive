@@ -58,7 +58,7 @@ export class Feature {
         // const vanityData = await member.guild.fetchVanityData();
 
         // Find the invite code that was used
-        // TODO: Add support for vanity invites
+        // TODO: #1.1:6h/dev Add support for vanity invites
         const inviteCode = guildInvitesBeforeUserJoined.find((invite) => {
             // // Check if the invite was a vanity invite
             // if (invite.code === vanityData.code && vanityData.uses !== guildInvitesBeforeUserJoined.find((invite) => invite.code === vanityData.code)?.uses) return true;
@@ -69,7 +69,7 @@ export class Feature {
         })?.code;
 
         // Find the invite that was used
-        // TODO: Add support for vanity invites
+        // TODO: #1.2:6h/dev Add support for vanity invites
         const inviteUsed = guildInvitesNow.find((invite) => invite.code === inviteCode);
 
         // Update the invite uses, skip if the invite is a DM invite

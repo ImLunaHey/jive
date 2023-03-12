@@ -71,7 +71,7 @@ class Service {
             const successChannel = guild.channels.cache.get('1042598577156919376');
             if (!successChannel) return;
 
-            // TODO: Workout what todo about people with XP from the old system
+            // TODO: #1:6h/dev Workout what to do about people with XP from the old system
             // // Get all the roles
             // const roles = await guild.roles.fetch();
 

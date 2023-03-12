@@ -82,7 +82,7 @@ export class Feature {
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
-        // TODO: Add a way to check if the user is a moderator
+        // TODO: #1:6h/dev Add a way to check if the user is a moderator
         //        (e.g. a moderator role)
         //        This should come from the database
         // Check if the user has the KICK_MEMBERS permission
@@ -107,7 +107,7 @@ export class Feature {
                 return;
             }
 
-            // TODO: Add warning to database
+            // TODO: #2:6h/dev Add warning to database
 
             // Send a message to the user that they were warned
             await member.send({
@@ -149,7 +149,7 @@ export class Feature {
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
-        // TODO: Add a way to check if the user is a moderator
+        // TODO: #3:6h/dev Add a way to check if the user is a moderator
         //        (e.g. a moderator role)
         //        This should come from the database
         // Check if the user has the KICK_MEMBERS permission
@@ -174,8 +174,8 @@ export class Feature {
                 return;
             }
 
-            // TODO: Add kick to database
-            // TODO: This can be used by the auditlog to enrich the auditlog message
+            // TODO: #4:6h/dev Add kick to database
+            // This can be used by the auditlog to enrich the auditlog message
             // Kicked wasi#7226.
 
             // Kick the user
