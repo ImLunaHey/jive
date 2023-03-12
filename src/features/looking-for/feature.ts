@@ -8,6 +8,8 @@ export class Feature {
     private embedCache = new Map<string, EmbedBuilder>();
     private logger = globalLogger.scope('LookingFor');
 
+    private channelId = '1084138350107185262';
+
     constructor() {
         this.logger.success('Feature initialized');
     }
@@ -23,6 +25,25 @@ export class Feature {
         const modal = new ModalBuilder()
             .setCustomId('looking-for-modal')
             .setTitle('Looking for someone?');
+
+        // Check if the user already has a post
+        const channel = interaction.guild?.channels.cache.get(this.channelId);
+        if (!channel) return;
+        if (channel.type !== ChannelType.GuildText) return;
+
+        // Fetch the last 100 messages
+        const messages = await channel.messages.fetch({ limit: 100 });
+
+        // Find the user's message
+        const message = messages.find((m) => m.components.find(component => JSON.stringify(component.toJSON()).includes(interaction.user.id)));
+        if (message) {
+            // Reply with a confirmation message
+            await interaction.followUp({
+                ephemeral: true,
+                content: `You already have a post! ${message.url}`,
+            });
+            return;
+        }
 
         // Add inputs to the modal
         modal.addComponents([
@@ -58,7 +79,7 @@ export class Feature {
         // Defer the reply
         if (!interaction.deferred) await interaction.deferReply({ ephemeral: true });
 
-        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        const channel = interaction.guild.channels.cache.get(this.channelId);
         if (!channel) return;
 
         const description = interaction.fields.getTextInputValue('description');
@@ -131,7 +152,7 @@ export class Feature {
         // Defer the reply
         if (!interaction.deferred) await interaction.deferUpdate();
 
-        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        const channel = interaction.guild.channels.cache.get(this.channelId);
         if (!channel) return;
         if (channel.type !== ChannelType.GuildText) return;
 
@@ -183,7 +204,7 @@ export class Feature {
         // Defer the reply
         if (!interaction.deferred) await interaction.deferUpdate();
 
-        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        const channel = interaction.guild.channels.cache.get(this.channelId);
         if (!channel) return;
         if (channel.type !== ChannelType.GuildText) return;
 
@@ -225,7 +246,7 @@ export class Feature {
         // Defer the reply
         if (!interaction.deferred) await interaction.deferUpdate();
 
-        const channel = interaction.guild.channels.cache.get('1084138350107185262');
+        const channel = interaction.guild.channels.cache.get(this.channelId);
         if (!channel) return;
         if (channel.type !== ChannelType.GuildText) return;
 
