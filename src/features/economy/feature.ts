@@ -14,6 +14,7 @@ import {
     ButtonStyle,
     Colors,
     CommandInteraction,
+    EmbedBuilder,
     GuildMember,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction
@@ -489,33 +490,45 @@ export class Feature {
                 }
             }
 
+            // Create the embed
+            const embed = new EmbedBuilder({
+                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                description: outdent`
+                    ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
+
+                    Damage dealt to creatures:
+                    ${encounter.creatures.map(creature => `${creature.name}: ${getDamageTaken(creature.id)}`).join('\n')}
+
+                    Damage dealt to guild members:
+                    ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${getDamageTaken(guildMember.id)}`).join('\n')}
+                `,
+                footer: {
+                    text: `Encounter ID: ${encounter.id}`
+                },
+                color: deadCreatures.length === encounter.creatures.length ? Colors.Green : Colors.Red,
+            });
+
             // Log the end of the encounter
             if (deadCreatures.length === encounter.creatures.length) {
                 this.logger.info(`Encounter ${encounter.id} has ended. The creatures have been defeated.`);
                 this.logger.info(`XP awarded: ${xpPerGuildMember} per guild member.`);
                 this.logger.info(`Loot awarded: ${lootTable.map(lootTable => lootTable.name).join(', ')}`);
+
+                // Add the fields to the embed
+                embed.addFields([{
+                    name: 'XP Awarded',
+                    value: `${xpPerGuildMember} per guild member.`,
+                }, {
+                    name: 'Loot Awarded',
+                    value: lootTable.map(lootTable => lootTable.name).join(', '),
+                }]);
             } else {
                 this.logger.info(`Encounter ${encounter.id} has ended. The guild members have been defeated.`);
             }
 
             // Respond with the end of the encounter
             await interaction.editReply({
-                embeds: [{
-                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
-                    description: outdent`
-                        ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
-
-                        Damage dealt to creatures:
-                        ${encounter.creatures.map(creature => `${creature.name}: ${getDamageTaken(creature.id)}`).join('\n')}
-
-                        Damage dealt to guild members:
-                        ${encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${getDamageTaken(guildMember.id)}`).join('\n')}
-                    `,
-                    footer: {
-                        text: `Encounter ID: ${encounter.id}`
-                    },
-                    color: deadCreatures.length === encounter.creatures.length ? Colors.Green : Colors.Red,
-                }],
+                embeds: [embed],
                 components: []
             });
 
