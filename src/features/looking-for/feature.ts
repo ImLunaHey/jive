@@ -47,7 +47,7 @@ export class Feature {
     }
 
     @ModalComponent({
-        id: 'looking-for',
+        id: 'looking-for-modal',
     })
     async lookingForModal(interaction: ModalSubmitInteraction) {
         if (!interaction.guild) return;
