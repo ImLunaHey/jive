@@ -8,7 +8,7 @@ export class Feature {
     private embedCache = new Map<string, EmbedBuilder>();
     private logger = globalLogger.scope('LookingFor');
 
-    private channelId = '1084138350107185262';
+    private channelId = '1083557897813901404';
 
     constructor() {
         this.logger.success('Feature initialized');
