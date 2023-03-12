@@ -2115,7 +2115,7 @@ export class Feature {
             embeds: [{
                 title: shop.name,
                 description: items.map(item => outdent`
-                    <${item.emoji}> **${item.name}**
+                    ${item.emoji} **${item.name}**
                     ${item.description}
                     \`${Intl.NumberFormat('en').format(item.price)}\` ${coinEmoji}
                 `).join('\n\n')
