@@ -1323,8 +1323,10 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(
                         user.inventory.slice(0, 5).map(item => {
+                            const itemCustomId = `${customId}-item-use [${item.id}]`;
+                            this.logger.info(`Adding item ${itemCustomId} to ActionRowBuilder for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
                             return new ButtonBuilder()
-                                .setCustomId(`${customId}-item-use [${item.id}]`)
+                                .setCustomId(itemCustomId)
                                 .setLabel(item.name)
                                 .setEmoji(item.emoji)
                                 .setStyle(ButtonStyle.Primary);
