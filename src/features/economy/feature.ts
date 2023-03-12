@@ -2053,6 +2053,17 @@ export class Feature {
             },
         });
 
+        // If there are no shops, tell the user
+        if (shops.length === 0) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Shop',
+                    description: 'There are no shops in this location.'
+                }]
+            });
+            return;
+        }
+
         // Send the shops
         await interaction.editReply({
             embeds: [{
