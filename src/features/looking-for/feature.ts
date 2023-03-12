@@ -38,7 +38,7 @@ export class Feature {
         const message = messages.find((m) => m.components.find(component => JSON.stringify(component.toJSON()).includes(interaction.user.id)));
         if (message) {
             // Reply with a confirmation message
-            await interaction.followUp({
+            await interaction.reply({
                 ephemeral: true,
                 content: `You already have a post! ${message.url}`,
             });
