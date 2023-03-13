@@ -14,9 +14,9 @@
   "dependencies": {
     "@discordx/utilities": "^5.2.1",
     "@napi-rs/canvas": "^0.1.38",
+    "media-extractor": "github:imlunahey/media-extractor",
     "prisma": "^4.11.0",
-    "vm2": "^3.9.14",
-    "media-extractor": "github:imlunahey/media-extractor"
+    "vm2": "^3.9.14"
   },
   "devDependencies": {
     "@discordx/importer": "^1.1.10",
