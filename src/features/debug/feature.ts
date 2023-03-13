@@ -41,15 +41,14 @@ export class Feature {
 
     constructor() {
         this.logger.success('Feature initialized');
-
-        // Get count of guilds
-        void prisma.guild.count().then((count) => {
-            this.logger.info('Bot is in %d guilds', count);
-        });
     }
 
     @On({ event: 'ready' })
     async ready(): Promise<void> {
+        // Get count of guilds
+        const guildCount = await prisma.guild.count();
+        this.logger.info('Bot is in %d guilds', guildCount);
+
         // Get the guild
         const guild = client.guilds.cache.get('927461441051701280');
         if (!guild) return;
