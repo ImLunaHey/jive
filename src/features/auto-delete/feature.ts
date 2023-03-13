@@ -22,7 +22,7 @@ export class Feature {
     }
 
     @On({ event: 'messageCreate' })
-    async messageCreate([message]: ArgsOf<'messageCreate'>) {
+    async messageCreate([]: ArgsOf<'messageCreate'>) {
         // // Check if the feature is enabled
         // if (!await isFeatureEnabled(Features.AUTO_DELETE, message.guild?.id)) return;
 

@@ -1,4 +1,5 @@
-import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, GuildMember, PermissionFlagsBits, VoiceChannel } from 'discord.js';
+import type { GuildMember, VoiceChannel } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { prisma } from '@app/common/prisma-client';
@@ -127,7 +128,7 @@ export class Feature {
                 ]
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             globalLogger.error('Failed to get user\'s level + XP', error);
             await interaction.reply({
                 content: 'Failed to get your levels + XP, please let a member of staff know.',
@@ -155,8 +156,8 @@ export class Feature {
             });
 
             const leaderboard = await Promise.all(users.map(async (user, index) => {
-                const discordUser = client.users.cache.get(user.id) ?? await client.users?.fetch(user.id).catch(() => null) ?? 'Unknown';
-                return `${index + 1}. ${discordUser} - Level ${levelService.getLevel(user.xp)} - ${user.xp} XP`;
+                const guildMember = client.users.cache.get(user.id) ?? await client.users?.fetch(user.id).catch(() => null);
+                return `${index + 1}. ${guildMember ? `<@${user.id}>` : 'Unknown User'} - Level ${levelService.getLevel(user.xp)} - ${user.xp} XP`;
             })).then(result => result.join('\n'));
 
             await interaction.editReply({
@@ -170,7 +171,7 @@ export class Feature {
                 ]
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to get leaderboard', error);
             await interaction.reply({
                 content: 'Failed to get the leaderboard, please let a member of staff know.',
@@ -245,7 +246,7 @@ export class Feature {
                 content: 'Successfully imported the leaderboard, please note that this will not import your roles.',
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to import the leaderboard', error);
             await interaction.reply({
                 content: 'Failed to import the leaderboard, please let a member of staff know.',

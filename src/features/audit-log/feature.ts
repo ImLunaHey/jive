@@ -6,8 +6,9 @@ import { prisma } from '@app/common/prisma-client';
 import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { EmbedBuilder } from '@discordjs/builders';
-import { AuditLog } from '@prisma/client';
-import { Channel, ChannelType, Colors, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, Role, TextChannel, User } from 'discord.js';
+import type { AuditLog } from '@prisma/client';
+import type { Channel, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, Role, TextChannel, User } from 'discord.js';
+import { ChannelType, Colors } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -51,7 +52,7 @@ export class Feature {
         const auditLogChannel = client.guilds.cache.get(guild.id)?.channels.cache.get(channelId);
         if (!auditLogChannel) return null;
         if (auditLogChannel.type !== ChannelType.GuildText) return null;
-        return auditLogChannel as TextChannel;
+        return auditLogChannel ;
     }
 
     getAuditLogs(guild: Guild | InviteGuild): Promise<AuditLog[]> {
@@ -228,7 +229,8 @@ export class Feature {
 
     // Unban
     @On({ event: 'guildBanRemove' })
-    async guildBanRemove([ban]: ArgsOf<'guildBanRemove'>) {
+    async guildBanRemove([]: ArgsOf<'guildBanRemove'>) {
+        // TODO: #1:1h/dev Audit log - Unban
     }
 
     @On({ event: 'guildMemberUpdate' })
@@ -824,7 +826,8 @@ export class Feature {
     }
 
     @On({ event: 'emojiUpdate' })
-    async guildEmojiUpdate([oldEmoji, newEmoji]: ArgsOf<'emojiUpdate'>) {
+    async guildEmojiUpdate([]: ArgsOf<'emojiUpdate'>) {
+        // TODO: #1:1h/dev Audit log - Emoji update
     }
 
     @On({ event: 'channelCreate' })
@@ -1104,7 +1107,8 @@ export class Feature {
     }
 
     @On({ event: 'channelPinsUpdate' })
-    async channelPinsUpdate([channel, time]: ArgsOf<'channelPinsUpdate'>) {
+    async channelPinsUpdate([]: ArgsOf<'channelPinsUpdate'>) {
+        // TODO: #1:1h/dev Audit log - channel pins
     }
 
     @On({ event: 'inviteCreate' })
@@ -1263,7 +1267,7 @@ export class Feature {
             //     name: firstMessage.author.username,
             //     icon_url: firstMessage.author.avatarURL() ?? undefined,
             // },
-            title: `🗑️ ${messages.size} messages deleted in ${firstMessage.channel}`,
+            title: `🗑️ ${messages.size} messages deleted in <#${firstMessage.channel.id}>`,
             // description: firstMessage.content ?? '',
             color: Colors.Red,
             // footer: {

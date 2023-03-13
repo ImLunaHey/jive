@@ -1,4 +1,4 @@
-import { RedditListResponse, RedditRandomResponse, T3 } from '@app/features/reddit/types';
+import type { RedditListResponse, RedditRandomResponse, T3 } from '@app/features/reddit/types';
 import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
@@ -14,7 +14,7 @@ export class Feature {
         this.logger.success('Feature initialized');
     }
 
-    async resolvePosts(response: RedditRandomResponse | RedditListResponse) {
+    resolvePosts(response: RedditRandomResponse | RedditListResponse) {
         const responses = Array.isArray(response) ? response : [response];
         return responses.filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
@@ -27,7 +27,7 @@ export class Feature {
         }).map(response => response.data.children.find(child => child.kind === 't3')?.data).filter(Boolean);
     }
 
-    async getRandomRedditPost(tries = 0, list: 'random' | 'hot' | 'top', subreddit: string = 'cats'): Promise<T3 | undefined> {
+    async getRandomRedditPost(tries = 0, list: 'random' | 'hot' | 'top', subreddit = 'cats'): Promise<T3 | undefined> {
         // If we have no tries left, return undefined
         if (tries <= 0) return undefined;
 
@@ -36,7 +36,7 @@ export class Feature {
 
         // Get a random post from the subreddit
         const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit}/${list}.json?limit=1`).then(response => response.json() as Promise<RedditRandomResponse>);
-        const redditPosts = await this.resolvePosts(redditResponses);
+        const redditPosts = this.resolvePosts(redditResponses);
 
         // Log the amount of posts we got
         this.logger.info(`Got ${redditPosts.length} posts`);
@@ -70,7 +70,7 @@ export class Feature {
 
         // Get the post from the url
         const redditResponses = await fetch(`https://www.reddit.com${resolvedUrl}.json?limit=1`).then(response => response.json() as Promise<RedditRandomResponse>);
-        const redditPosts = await this.resolvePosts(redditResponses);
+        const redditPosts = this.resolvePosts(redditResponses);
         const post = redditPosts[Math.floor(Math.random() * redditPosts.length)];
 
         // If we didn't get a post, return undefined
@@ -120,7 +120,7 @@ export class Feature {
             description: 'Reply with a private message?',
             required: false,
             type: ApplicationCommandOptionType.Boolean,
-        }) ephemeral: boolean = false,
+        }) ephemeral = false,
         interaction: CommandInteraction
     ) {
         if (!interaction.guild) return;

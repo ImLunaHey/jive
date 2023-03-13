@@ -1,6 +1,7 @@
 import { createTimer } from '@app/common/timer';
 import { globalLogger } from '@app/logger';
-import { Collection, Colors, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
+import type { Collection, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
+import { Colors } from 'discord.js';
 import { readFileSync } from 'fs';
 import { NodeVM } from 'vm2';
 
@@ -60,7 +61,7 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
         }
 
         module.exports = output;
-    `);
+    `) as unknown;
 
     if (typeof result !== 'string') {
         globalLogger.scope('replaceVariables').error('Failed to render message, recieved non-string result.');

@@ -228,7 +228,7 @@ export class Feature {
         // Reply with a confirmation message
         await interaction.followUp({
             ephemeral: true,
-            content: `We've sent them a message for you!`,
+            content: 'We\'ve sent them a message for you!',
         });
 
         // DM the user
@@ -274,7 +274,7 @@ export class Feature {
         // Reply with a confirmation message
         await interaction.followUp({
             ephemeral: true,
-            content: `We've deleted your post!`,
+            content: 'We\'ve deleted your post!',
         });
     }
 }

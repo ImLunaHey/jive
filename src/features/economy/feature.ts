@@ -4,11 +4,12 @@ import { sleep } from '@app/common/sleep';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
 import { EntityType, ItemSubType, ItemType, Location, Slot } from '@prisma/client';
+import type {
+    AnySelectMenuInteraction,
+    AutocompleteInteraction} from 'discord.js';
 import {
     ActionRowBuilder,
-    AnySelectMenuInteraction,
     ApplicationCommandOptionType,
-    AutocompleteInteraction,
     ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
@@ -626,6 +627,8 @@ export class Feature {
 
             if (initiative.entityType === EntityType.CREATURE) {
                 // Get the creature
+                // TODO: #1:6h/dev Ensure creature exists
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const creature = encounter.creatures.find(creature => creature.id === initiative.entityId)!;
 
                 // If the creature is dead, skip their turn
@@ -688,6 +691,8 @@ export class Feature {
                 await sleep(2_000);
             } else if (initiative.entityType === EntityType.GUILD_MEMBER) {
                 // Get the guild member
+                // TODO: #2:6h/dev Ensure guild member exists
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const guildMember = encounter.guildMembers.find(guildMember => guildMember.id === initiative.entityId)!;
 
                 // If the guild member is dead, skip their turn
@@ -1309,10 +1314,17 @@ export class Feature {
     }
 
     async showInventory(interaction: ButtonInteraction | CommandInteraction, title: string, customId: string) {
+        if (!interaction.guild?.id) return;
+
+        // Get the interaction user's ID and username
+        const userId = interaction.member?.user.id;
+        const userUsername = interaction.member?.user.username;
+        if (!userId || !userUsername) return;
+
         // Get the user's inventory
         const user = await prisma.guildMember.findUnique({
             where: {
-                id: interaction.member?.user.id
+                id: userId,
             },
             include: {
                 inventory: true,
@@ -1320,7 +1332,7 @@ export class Feature {
         });
         if (!user) return;
 
-        this.logger.info(`Showing inventory for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+        this.logger.info(`Showing inventory for ${userId} (${userUsername})`);
 
         const components = [
             ...(user.inventory.length >= 1 ? [
@@ -1328,7 +1340,7 @@ export class Feature {
                     .addComponents(
                         user.inventory.slice(0, 5).map(item => {
                             const itemCustomId = `${customId}-item-use [${item.id}]`;
-                            this.logger.info(`Adding item ${itemCustomId} to ActionRowBuilder for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+                            this.logger.info(`Adding item ${itemCustomId} to ActionRowBuilder for ${userId} (${userUsername})`);
                             return new ButtonBuilder()
                                 .setCustomId(itemCustomId)
                                 .setLabel(item.name)
@@ -1363,9 +1375,13 @@ export class Feature {
         interaction: ButtonInteraction
     ) {
         if (!interaction.guild?.id) return;
-        if (!interaction.member?.user.id) return;
 
-        this.logger.info(`Using item in encounter for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+        // Get the interaction user's ID and username
+        const userId = interaction.member?.user.id;
+        const userUsername = interaction.member?.user.username;
+        if (!userId || !userUsername) return;
+
+        this.logger.info(`Using item in encounter for ${userId} (${userUsername})`);
 
         // Show the bot is thinking
         if (!interaction.deferred) await interaction.deferUpdate();
@@ -1418,13 +1434,13 @@ export class Feature {
             return;
         }
 
-        this.logger.info(`Using item ${item.id} (${item.name}) [${item.type}:${item.subType}] in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+        this.logger.info(`Using item ${item.id} (${item.name}) [${item.type}:${item.subType}] in encounter ${encounter.id} for ${userId} (${userUsername})`);
 
         // Check if the item is a weapon
         if (item.type === ItemType.WEAPON) {
             // Check if the item is already equipped
             if (item.equipped) {
-                this.logger.info(`Item ${item.id} (${item.name}) is already equipped for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+                this.logger.info(`Item ${item.id} (${item.name}) is already equipped for ${userId} (${userUsername})`);
 
                 // Respond with the result
                 await interaction.editReply({
@@ -1457,7 +1473,7 @@ export class Feature {
             await prisma.$transaction(async prisma => {
                 // Unequip the current weapon
                 if (currentWeapon) {
-                    this.logger.info(`Unequipping weapon ${currentWeapon.id} (${currentWeapon.name}) in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+                    this.logger.info(`Unequipping weapon ${currentWeapon.id} (${currentWeapon.name}) in encounter ${encounter.id} for ${userId} (${userUsername})`);
                     await prisma.item.update({
                         where: {
                             id: currentWeapon?.id,
@@ -1469,7 +1485,7 @@ export class Feature {
                 }
 
                 // Equip the new weapon
-                this.logger.info(`Equipping weapon ${item.id} (${item.name}) in encounter ${encounter.id} for ${interaction.member?.user.id} (${interaction.member?.user.username})`);
+                this.logger.info(`Equipping weapon ${item.id} (${item.name}) in encounter ${encounter.id} for ${userId} (${userUsername})`);
                 await prisma.item.update({
                     where: {
                         id: item.id,
@@ -1559,7 +1575,7 @@ export class Feature {
             ephemeral: true,
             embeds: [{
                 title: 'Encounter',
-                description: `You're not in an encounter.`
+                description: 'You\'re not in an encounter.'
             }],
             components: []
         });
@@ -1814,12 +1830,27 @@ export class Feature {
         guildMember: GuildMember | undefined,
         interaction: CommandInteraction
     ) {
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's details
         const user = await prisma.guildMember.findUnique({ where: { id: guildMember?.id ?? interaction.member?.user.id } });
         if (!user) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Profile',
+                    description: 'No profile found for this user.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // Check we have a user
+        const member = guildMember?.user ?? interaction.member?.user;
+        if (!member) {
             await interaction.editReply({
                 embeds: [{
                     title: 'Profile',
@@ -1838,7 +1869,7 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 author: {
-                    name: `${guildMember?.nickname ?? interaction.member?.user.username}'s profile`,
+                    name: `${member.username}'s profile`,
                     icon_url: guildMember?.avatarURL() ?? interaction.user.avatarURL() ?? undefined
                 },
                 fields: [{
@@ -2027,11 +2058,11 @@ export class Feature {
             await interaction.editReply({
                 embeds: [{
                     title: 'Give',
-                    description: `You give ${target} ${amount} coins. You now have ${userBalance - amount} coins.`
+                    description: `You give <@${target.id}> ${amount} coins. You now have ${userBalance - amount} coins.`
                 }]
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to transfer coins', error);
             await interaction.editReply({
                 content: 'Failed to transfer coins, please let a member of staff know.'

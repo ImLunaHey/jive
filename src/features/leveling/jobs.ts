@@ -23,7 +23,7 @@ export class Jobs {
                 store.getState().usersWhoChattedThisMinute.delete(userId);
 
                 // Grant them XP
-                levelService.grantXp(userId, levelService.DEFAULT_XP);
+                await levelService.grantXp(userId, levelService.DEFAULT_XP);
             }
         }
 

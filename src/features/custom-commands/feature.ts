@@ -1,6 +1,7 @@
 import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
-import { ChannelType, TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { replaceVariablesForMember, templateResultToMessage } from '@app/common/replace-variables';
 import { prisma } from '@app/common/prisma-client';

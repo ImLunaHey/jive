@@ -4,8 +4,8 @@ import { prisma } from '@app/common/prisma-client';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import { Welcome } from '@prisma/client';
-import { GuildMember, TextChannel } from 'discord.js';
+import type { Welcome } from '@prisma/client';
+import type { GuildMember, TextChannel } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()

@@ -1,6 +1,6 @@
 import { prisma } from '@app/common/prisma-client';
-import { CommandInteraction } from 'discord.js';
-import { Client, Next } from 'discordx';
+import type { CommandInteraction } from 'discord.js';
+import type { Client, Next } from 'discordx';
 
 const createGuildMember = async (guildId: string, userId: string) => {
     return prisma.guildMember.upsert({

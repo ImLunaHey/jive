@@ -1,5 +1,6 @@
 import { globalLogger } from '@app/logger';
-import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits, TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
+import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
@@ -52,7 +53,7 @@ export class Feature {
                 content: `Cleared ${amount} messages.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to clear messages', error);
             await interaction.editReply({
                 content: 'Failed to clear messages, please let a member of staff know.'
@@ -79,6 +80,8 @@ export class Feature {
         }) reason: string,
         interaction: CommandInteraction
     ) {
+        if (!interaction.guild) return;
+
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
@@ -111,7 +114,7 @@ export class Feature {
 
             // Send a message to the user that they were warned
             await member.send({
-                content: `You were warned in ${interaction.guild?.name} for ${reason}.`
+                content: `You were warned in ${interaction.guild.name} for ${reason}.`
             });
 
             // Send a message to the moderator that the user was warned
@@ -119,7 +122,7 @@ export class Feature {
                 content: `Warned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to warn user', error);
             await interaction.editReply({
                 content: 'Failed to warn user, please let a member of staff know.'
@@ -186,7 +189,7 @@ export class Feature {
                 content: `Successfully kicked <@${member.user.id}>.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to kick user', error);
             await interaction.editReply({
                 content: 'Failed to kick user, please let a member of staff know.'
@@ -256,7 +259,7 @@ export class Feature {
                 content: `Banned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error('Unknown Error: ' + error);
+            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to ban user', error);
             await interaction.editReply({
                 content: 'Failed to ban user, please let a member of staff know.'

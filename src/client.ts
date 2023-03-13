@@ -1,5 +1,5 @@
 import { IntentsBitField, Partials } from 'discord.js';
-import { createDiscordClient } from './common/discord-client.js';
+import { createDiscordClient } from '@app/common/discord-client';
 import pkg from '../package.json';
 
 const { name } = pkg;

@@ -3,9 +3,14 @@
   "scripts": {
     "postinstall": "npx patch-package",
     "build": "npx tsup ./src/main.ts --external redlock",
-    "dev": "npm run build -- --onSuccess=\"MAINTENCE_MODE=true node dist/main.js\" --watch",
-    "start": "node dist/main.js"
+    "dev": "npm run build -- --onSuccess=\"MAINTENCE_MODE=true node dist/main.cjs\" --watch",
+    "start": "node dist/main.cjs",
+    "test": "cross-env SKIP_ENV_VALIDATION=true NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" npx jest --detectOpenHandles",
+    "coverage": "npm run test -- --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "npm run lint -- --fix"
   },
+  "type": "module",
   "dependencies": {
     "@discordx/utilities": "^5.2.1",
     "@napi-rs/canvas": "^0.1.38",
@@ -20,6 +25,8 @@
     "@total-typescript/ts-reset": "^0.3.7",
     "@types/jest": "^29.4.0",
     "@types/signale": "^1.4.4",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "cross-env": "^7.0.3",
     "discord.js": "^14.7.1",
     "discord.js-pages": "^1.4.4",
     "discordx": "^11.7.1",

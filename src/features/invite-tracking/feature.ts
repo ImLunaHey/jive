@@ -24,7 +24,7 @@ export class Feature {
             // Fetch the invites
             this.logger.debug(`Fetching invites for guild ${guildId}...`);
             const invites = await client.guilds.cache.get(guildId)?.invites.fetch();
-            this.logger.debug(`Fetched ${invites?.size} invites for guild ${guildId}`);
+            this.logger.debug(`Fetched ${invites?.size ?? 0} invites for guild ${guildId}`);
 
             // Update the invite uses
             for (const invite of invites?.values() ?? []) {
@@ -72,7 +72,7 @@ export class Feature {
         const inviteUsed = guildInvitesNow.find((invite) => invite.code === inviteCode);
 
         // Update the invite uses, skip if the invite is a DM invite
-        if (inviteUsed) this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
+        if (inviteUsed) await this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
 
         // Skip if the feature is disabled
         const settings = await prisma.settings.findFirst({
@@ -97,7 +97,7 @@ export class Feature {
             await inviteTrackingChannel?.send({
                 embeds: [{
                     title: 'Invite used',
-                    description: `${member} joined using an unknown invite`,
+                    description: `<@${member.id}> joined using an unknown invite`,
                 }]
             });
         } else {
@@ -105,7 +105,7 @@ export class Feature {
             await inviteTrackingChannel?.send({
                 embeds: [{
                     title: 'Invite used',
-                    description: `${member} joined using invite ${inviteUsed.code}`,
+                    description: `<@${member.id}> joined using invite ${inviteUsed.code}`,
                     fields: [
                         {
                             name: 'Uses',

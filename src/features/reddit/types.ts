@@ -4,11 +4,9 @@ export type LinkFlairRichtext = {
     e: string;
 }
 
-export type MediaEmbed = {
-}
+export type MediaEmbed = object;
 
-export type SecureMediaEmbed = {
-}
+export type SecureMediaEmbed = object;
 
 export type AuthorFlairRichtext = {
     a: string;
@@ -17,8 +15,7 @@ export type AuthorFlairRichtext = {
     t: string;
 }
 
-export type Gildings = {
-}
+export type Gildings = object;
 
 export type Source = {
     url: string;
@@ -121,24 +118,24 @@ export type Preview = {
 
 export type T3 = {
     author_flair_background_color: string;
-    approved_at_utc?: any;
+    approved_at_utc?: unknown;
     subreddit: string;
     selftext: string;
-    user_reports: any[];
+    user_reports: unknown[];
     saved: boolean;
-    mod_reason_title?: any;
+    mod_reason_title?: unknown;
     gilded: number;
     clicked: boolean;
     title: string;
     link_flair_richtext: LinkFlairRichtext[];
     subreddit_name_prefixed: string;
     hidden: boolean;
-    pwls?: any;
+    pwls?: unknown;
     link_flair_css_class: string;
     downs: number;
     thumbnail_height: number;
-    top_awarded_type?: any;
-    parent_whitelist_status?: any;
+    top_awarded_type?: unknown;
+    parent_whitelist_status?: unknown;
     hide_score: boolean;
     name: string;
     quarantine: boolean;
@@ -152,40 +149,40 @@ export type T3 = {
     author_flair_template_id: string;
     is_original_content: boolean;
     author_fullname: string;
-    secure_media?: any;
+    secure_media?: unknown;
     is_reddit_media_domain: boolean;
     is_meta: boolean;
-    category?: any;
+    category?: unknown;
     secure_media_embed: SecureMediaEmbed;
     link_flair_text: string;
     can_mod_post: boolean;
     score: number;
-    approved_by?: any;
+    approved_by?: unknown;
     is_created_from_ads_ui: boolean;
     author_premium: boolean;
     thumbnail: string;
     edited: boolean;
-    author_flair_css_class?: any;
+    author_flair_css_class?: unknown;
     author_flair_richtext: AuthorFlairRichtext[];
     gildings: Gildings;
     post_hint: string;
-    content_categories?: any;
+    content_categories?: unknown;
     is_self: boolean;
     subreddit_type: string;
     created: number;
     link_flair_type: string;
-    wls?: any;
-    removed_by_category?: any;
+    wls?: unknown;
+    removed_by_category?: unknown;
     banned_by?: boolean;
     author_flair_type: string;
     total_awards_received: number;
     allow_live_comments: boolean;
-    selftext_html?: any;
-    likes?: any;
+    selftext_html?: unknown;
+    likes?: unknown;
     suggested_sort: string;
     banned_at_utc?: number;
     url_overridden_by_dest: string;
-    view_count?: any;
+    view_count?: unknown;
     archived: boolean;
     no_follow: boolean;
     spam: boolean;
@@ -193,8 +190,8 @@ export type T3 = {
     pinned: boolean;
     over_18: boolean;
     preview: Preview;
-    all_awardings: any[];
-    awarders: any[];
+    all_awardings: unknown[];
+    awarders: unknown[];
     media_only: boolean;
     link_flair_template_id: string;
     can_gild: boolean;
@@ -202,40 +199,40 @@ export type T3 = {
     spoiler: boolean;
     locked: boolean;
     author_flair_text: string;
-    treatment_tags: any[];
+    treatment_tags: unknown[];
     visited: boolean;
-    removed_by?: any;
-    mod_note?: any;
+    removed_by?: unknown;
+    mod_note?: unknown;
     distinguished: string;
     subreddit_id: string;
     author_is_blocked: boolean;
-    mod_reason_by?: any;
+    mod_reason_by?: unknown;
     num_reports: number;
-    removal_reason?: any;
+    removal_reason?: unknown;
     link_flair_background_color: string;
     id: string;
     is_robot_indexable: boolean;
     num_duplicates: number;
-    report_reasons: any[];
+    report_reasons: unknown[];
     author: string;
-    discussion_type?: any;
+    discussion_type?: unknown;
     num_comments: number;
     send_replies: boolean;
-    media?: any;
+    media?: unknown;
     contest_mode: boolean;
     author_patreon_flair: boolean;
     approved: boolean;
     author_flair_text_color: string;
     permalink: string;
-    whitelist_status?: any;
+    whitelist_status?: unknown;
     stickied: boolean;
     url: string;
     subreddit_subscribers: number;
     created_utc: number;
     num_crossposts: number;
-    mod_reports: any[];
+    mod_reports: unknown[];
     is_video: boolean;
-    comment_type?: any;
+    comment_type?: unknown;
     replies: string;
     collapsed_reason_code: string;
     parent_id: string;
@@ -243,10 +240,10 @@ export type T3 = {
     body: string;
     is_submitter?: boolean;
     body_html: string;
-    collapsed_reason?: any;
-    associated_award?: any;
+    collapsed_reason?: unknown;
+    associated_award?: unknown;
     link_id: string;
-    unrepliable_reason?: any;
+    unrepliable_reason?: unknown;
     score_hidden?: boolean;
     controversiality?: number;
     depth?: number;
@@ -260,12 +257,12 @@ export type Child = {
 }
 
 export type Data = {
-    after?: any;
+    after?: unknown;
     dist?: number;
     modhash: string;
     geo_filter: string;
     children: Child[];
-    before?: any;
+    before?: unknown;
 }
 
 export type RedditRandomResponse = {

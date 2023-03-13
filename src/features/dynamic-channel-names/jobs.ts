@@ -12,6 +12,6 @@ export class Jobs {
     @Cron.PreventOverlap
     @Cron(Expression.EVERY_10_MINUTES)
     async updateChannelNames() {
-        void dynamicChannelNamesService.setChannelNames();
+        await dynamicChannelNamesService.setChannelNames();
     }
 }

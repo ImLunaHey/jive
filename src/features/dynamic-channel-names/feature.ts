@@ -12,6 +12,6 @@ export class Feature {
 
     @On({ event: 'ready' })
     async ready(): Promise<void> {
-        void dynamicChannelNamesService.setChannelNames();
+        await dynamicChannelNamesService.setChannelNames();
     }
 }

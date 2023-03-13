@@ -3,9 +3,10 @@ import { client } from '@app/client';
 import { Features } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, CacheType, ChannelType, ChatInputCommandInteraction, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import type { ButtonComponent, CacheType, ChatInputCommandInteraction} from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
-import { Trigger } from 'discord.js-pages/lib/types';
+import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
 
 @Discord()
@@ -277,11 +278,11 @@ export class Feature {
                         inline: true
                     }, {
                         name: 'Wait until gate',
-                        value: settings.welcome?.waitUntilGate ? `Yes ✅` : 'No ❌',
+                        value: settings.welcome?.waitUntilGate ? 'Yes ✅' : 'No ❌',
                         inline: true,
                     }, {
                         name: 'Send join message via DM?',
-                        value: settings.welcome?.joinDm ? `Yes ✅` : 'No ❌',
+                        value: settings.welcome?.joinDm ? 'Yes ✅' : 'No ❌',
                         inline: true,
                     }, settings.welcome?.joinDm ? null : {
                         name: 'Join channel',
@@ -379,7 +380,7 @@ export class Feature {
                     });
 
                     await interaction.followUp({
-                        content: `welcome-waitUntilGate button callback!`,
+                        content: 'welcome-waitUntilGate button callback!',
                         ephemeral: true
                     });
                 }
@@ -404,7 +405,7 @@ export class Feature {
                         new ActionRowBuilder<TextInputBuilder>().addComponents(
                             new TextInputBuilder()
                                 .setCustomId('joinMessage')
-                                .setLabel(`What's the join message?`)
+                                .setLabel('What\'s the join message?')
                                 .setPlaceholder('<@{{ member.id }}> welcome to {{ guild.name }}!')
                                 .setValue(settings.welcome?.joinMessage ?? '')
                                 .setStyle(TextInputStyle.Paragraph)
@@ -488,7 +489,7 @@ export class Feature {
 
                     // Tell the user that it worked
                     await interaction.editReply({
-                        content: `Successfully updated the join channel!`
+                        content: 'Successfully updated the join channel!'
                     });
                 }
             }

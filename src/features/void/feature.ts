@@ -1,7 +1,8 @@
 import { client } from '@app/client';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import { Colors, TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
+import { Colors } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()

@@ -1,6 +1,6 @@
 import { client } from '@app/client';
 import { prisma } from '@app/common/prisma-client';
-import { TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
 
 class Service {
     public readonly DEFAULT_XP = 100;

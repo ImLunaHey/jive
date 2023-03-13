@@ -5,9 +5,10 @@ import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, AttachmentBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
-import Canvas, { createCanvas, Image } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import type { Canvas } from '@napi-rs/canvas';
 
-const applyText = (canvas, text) => {
+const applyText = (canvas: Canvas, text: string) => {
     const context = canvas.getContext('2d');
     let fontSize = 70;
 
@@ -16,6 +17,22 @@ const applyText = (canvas, text) => {
     } while (context.measureText(text).width > canvas.width - 300);
 
     return context.font;
+};
+
+const isPromiseLike = <T>(element: unknown): element is Promise<T> => {
+    if (element === null) return false;
+    if (typeof element === 'object' && 'then' in element) return true;
+    return false;
+};
+
+const replaceAll = (string: string, search: string, replace: string) => {
+    // If a regex pattern
+    if (Object.prototype.toString.call(search) === '[object RegExp]') {
+        return string.replace(search, replace);
+    }
+
+    // If a string
+    return string.replace(new RegExp(search, 'g'), replace);
 };
 
 @Discord()
@@ -103,10 +120,13 @@ export class Feature {
         description: 'Test the bot',
     })
     async test(interaction: CommandInteraction) {
+        const userUsername = interaction.member?.user.username;
+        if (!userUsername) return;
+
         const canvas = createCanvas(700, 250);
         const context = canvas.getContext('2d');
 
-        context.fillStyle = "black";
+        context.fillStyle = 'black';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
         context.fillStyle = 'white';
@@ -123,9 +143,9 @@ export class Feature {
         context.fillStyle = '#ffffff';
         context.fillText('Profile', canvas.width / 2.5, canvas.height / 3.5);
 
-        context.font = applyText(canvas, `${interaction.member?.user.username}!`);
+        context.font = applyText(canvas, `${userUsername}!`);
         context.fillStyle = '#ffffff';
-        context.fillText(`${interaction.member?.user.username}!`, canvas.width / 2.5, canvas.height / 1.8);
+        context.fillText(`${userUsername}!`, canvas.width / 2.5, canvas.height / 1.8);
 
         context.beginPath();
         context.arc(125, 125, 100, 0, Math.PI * 2, true);
@@ -133,7 +153,7 @@ export class Feature {
         context.clip();
 
         const buffer = await fetch(interaction.user.displayAvatarURL({ extension: 'jpg' })).then(response => response.arrayBuffer());
-        const avatar = await Canvas.loadImage(buffer);
+        const avatar = await loadImage(buffer);
 
         context.drawImage(avatar, 25, 25, 200, 200);
 
@@ -173,8 +193,8 @@ export class Feature {
         name: 'eval',
         description: 'Evaluate code',
     })
-    @Guard(async (interaction, _client, next) => {
-        if (interaction.user.id === env.OWNER_ID) await next();
+    @Guard(async (interaction: CommandInteraction, _client, next) => {
+        if (interaction.user?.id === env.OWNER_ID) await next();
     })
     @Guild(env.OWNER_GUILD_ID)
     async eval(
@@ -210,18 +230,19 @@ export class Feature {
                 const code = interaction.fields.getTextInputValue('code');
 
                 // Evaluate our input
-                const evaled = eval(`(async () => { ${code} })()`);
+                const evaled = eval(`(async () => { ${code} })()`) as unknown;
 
                 // Cleanup result
                 let result = evaled;
-                if (result && result.constructor.name == "Promise") result = await result;
-                if (typeof result !== "string") result = inspect(result, { depth: 1 });
-                result = result.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
-                result = result.replaceAll(client.token, "[REDACTED]");
+                if (isPromiseLike(result)) result = await result;
+                if (typeof result !== 'string') result = inspect(result, { depth: 1 });
+
+                result = (result as string).replace(/`/g, '`' + String.fromCharCode(8203)).replace(/@/g, '@' + String.fromCharCode(8203));
+                result = replaceAll(result as string, env.BOT_TOKEN, '[REDACTED]');
 
                 // Check if the result is too long
-                if (result.length > 2000) {
-                    result = result.slice(0, 2000);
+                if ((result as string).length > 2000) {
+                    result = (result as string).slice(0, 2000);
                     result += '...';
                 }
 
@@ -229,9 +250,9 @@ export class Feature {
                 if ((interaction.deferred || interaction.replied) && !result) return;
 
                 // Send the result
-                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`\`\`js\n${result}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`\`\`js\n${(result as string)}\n\`\`\``);
             } catch (error: unknown) {
-                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`ERROR\` \`\`\`xl\n${error}\n\`\`\``);
+                await interaction[(interaction.deferred || interaction.replied) ? 'followUp' : 'reply'](`\`ERROR\` \`\`\`xl\n${String(error)}\n\`\`\``);
             }
 
             return;

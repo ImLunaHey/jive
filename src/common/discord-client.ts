@@ -1,4 +1,4 @@
-import { Interaction, Message, Partials } from 'discord.js';
+import type { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
@@ -15,6 +15,8 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     prefix?: string;
 }): Client => {
     // If a client already exists with this name then return it
+    // See: https://github.com/microsoft/TypeScript/issues/13086
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (clients.has(name)) return clients.get(name)!;
 
     // Create a discord.js client instance
@@ -59,8 +61,8 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         client.executeInteraction(interaction);
     });
 
-    client.on('messageCreate', (message: Message) => {
-        client.executeCommand(message);
+    client.on('messageCreate', async (message: Message) => {
+        await client.executeCommand(message);
     });
 
     client.on('error', (error: Error) => {
