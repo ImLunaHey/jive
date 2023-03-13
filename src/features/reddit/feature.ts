@@ -132,6 +132,11 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral });
 
+        this.logger.info(`Getting a reddit post for ${interaction.user.tag} (${interaction.user.id})`);
+        if (subreddit) this.logger.info(`Subreddit: ${subreddit}`);
+        if (url) this.logger.info(`Url: ${url}`);
+        if (list) this.logger.info(`List: ${list}`);
+
         // Check if the subreddit is just plain text
         if (subreddit && !SubredditName.safeParse(subreddit).success) {
             await interaction.editReply({
@@ -147,7 +152,8 @@ export class Feature {
 
         // If we didn't get a post, show an error
         if (!post) {
-            await interaction.followUp({
+            this.logger.error('No posts found');
+            await interaction.editReply({
                 embeds: [{
                     title: 'No posts found',
                     description: 'Please try a different subreddit',
@@ -163,6 +169,9 @@ export class Feature {
                 interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw || 
                 interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
             ) {
+                this.logger.error(`${interaction.channel.type} ${interaction.channel.id} is not a NSFW channel`);
+
+                // Reply with an error
                 await interaction.editReply({
                     embeds: [{
                         title: 'This is **NOT** a NSFW channel',
@@ -173,6 +182,9 @@ export class Feature {
             }
             return;
         }
+
+        // Log the post
+        this.logger.info(`Sending post ${post.title} (${post.url})`);
 
         // Reply with the post
         await interaction.editReply({
