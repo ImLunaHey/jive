@@ -30,10 +30,21 @@ export class Feature {
         // If we have no tries left, return undefined
         if (tries <= 0) return undefined;
 
+        // Log the subreddit we're getting a post from
+        this.logger.info(`Getting a random post from /r/${subreddit} [${list}] (${tries} tries left)`);
+
         // Get a random post from the subreddit
         const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit}/${list}.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
         const redditPosts = await this.resolvePosts(redditResponses);
+
+        // Log the amount of posts we got
+        this.logger.info(`Got ${redditPosts.length} posts`);
+
+        // Get a random post
         const post = redditPosts[Math.floor(Math.random() * redditPosts.length)];
+
+        // Log the post we got
+        this.logger.info(`Got post ${post?.title} (${post?.url})`);
 
         // If we didn't get a post, try again
         if (!post) return this.getRandomRedditPost(tries--, list, subreddit);
@@ -123,7 +134,7 @@ export class Feature {
 
         // Check if the subreddit is just plain text
         if (subreddit && !SubredditName.safeParse(subreddit).success) {
-            await interaction.followUp({
+            await interaction.editReply({
                 embeds: [{
                     title: 'Invalid subreddit',
                 }]
@@ -152,8 +163,7 @@ export class Feature {
                 interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw || 
                 interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
             ) {
-                await interaction.followUp({
-                    ephemeral: true,
+                await interaction.editReply({
                     embeds: [{
                         title: 'This is **NOT** a NSFW channel',
                         description: 'Please use this command in a NSFW channel',
@@ -165,7 +175,7 @@ export class Feature {
         }
 
         // Reply with the post
-        await interaction.followUp({
+        await interaction.editReply({
             embeds: [{
                 title: post.title,
                 author: {
@@ -177,7 +187,7 @@ export class Feature {
                     url: post.url,
                 },
                 footer: {
-                    text: `👍 ${post.ups} 💬 ${post.num_comments} 🚇 ${post.subreddit_name_prefixed}`,
+                    text: `👍 ${Intl.NumberFormat('en').format(post.ups)} 💬 ${Intl.NumberFormat('en').format(post.num_comments)} 🚇 ${post.subreddit_name_prefixed}`,
                 },
                 description: `[View on Reddit](https://reddit.com${post.permalink})`,
             }]
