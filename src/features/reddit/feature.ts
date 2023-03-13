@@ -1,6 +1,6 @@
 import { RedditResponse, T3 } from '@app/features/reddit/types';
 import { globalLogger } from '@app/logger';
-import { ApplicationCommandOptionType, CommandInteraction, TextChannel } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction, TextChannel } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import { z } from 'zod';
 
@@ -55,6 +55,13 @@ export class Feature {
         }) ephemeral: boolean = false,
         interaction: CommandInteraction
     ) {
+        if (!interaction.guild) return;
+        if (
+            interaction.channel?.type !== ChannelType.GuildText &&
+            interaction.channel?.type !== ChannelType.PrivateThread &&
+            interaction.channel?.type !== ChannelType.PublicThread
+        ) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral });
 
@@ -82,14 +89,22 @@ export class Feature {
             return;
         }
 
-        // If this is a nsfw post and the channel is not nsfw, show an error
-        if (post?.over_18 && !(interaction.channel as TextChannel)?.nsfw) {
-            await interaction.followUp({
-                embeds: [{
-                    title: 'This is not a NSFW channel',
-                    description: 'Please use this command in a NSFW channel',
-                }]
-            });
+        // If this is a nsfw post
+        if (post?.over_18) {
+            // Check if the channel is nsfw
+            if (interaction.channel.type === ChannelType.GuildText && !interaction.channel.nsfw ||
+                interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw || 
+                interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
+            ) {
+                await interaction.followUp({
+                    ephemeral: true,
+                    embeds: [{
+                        title: 'This is **NOT** a NSFW channel',
+                        description: 'Please use this command in a NSFW channel',
+                        color: Colors.Red,
+                    }]
+                });
+            }
             return;
         }
 
