@@ -1,7 +1,7 @@
-import { RedditResponse, T3 } from '@app/features/reddit/types';
+import { RedditListResponse, RedditRandomResponse, T3 } from '@app/features/reddit/types';
 import { globalLogger } from '@app/logger';
 import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction } from 'discord.js';
-import { Discord, Slash, SlashChoice, SlashOption } from 'discordx';
+import { Discord, Slash, SlashOption } from 'discordx';
 import { z } from 'zod';
 
 const SubredditName = z.string().regex(/^[a-zA-Z0-9_]+$/).min(3).max(21);
@@ -14,8 +14,9 @@ export class Feature {
         this.logger.success('Feature initialized');
     }
 
-    async resolvePosts(posts: RedditResponse) {
-        return posts.filter(response => {
+    async resolvePosts(response: RedditRandomResponse | RedditListResponse) {
+        const responses = Array.isArray(response) ? response : [response];
+        return responses.filter(response => {
             const post = response.data.children.find(child => child.kind === 't3')?.data;
             if (!post) return false;
 
@@ -34,7 +35,7 @@ export class Feature {
         this.logger.info(`Getting a random post from /r/${subreddit} [${list}] (${tries} tries left)`);
 
         // Get a random post from the subreddit
-        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit}/${list}.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
+        const redditResponses = await fetch(`https://www.reddit.com/r/${subreddit}/${list}.json?limit=1`).then(response => response.json() as Promise<RedditRandomResponse>);
         const redditPosts = await this.resolvePosts(redditResponses);
 
         // Log the amount of posts we got
@@ -68,7 +69,7 @@ export class Feature {
         const resolvedUrl = this.resolveRedditUrl(url);
 
         // Get the post from the url
-        const redditResponses = await fetch(`https://www.reddit.com${resolvedUrl}.json?limit=1`).then(response => response.json() as Promise<RedditResponse>);
+        const redditResponses = await fetch(`https://www.reddit.com${resolvedUrl}.json?limit=1`).then(response => response.json() as Promise<RedditRandomResponse>);
         const redditPosts = await this.resolvePosts(redditResponses);
         const post = redditPosts[Math.floor(Math.random() * redditPosts.length)];
 

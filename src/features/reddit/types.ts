@@ -268,7 +268,12 @@ export type Data = {
     before?: any;
 }
 
-export type RedditResponse = {
+export type RedditRandomResponse = {
     kind: string;
     data: Data;
 }[]
+
+export type RedditListResponse = {
+    kind: string;
+    data: Data;
+}
