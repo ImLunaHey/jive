@@ -28,6 +28,11 @@ jobs:
           node-version: 18.x
       - run: npm ci
       - run:  npm run coverage
+      - name: Generating coverage badges
+        uses: jpb06/jest-badges-action@latest
+        with:
+          branches: main
+          commit-message: "chore: updating coverage badges"
 
   build:
     runs-on: ubuntu-latest
