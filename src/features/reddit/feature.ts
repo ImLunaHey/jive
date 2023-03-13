@@ -48,7 +48,7 @@ export class Feature {
         this.logger.info(`Got post ${post?.title} (${post?.url})`);
 
         // If we didn't get a post, try again
-        if (!post) return this.getRandomRedditPost(tries--, list, subreddit);
+        if (!post) return this.getRandomRedditPost(tries - 1, list, subreddit);
         return post;
     }
 
@@ -180,8 +180,9 @@ export class Feature {
                         color: Colors.Red,
                     }]
                 });
+
+                return;
             }
-            return;
         }
 
         // Log the post
