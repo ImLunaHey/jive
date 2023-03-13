@@ -6,7 +6,6 @@ import type { MessageReaction, PartialMessageReaction, PartialUser, TextChannel,
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
-import { resolveMediaUrl } from 'media-extractor';
 import { sleep } from '@app/common/sleep';
 
 const extension = (attachment: string) => {
@@ -159,6 +158,7 @@ export class Feature {
                     .setTimestamp(new Date());
                 if (image) embed.setImage(image);
                 if (tenorGif && reaction.message.cleanContent) {
+                    const resolveMediaUrl = await import('media-extractor').then(m => m.resolveMediaUrl);
                     const mediaLink = await resolveMediaUrl(reaction.message.cleanContent);
                     embed.setImage(mediaLink);
                 }
