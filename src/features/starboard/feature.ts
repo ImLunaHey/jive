@@ -6,7 +6,7 @@ import type { MessageReaction, PartialMessageReaction, PartialUser, TextChannel,
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
-import { resolve as resolveMedia } from 'media-extractor';
+import { resolveMediaUrl } from 'media-extractor';
 import { sleep } from '@app/common/sleep';
 
 const extension = (attachment: string) => {
@@ -158,7 +158,10 @@ export class Feature {
                     })
                     .setTimestamp(new Date());
                 if (image) embed.setImage(image);
-                if (tenorGif && reaction.message.cleanContent) embed.setImage(await resolveMedia(reaction.message.cleanContent));
+                if (tenorGif && reaction.message.cleanContent) {
+                    const mediaLink = await resolveMediaUrl(reaction.message.cleanContent);
+                    embed.setImage(mediaLink);
+                }
                 await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
 
                 // TODO: #2:6h/dev Add support for pinging the user
