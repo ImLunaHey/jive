@@ -1807,6 +1807,7 @@ export class Feature {
                     name: fileName,
                     description: `Image for ${creature.name}`,
                 });
+                this.logger.info(`Attaching ${creature.imageUrl} as ${fileName} from ${filePath}`);
                 files.push(file);
             }
         }
@@ -1815,11 +1816,14 @@ export class Feature {
         await interaction.editReply({
             files,
             embeds: creatures.map(creature => {
+                const thumbnailUrl = creature.imageUrl ? `attachment://${resolveImageName(creature.imageUrl)}` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                this.logger.info(`Adding thumbnail for ${creature.name} from ${thumbnailUrl} (original: ${String(creature.imageUrl)})`);
+                this.logger.info(`Thumbnail URL: ${thumbnailUrl}`);
                 return {
                     title: `${creature.emoji} ${creature.name}`,
                     description: creature.description,
                     thumbnail: {
-                        url: creature.imageUrl ? `attachment://${resolveImageName(creature.imageUrl)}` : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        url: thumbnailUrl,
                     },
                     fields: [{
                         name: 'NAME',
