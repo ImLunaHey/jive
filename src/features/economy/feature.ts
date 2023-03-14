@@ -1787,8 +1787,9 @@ export class Feature {
         // If the image is a local file attach it
         for (const creature of creatures) {
             if (creature.imageUrl?.startsWith('attachment://')) {
-                const file = new AttachmentBuilder(creature.imageUrl.replace('attachment://', ''), {
-                    name: creature.imageUrl.split('/').pop(),
+                const fileName = creature.imageUrl.replace('attachment://', '');
+                const file = new AttachmentBuilder(fileName, {
+                    name: fileName,
                 });
                 files.push(file);
             }
