@@ -1807,6 +1807,7 @@ export class Feature {
                 const fileName = resolveImageName(creature.imageUrl);
                 const file = new AttachmentBuilder(filePath, {
                     name: fileName,
+                    description: `Image for ${creature.name}`,
                 });
                 files.push(file);
             }
