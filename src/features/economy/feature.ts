@@ -1793,7 +1793,7 @@ export class Feature {
         const resolveImageName = (url: string) => {
             if (!url.startsWith('attachment://')) return url;
             const filePath = url.replace('attachment://', '');
-            const fileName = filePath.replace('/', '_');
+            const fileName = filePath.replace(/\//g, '_');
             return fileName;
         };
 
