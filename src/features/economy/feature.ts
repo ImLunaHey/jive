@@ -1783,15 +1783,13 @@ export class Feature {
         // Files to attach
         const files: AttachmentBuilder[] = [];
 
-        // assets/creatures/greg/profile.png -> attachment://assets_creatures_greg_profile.png
+        // attachment://assets/creatures/greg/profile.png -> assets/creatures/greg/profile.png
         const resolveImageUrl = (url: string) => {
             if (!url.startsWith('attachment://')) return url;
-            const filePath = url.replace('attachment://', '');
-            const fileName = filePath.replace('/', '_');
-            return `attachment://${fileName}`;
+            return url.replace('attachment://', '');
         };
 
-        // assets/creatures/greg/profile.png -> assets_creatures_greg_profile.png
+        // attachment://assets/creatures/greg/profile.png -> assets_creatures_greg_profile.png
         const resolveImageName = (url: string) => {
             if (!url.startsWith('attachment://')) return url;
             const filePath = url.replace('attachment://', '');
@@ -1821,7 +1819,7 @@ export class Feature {
                     title: `${creature.emoji} ${creature.name}`,
                     description: creature.description,
                     thumbnail: {
-                        url: creature.imageUrl ? resolveImageUrl(creature.imageUrl) : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        url: creature.imageUrl ? `attachment://${resolveImageName(creature.imageUrl)}` : 'https://cdn.discordapp.com/embed/avatars/0.png',
                     },
                     fields: [{
                         name: 'NAME',
