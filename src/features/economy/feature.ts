@@ -6,7 +6,9 @@ import { globalLogger } from '@app/logger';
 import { EntityType, ItemSubType, ItemType, Location, Slot } from '@prisma/client';
 import type {
     AnySelectMenuInteraction,
-    AutocompleteInteraction} from 'discord.js';
+    AutocompleteInteraction
+} from 'discord.js';
+import { AttachmentBuilder } from 'discord.js';
 import {
     ActionRowBuilder,
     ApplicationCommandOptionType,
@@ -81,6 +83,7 @@ const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     });
     await interaction.respond(locations);
 };
+
 @Discord()
 @Guard(GuildMemberGuard)
 export class Feature {
@@ -1777,8 +1780,21 @@ export class Feature {
             return;
         }
 
+        // Files to attach
+        const files: AttachmentBuilder[] = [];
+
+        // assets/creatures/${dirent.name}/profile.png
+        // If the image is a local file attach it
+        for (const creature of creatures) {
+            if (creature.imageUrl?.startsWith('attachment://')) {
+                const file = new AttachmentBuilder(creature.imageUrl);
+                files.push(file);
+            }
+        }
+
         // Respond with the result
         await interaction.editReply({
+            files,
             embeds: creatures.map(creature => {
                 return {
                     title: `${creature.emoji} ${creature.name}`,
