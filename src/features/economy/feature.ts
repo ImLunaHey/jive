@@ -1783,12 +1783,29 @@ export class Feature {
         // Files to attach
         const files: AttachmentBuilder[] = [];
 
+        // assets/creatures/greg/profile.png -> attachment://assets_creatures_greg_profile.png
+        const resolveImageUrl = (url: string) => {
+            if (!url.startsWith('attachment://')) return url;
+            const filePath = url.replace('attachment://', '');
+            const fileName = filePath.replace('/', '_');
+            return `attachment://${fileName}`;
+        };
+
+        // assets/creatures/greg/profile.png -> assets_creatures_greg_profile.png
+        const resolveImageName = (url: string) => {
+            if (!url.startsWith('attachment://')) return url;
+            const filePath = url.replace('attachment://', '');
+            const fileName = filePath.replace('/', '_');
+            return fileName;
+        };
+
         // assets/creatures/${dirent.name}/profile.png
         // If the image is a local file attach it
         for (const creature of creatures) {
             if (creature.imageUrl?.startsWith('attachment://')) {
-                const fileName = creature.imageUrl.replace('attachment://', '');
-                const file = new AttachmentBuilder(fileName, {
+                const filePath = resolveImageUrl(creature.imageUrl);
+                const fileName = resolveImageName(creature.imageUrl);
+                const file = new AttachmentBuilder(filePath, {
                     name: fileName,
                 });
                 files.push(file);
@@ -1803,7 +1820,7 @@ export class Feature {
                     title: `${creature.emoji} ${creature.name}`,
                     description: creature.description,
                     thumbnail: {
-                        url: creature.imageUrl ?? 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        url: creature.imageUrl ? resolveImageUrl(creature.imageUrl) : 'https://cdn.discordapp.com/embed/avatars/0.png',
                     },
                     fields: [{
                         name: 'NAME',
