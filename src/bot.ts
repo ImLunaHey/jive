@@ -7,7 +7,11 @@ import { client } from '@app/client';
 const { name } = pkg;
 
 export const start = async () => {
-    globalLogger.info('Starting "%s" in "%s" mode with a log level of "%s".', name, env.NODE_ENV, env.LOG_LEVEL);
+    globalLogger.info('Starting bot', {
+        name,
+        env: env.NODE_ENV,
+        logLevel: env.LOG_LEVEL,
+    });
 
     // Load all the events, commands and api
     await import('./features/audit-log');

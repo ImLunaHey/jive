@@ -12,10 +12,10 @@ import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Leveling');
+    private logger = globalLogger.child({ service: 'Leveling' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

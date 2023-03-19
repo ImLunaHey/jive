@@ -8,10 +8,10 @@ import { prisma } from '@app/common/prisma-client';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('CustomCommands');
+    private logger = globalLogger.child({ service: 'CustomCommands' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'messageCreate' })
@@ -53,14 +53,23 @@ export class Feature {
         if (!customCommand) return;
 
         // Log that we ran a custom command
-        this.logger.info('Ran custom command "%s" for %s in %s', customCommand.triggerMessage, message.member.user.tag, message.guild.name);
+        this.logger.info('Ran custom command', {
+            guildId: message.guild.id,
+            userId: message.member.id,
+            customCommandId: customCommand.id,
+        });
 
         // Send the custom command response
         if (customCommand.responseMessage) await message.reply(templateResultToMessage(await replaceVariablesForMember(customCommand.responseMessage, message.member)));
 
         // Delete the message
         if (customCommand.deleteTrigger) await message.delete().catch(() => {
-            this.logger.error('Failed to delete message', message.id);
+            this.logger.error('Failed to delete message', {
+                guildId: message.guild?.id,
+                userId: message.member?.id,
+                customCommandId: customCommand.id,
+                messageId: message.id,
+            });
         });
 
         // Add the roles

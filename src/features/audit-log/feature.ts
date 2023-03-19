@@ -16,10 +16,10 @@ const filterOutEveryoneRole = (r: Role) => r.name !== '@everyone';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('AuditLog');
+    private logger = globalLogger.child({ service: 'AuditLog' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     isValid(auditLog: AuditLog, { member, user, channel }: {
@@ -52,7 +52,7 @@ export class Feature {
         const auditLogChannel = client.guilds.cache.get(guild.id)?.channels.cache.get(channelId);
         if (!auditLogChannel) return null;
         if (auditLogChannel.type !== ChannelType.GuildText) return null;
-        return auditLogChannel ;
+        return auditLogChannel;
     }
 
     getAuditLogs(guild: Guild | InviteGuild): Promise<AuditLog[]> {

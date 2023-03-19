@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import { Features } from '@app/common/is-feature-enabled';
 import { prisma } from '@app/common/prisma-client';
 import { globalLogger } from '@app/logger';
-import type { ButtonComponent, CacheType, ChatInputCommandInteraction} from 'discord.js';
+import type { ButtonComponent, CacheType, ChatInputCommandInteraction } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import type { Trigger } from 'discord.js-pages/lib/types';
@@ -11,10 +11,10 @@ import { Discord, Slash, On, type ArgsOf } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Setup');
+    private logger = globalLogger.child({ service: 'Setup' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     createToggleButton(id: Features, name: string, enabled: boolean) {

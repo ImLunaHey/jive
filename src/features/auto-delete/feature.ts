@@ -4,10 +4,10 @@ import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('AutoDelete');
+    private logger = globalLogger.child({ service: 'AutoDelete' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

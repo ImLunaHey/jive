@@ -4,10 +4,10 @@ import { Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('DynamicChannelNames');
+    private logger = globalLogger.child({ service: 'DynamicChannelNames' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

@@ -3,10 +3,10 @@ import { Cron, Expression } from '@reflet/cron';
 import { dynamicChannelNamesService } from '@app/features/dynamic-channel-names/service';
 
 export class Jobs {
-    private logger = globalLogger.scope('DynamicChannelNames');
+    private logger = globalLogger.child({ service: 'DynamicChannelNames:Jobs' });
 
     constructor() {
-        this.logger.success('Jobs initialized');
+        this.logger.info('Initialised');
     }
 
     @Cron.PreventOverlap

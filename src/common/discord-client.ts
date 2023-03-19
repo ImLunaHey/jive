@@ -2,7 +2,6 @@ import type { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
-import { prisma } from '@app/common/prisma-client';
 
 const clients = new Map<string, Client>();
 
@@ -30,31 +29,21 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.once('ready', async () => {
-        globalLogger.info('Connected to discord as %s', client.user?.username);
+        globalLogger.info('Connected to discord', {
+            username: client.user?.username,
+        });
 
         // Make sure all guilds are in cache
         globalLogger.info('Fetching all guilds');
         await client.guilds.fetch();
 
-        // Add all guilds to the database
-        globalLogger.info('Adding all guilds to the database');
-        for (const guild of client.guilds.cache.values()) {
-            await prisma.guild.upsert({
-                where: {
-                    id: guild.id,
-                },
-                update: {},
-                create: {
-                    id: guild.id
-                }
-            });
-        }
-
         // init all application commands
         globalLogger.info('Initializing all application commands');
         await client.initApplicationCommands();
 
-        globalLogger.info('%s is ready', client.user?.username);
+        globalLogger.info('Bot is ready', {
+            username: client.user?.username,
+        });
     });
 
     client.on('interactionCreate', (interaction: Interaction) => {

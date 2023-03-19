@@ -7,10 +7,10 @@ import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Void');
+    private logger = globalLogger.child({ service: 'Void' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

@@ -7,10 +7,10 @@ import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('InviteTracking');
+    private logger = globalLogger.child({ service: 'InviteTracking' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

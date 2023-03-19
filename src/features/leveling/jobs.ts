@@ -5,10 +5,10 @@ import { store } from '@app/store';
 import { Cron, Expression } from '@reflet/cron';
 
 export class Jobs {
-    private logger = globalLogger.scope('Jobs');
+    private logger = globalLogger.child({ service: 'Leveling:Jobs' });
 
     constructor() {
-        this.logger.success('Jobs initialized');
+        this.logger.info('Jobs Initialised');
     }
 
     @Cron.PreventOverlap
@@ -17,7 +17,7 @@ export class Jobs {
         // Get all the users who have sent text messages this minute
         for (const [guildId, guild] of store.getState().usersWhoChattedThisMinute.entries()) {
             for (const userId in guild.values()) {
-                this.logger.success('Granting %s text XP to "%s"', levelService.DEFAULT_XP, client.guilds.cache.get(guildId)?.members.cache.get(userId)?.user.username ?? `Unknown user [ID: ${userId}]`);
+                this.logger.info('Granting %s text XP to "%s"', levelService.DEFAULT_XP, client.guilds.cache.get(guildId)?.members.cache.get(userId)?.user.username ?? `Unknown user [ID: ${userId}]`);
 
                 // Clear them from the list
                 store.getState().usersWhoChattedThisMinute.delete(userId);
@@ -30,7 +30,7 @@ export class Jobs {
         // Get all the users who are currently in voice channels
         for (const [guildId, guild] of store.getState().usersInVC.entries()) {
             for (const userId in guild.values()) {
-                this.logger.success('Granting %s voice XP to "%s"', levelService.DEFAULT_XP, client.guilds.cache.get(guildId)?.members.cache.get(userId)?.user.username ?? `Unknown user [ID: ${userId}]`);
+                this.logger.info('Granting %s voice XP to "%s"', levelService.DEFAULT_XP, client.guilds.cache.get(guildId)?.members.cache.get(userId)?.user.username ?? `Unknown user [ID: ${userId}]`);
 
                 // Grant them XP
                 await levelService.grantXp(userId, levelService.DEFAULT_XP);

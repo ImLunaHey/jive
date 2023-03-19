@@ -6,10 +6,10 @@ import { Discord, Slash } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Features');
+    private logger = globalLogger.child({ service: 'Features' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @Slash({

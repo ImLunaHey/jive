@@ -64,7 +64,9 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
     `) as unknown;
 
     if (typeof result !== 'string') {
-        globalLogger.scope('replaceVariables').error('Failed to render message, recieved non-string result.');
+        globalLogger.child({
+            service: 'replaceVariables'
+        }).error('Failed to render message, received non-string result.');
         return 'Failed to render message, please contact <@784365843810222080>.';
     }
 

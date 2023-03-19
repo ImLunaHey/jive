@@ -18,10 +18,10 @@ const extension = (attachment: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Starboard');
+    private logger = globalLogger.child({ service: 'Starboard' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     isReactionValid(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {

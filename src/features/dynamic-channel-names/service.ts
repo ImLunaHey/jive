@@ -10,7 +10,7 @@ import { ChannelType } from 'discord.js';
 // `💳 {{ guild.roles['927469767680487474'].size }} sellers`
 
 class DynamicChannelNamesService {
-    private logger = globalLogger.scope('DynamicChannelNames');
+    private logger = globalLogger.child('DynamicChannelNames');
 
     async setChannelNames() {
         // Wait until the client is ready

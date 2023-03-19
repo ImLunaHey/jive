@@ -87,10 +87,10 @@ const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
 @Discord()
 @Guard(GuildMemberGuard)
 export class Feature {
-    private logger = globalLogger.scope('Economy');
+    private logger = globalLogger.child({ service: 'Economy' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @Slash({

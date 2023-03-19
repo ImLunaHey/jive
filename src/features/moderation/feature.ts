@@ -5,10 +5,10 @@ import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Moderation');
+    private logger = globalLogger.child({ service: 'Moderation' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @Slash({

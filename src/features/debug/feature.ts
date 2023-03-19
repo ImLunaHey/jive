@@ -37,10 +37,10 @@ const replaceAll = (string: string, search: string, replace: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Debug');
+    private logger = globalLogger.child({ service: 'Debug' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     @On({ event: 'ready' })

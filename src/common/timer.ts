@@ -9,6 +9,6 @@ export const createTimer = (scope: string) => {
     const startTime = process.hrtime();
     return () => {
         const seconds = parseHrtimeToSeconds(process.hrtime(startTime));
-        globalLogger.scope('Timer').info(`[${scope}] Took ${seconds} seconds.`);
+        globalLogger.child({ service: 'Timer' }).info(`[${scope}] Took ${seconds} seconds.`);
     };
 };

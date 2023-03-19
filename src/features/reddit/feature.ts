@@ -8,10 +8,10 @@ const SubredditName = z.string().regex(/^[a-zA-Z0-9_]+$/).min(3).max(21);
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Reddit');
+    private logger = globalLogger.child({ service: 'Reddit' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     resolvePosts(response: RedditRandomResponse | RedditListResponse) {
@@ -167,7 +167,7 @@ export class Feature {
         if (!ephemeral && post?.over_18) {
             // Check if the channel is nsfw
             if (interaction.channel.type === ChannelType.GuildText && !interaction.channel.nsfw ||
-                interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw || 
+                interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw ||
                 interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
             ) {
                 this.logger.error(`${interaction.channel.type} ${interaction.channel.id} is not a NSFW channel`);

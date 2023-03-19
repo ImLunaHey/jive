@@ -10,10 +10,10 @@ import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.scope('Welcome');
+    private logger = globalLogger.child({ service: 'Welcome' });
 
     constructor() {
-        this.logger.success('Feature initialized');
+        this.logger.info('Initialised');
     }
 
     async welcomeMember(member: GuildMember, settings: Welcome) {
@@ -109,7 +109,10 @@ export class Feature {
 
         // If waitUntilGate is true check if the member has passed the guild's membership screening requirements
         if (settings.waitUntilGate && oldMember.pending && !newMember.pending) {
-            this.logger.info('Member %s has passed the membership screening requirements', newMember.id);
+            this.logger.info('Member has passed the membership screening requirements', {
+                guildId: newMember.guild.id,
+                userId: newMember.id,
+            });
 
             // Welcome the member
             await this.welcomeMember(newMember, settings);
