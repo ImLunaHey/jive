@@ -239,7 +239,7 @@ export class Feature {
                 });
             }
 
-            this.logger.success('Successfully imported the leaderboard for guild "%s" with %s members', interaction.guild.name, leaderboard.length);
+            this.logger.info('Successfully imported the leaderboard for guild "%s" with %s members', interaction.guild.name, leaderboard.length);
 
             // Tell the user that the leaderboard has been imported
             await interaction.editReply({
