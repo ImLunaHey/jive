@@ -1,10 +1,14 @@
 import winston from 'winston';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/axiom-node';
 import chalk from 'chalk';
+import { name as botName } from '@app/../package.json';
 
 export const globalLogger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
+    defaultMeta: {
+        botName,
+    },
     transports: [
         // You can pass an option here, if you don't the transport is configured
         // using environment variables like `AXIOM_DATASET` and `AXIOM_TOKEN`

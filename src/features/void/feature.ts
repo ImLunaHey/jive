@@ -26,7 +26,10 @@ export class Feature {
         const messages = await voidChannel?.messages.fetch();
         if (!messages) return;
 
-        this.logger.info('Deleting %s messages', messages.size);
+        this.logger.info('Deleting messages', {
+            guildId: voidChannel.guild.id,
+            count: messages.size,
+        });
 
         // Delete all the messages in the channel
         for (const message of messages.values()) {
