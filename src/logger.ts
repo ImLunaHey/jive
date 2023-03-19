@@ -1,19 +1,15 @@
 import winston from 'winston';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/axiom-node';
 import chalk from 'chalk';
-import { name as botName } from '@app/../package.json';
+import * as pkg from '@app/../package.json';
 
 export const globalLogger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     defaultMeta: {
-        botName,
+        botName: pkg.name,
     },
-    transports: [
-        // You can pass an option here, if you don't the transport is configured
-        // using environment variables like `AXIOM_DATASET` and `AXIOM_TOKEN`
-        new AxiomTransport(),
-    ],
+    transports: [],
 });
 
 const logLevelColours = {
@@ -29,8 +25,16 @@ const colourLevel = (level: keyof typeof logLevelColours) => {
     return chalk[colour](level);
 };
 
-// Add the console logger if we're not in production
-if (process.env.NODE_ENV != 'production') {
+if (process.env.NODE_ENV === 'test') {
+    globalLogger.silent = true;
+}
+
+if (process.env.AXIOM_TOKEN) {
+    globalLogger.add(new AxiomTransport());
+}
+
+// Add the console logger if we're not running tests and there are no transports
+if (process.env.NODE_ENV !== 'test' && globalLogger.transports.length === 0) {
     globalLogger.add(
         new winston.transports.Console({
             format: winston.format.combine(
