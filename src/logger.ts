@@ -1,7 +1,6 @@
 import winston from 'winston';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/axiom-node';
 import chalk from 'chalk';
-import { inspect } from 'util';
 import * as pkg from '@app/../package.json';
 
 export const globalLogger = winston.createLogger({
