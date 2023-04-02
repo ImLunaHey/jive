@@ -30,7 +30,7 @@
     "@types/signale": "^1.4.4",
     "@typescript-eslint/eslint-plugin": "^5.54.1",
     "cross-env": "^7.0.3",
-    "discord.js": "^14.7.1",
+    "discord.js": "^14.9.0",
     "discord.js-pages": "^1.4.4",
     "discordx": "^11.7.1",
     "dotenv": "^16.0.3",
