@@ -17,7 +17,7 @@
     "chalk": "^4.1.2",
     "media-extractor": "github:imlunahey/media-extractor",
     "prisma": "^4.11.0",
-    "vm2": "^3.9.15"
+    "vm2": "^3.9.16"
   },
   "devDependencies": {
     "@axiomhq/axiom-node": "^0.11.0",
