@@ -248,7 +248,7 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 title: `${members.size} members to be purged - page ${page}/${Math.ceil(members.size / 100)}`,
-                description: [...members.values()].slice(offset - 100, 100).map(member => `<@${member.id}>`).join(' '),
+                description: [...members.values()].slice(offset - 100, offset).map(member => `<@${member.id}>`).join(' '),
             }],
             components: [
                 component,
