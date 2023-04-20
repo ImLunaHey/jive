@@ -1,14 +1,21 @@
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, GuildMember, StringSelectMenuBuilder } from 'discord.js';
+import type { GuildMember } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle } from 'discord.js';
 import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { ButtonComponent, Discord, Slash, SlashChoice, SlashOption } from 'discordx';
 
 const filters = {
-    NO_ROLES: (member: GuildMember) => {
-        // The member should have 1 role which is @everyone
-        return member.roles.cache.size === 1;
+    NO_ROLES: {
+        name: 'Members with no roles',
+        filter: (member: GuildMember) => {
+            // The member should have 1 role which is @everyone
+            return member.roles.cache.size === 1;
+        }
     }
-};
+} satisfies Record<string, {
+    name: string,
+    filter: (member: GuildMember) => boolean;
+}>;
 
 @Discord()
 export class Feature {
@@ -75,7 +82,7 @@ export class Feature {
         await interaction.guild.members.fetch();
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter](member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
 
         // Return a message with a button to approve/deny the purge
         await interaction.editReply({
@@ -83,7 +90,7 @@ export class Feature {
                 title: 'Purge',
                 fields: [{
                     name: 'Filter',
-                    value: filter,
+                    value: filters[filter].name,
                 }]
             }],
             components: [
@@ -128,7 +135,7 @@ export class Feature {
         const filter = interaction.customId.match(/^purge-start(?:\s+\[([\w-]+)\])?$/)?.[1] as keyof typeof filters;
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter](member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
 
         const membersToPurge = members.size;
         let membersPurged = 0;
@@ -153,7 +160,7 @@ export class Feature {
                         title: 'Purge',
                         fields: [{
                             name: 'Filter',
-                            value: filter,
+                            value: filters[filter].name,
                         }, {
                             name: 'Status',
                             value: membersPurged === membersToPurge ? 'Done' : 'Kicking members',
@@ -195,12 +202,15 @@ export class Feature {
         const offset = Number(buttonData[2]);
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter](member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
+
+        // Get the current page number
+        const page = offset / 100;
 
         // Send new message with member list
         await interaction.editReply({
             embeds: [{
-                title: `${members.size} members to be purged`,
+                title: `${members.size} members to be purged - page ${page}/${Math.ceil(members.size / 100)}`,
                 description: [...members.values()].slice(0, offset).map(member => `<@${member.id}>`).join(' '),
             }],
             components: [
@@ -212,15 +222,20 @@ export class Feature {
                             .setEmoji('🚨')
                             .setStyle(ButtonStyle.Danger),
                         new ButtonBuilder()
-                            .setCustomId(`purge-list-members [${filter}] [${offset + 100}]`)
-                            .setLabel('List members to purge')
-                            .setEmoji('📖')
-                            .setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder()
                             .setCustomId('purge-cancel')
                             .setLabel('Cancel')
                             .setEmoji('❌')
                             .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(`purge-list-members [${filter}] [${Math.max(offset - 100, 0)}]`)
+                            .setLabel('⬅️')
+                            .setEmoji('📖')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId(`purge-list-members [${filter}] [${offset + 100}]`)
+                            .setLabel('➡️')
+                            .setEmoji('📖')
+                            .setStyle(ButtonStyle.Secondary),
                     ]),
             ]
         });
