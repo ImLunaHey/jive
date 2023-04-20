@@ -47,7 +47,9 @@ export class Feature {
     async ready(): Promise<void> {
         // Get count of guilds
         const guildCount = await prisma.guild.count();
-        this.logger.info('Bot is in %d guilds', guildCount);
+        this.logger.info('Fetched guild count', {
+            guildCount,
+        });
 
         // Get the guild
         const guild = client.guilds.cache.get('927461441051701280');

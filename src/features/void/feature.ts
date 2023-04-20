@@ -76,7 +76,9 @@ export class Feature {
         if (message.channel.id !== '1081483175202660403') return;
         if (message.author.bot && message.embeds[0].title === 'Void') return;
 
-        this.logger.info('Deleting message %s in 60s', message.id);
+        this.logger.info('Deleting message in 60s', {
+            messageId: message.id,
+        });
 
         await sleep(60_000);
         await message.delete().catch(() => {
