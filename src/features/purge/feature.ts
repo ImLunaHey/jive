@@ -150,7 +150,7 @@ export class Feature {
                     memberId: member.id,
                 });
 
-                // await member.kick();
+                await member.kick();
                 membersPurged++;
             } catch { }
 
