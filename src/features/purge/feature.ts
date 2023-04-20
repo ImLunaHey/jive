@@ -71,7 +71,10 @@ export class Feature {
             return;
         }
 
-        // Fetch all the users who match the filter
+        // Fetch all the users
+        await interaction.guild.members.fetch();
+
+        // Get all the users who match the filter
         const members = interaction.guild.members.cache.filter(member => filters[filter](member));
 
         // Return a message with a button to approve/deny the purge
@@ -107,7 +110,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-start\s+\[([\d\s]+)\]/
+        id: /^purge-start(?:\s+\[([\w-]+)\])?$/
     })
     async start(
         interaction: ButtonInteraction,
@@ -122,9 +125,9 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the filter from the button ID
-        const filter = interaction.customId.match(/^purge-start (.*)$/)?.[1] as keyof typeof filters;
+        const filter = interaction.customId.match(/^purge-start(?:\s+\[([\w-]+)\])?$/)?.[1] as keyof typeof filters;
 
-        // Fetch all the users who match the filter
+        // Get all the users who match the filter
         const members = interaction.guild.members.cache.filter(member => filters[filter](member));
 
         const membersToPurge = members.size;
@@ -167,7 +170,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-list-members\s+\[([\d\s]+)\]\s+\[([\d\s]+)\]/
+        id: /^purge-list-members(?:\s+\[([\w-]+)\])?(?:\s+\[([\d]+)\])?$/
     })
     async listMembers(
         interaction: ButtonInteraction,
@@ -182,7 +185,7 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the data from the buttonID
-        const buttonData = interaction.customId.match(/^purge-list-members\s+\[([\d\s]+)\]\s+\[([\d\s]+)\]/);
+        const buttonData = interaction.customId.match(/^purge-list-members(?:\s+\[([\w-]+)\])?(?:\s+\[([\d]+)\])?$/);
         if (!buttonData) return;
 
         // Get the filter from the button ID
@@ -191,7 +194,7 @@ export class Feature {
         // Get the offset from the button ID
         const offset = Number(buttonData[2]);
 
-        // Fetch all the users who match the filter
+        // Get all the users who match the filter
         const members = interaction.guild.members.cache.filter(member => filters[filter](member));
 
         // Send new message with member list
