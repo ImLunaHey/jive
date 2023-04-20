@@ -11,7 +11,8 @@ const filters = {
             // The member should have 1 role which is @everyone
             return member.roles.cache.size === 1;
         }
-    }
+    },
+
 } satisfies Record<string, {
     name: string,
     filter: (member: GuildMember) => boolean;
@@ -207,36 +208,50 @@ export class Feature {
         // Get the current page number
         const page = offset / 100;
 
+        // Create the button components
+        const component = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents([
+                new ButtonBuilder()
+                    .setCustomId(`purge-start [${filter}]`)
+                    .setLabel(`Purge ${members.size} members`)
+                    .setEmoji('🚨')
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setCustomId('purge-cancel')
+                    .setLabel('Cancel')
+                    .setEmoji('❌')
+                    .setStyle(ButtonStyle.Primary),
+            ]);
+
+        // If we're past page 1 add a back button
+        if (page >= 2) {
+            component.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`purge-list-members [${filter}] [${Math.max(offset - 100, 0)}]`)
+                    .setLabel('⬅️')
+                    .setEmoji('📖')
+                    .setStyle(ButtonStyle.Secondary),
+            );
+        }
+
+        if (page < Math.ceil(members.size / 100)) {
+            component.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`purge-list-members [${filter}] [${offset + 100}]`)
+                    .setLabel('➡️')
+                    .setEmoji('📖')
+                    .setStyle(ButtonStyle.Secondary),
+            );
+        }
+
         // Send new message with member list
         await interaction.editReply({
             embeds: [{
                 title: `${members.size} members to be purged - page ${page}/${Math.ceil(members.size / 100)}`,
-                description: [...members.values()].slice(0, offset).map(member => `<@${member.id}>`).join(' '),
+                description: [...members.values()].slice(offset, 100).map(member => `<@${member.id}>`).join(' '),
             }],
             components: [
-                new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents([
-                        new ButtonBuilder()
-                            .setCustomId(`purge-start [${filter}]`)
-                            .setLabel(`Purge ${members.size} members`)
-                            .setEmoji('🚨')
-                            .setStyle(ButtonStyle.Danger),
-                        new ButtonBuilder()
-                            .setCustomId('purge-cancel')
-                            .setLabel('Cancel')
-                            .setEmoji('❌')
-                            .setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder()
-                            .setCustomId(`purge-list-members [${filter}] [${Math.max(offset - 100, 0)}]`)
-                            .setLabel('⬅️')
-                            .setEmoji('📖')
-                            .setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder()
-                            .setCustomId(`purge-list-members [${filter}] [${offset + 100}]`)
-                            .setLabel('➡️')
-                            .setEmoji('📖')
-                            .setStyle(ButtonStyle.Secondary),
-                    ]),
+                component,
             ]
         });
     }
