@@ -25,6 +25,7 @@ export const start = async () => {
     await import('./features/leveling');
     await import('./features/looking-for');
     await import('./features/moderation');
+    await import('./features/purge');
     await import('./features/reddit');
     await import('./features/setup');
     await import('./features/starboard');
