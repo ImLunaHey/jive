@@ -92,10 +92,10 @@ export class Feature {
                             .setEmoji('🚨')
                             .setStyle(ButtonStyle.Danger),
                         new ButtonBuilder()
-                            .setCustomId(`purge-list-members [${filter}] [0]`)
-                            .setLabel(`Purge ${members.size} members`)
-                            .setEmoji('🚨')
-                            .setStyle(ButtonStyle.Danger),
+                            .setCustomId(`purge-list-members [${filter}] [100]`)
+                            .setLabel('List members to purge')
+                            .setEmoji('📖')
+                            .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
                             .setCustomId('purge-cancel')
                             .setLabel('Cancel')
