@@ -87,7 +87,7 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId(`purge-start ${filter}`)
+                            .setCustomId(`purge-start [${filter}]`)
                             .setLabel(`Purge ${members.size} members`)
                             .setEmoji('🚨')
                             .setStyle(ButtonStyle.Danger),
@@ -107,7 +107,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-start (.*)$/
+        id: /^purge-start\s+\[([\d\s]+)\]/
     })
     async start(
         interaction: ButtonInteraction,
@@ -167,7 +167,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-list-members [(.*)] [(.*)]$/
+        id: /^purge-list-members\s+\[([\d\s]+)\]\s+\[([\d\s]+)\]/
     })
     async listMembers(
         interaction: ButtonInteraction,
@@ -182,7 +182,7 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the data from the buttonID
-        const buttonData = interaction.customId.match(/^purge-list-members [(.*)] [(.*)]$/);
+        const buttonData = interaction.customId.match(/^purge-list-members\s+\[([\d\s]+)\]\s+\[([\d\s]+)\]/);
         if (!buttonData) return;
 
         // Get the filter from the button ID
@@ -204,15 +204,15 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId(`purge-start ${filter}`)
+                            .setCustomId(`purge-start [${filter}]`)
                             .setLabel(`Purge ${members.size} members`)
                             .setEmoji('🚨')
                             .setStyle(ButtonStyle.Danger),
                         new ButtonBuilder()
                             .setCustomId(`purge-list-members [${filter}] [${offset + 100}]`)
-                            .setLabel(`Purge ${members.size} members`)
-                            .setEmoji('🚨')
-                            .setStyle(ButtonStyle.Danger),
+                            .setLabel('List members to purge')
+                            .setEmoji('📖')
+                            .setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder()
                             .setCustomId('purge-cancel')
                             .setLabel('Cancel')
