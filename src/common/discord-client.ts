@@ -55,7 +55,8 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('error', (error: Error) => {
-        globalLogger.error('Client error', error.message);
+        globalLogger.error('Client error', { error });
+        console.log(error);
     });
 
     // Save the client for later

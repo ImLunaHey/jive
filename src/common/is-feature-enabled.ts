@@ -1,9 +1,9 @@
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
 import { globalLogger } from '@app/logger';
 
 const globallyEnabled: string[] = [];
 
-export enum Features {
+export enum FeatureId {
     AUDIT_LOG = 'AUDIT_LOG',
     AUTO_DELETE = 'AUTO_DELETE',
     CUSTOM_COMMANDS = 'CUSTOM_COMMANDS',
@@ -15,24 +15,22 @@ export enum Features {
     WELCOME = 'WELCOME',
 }
 
-export const isFeatureEnabled = async (id: Features, guildId?: string) => {
+export const isFeatureEnabled = async (featureId: FeatureId, guildId?: string) => {
     const check = async () => {
         if (!guildId) return false;
 
         // If the feature is enabled globally, return true
-        if (globallyEnabled.includes(id as string)) return true;
+        if (globallyEnabled.includes(featureId)) return true;
 
         // Is this feature enabled for this guild?
-        const settings = await prisma.settings.findFirst({
-            where: {
-                guild: {
-                    id: guildId
-                }
-            }
-        });
+        const settings = await db
+            .selectFrom('settings')
+            .select('featuresEnabled')
+            .where('guildId', '=', guildId)
+            .executeTakeFirst();
 
         try {
-            return settings?.featuresEnabled.includes(id);
+            return settings?.featuresEnabled.includes(featureId);
         } catch (error) {
             globalLogger.error(error);
 

@@ -1,12 +1,12 @@
 import { client } from '@app/client';
-import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { prisma } from '@app/common/prisma-client';
+import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import type { MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 import { sleep } from '@app/common/sleep';
+import { db } from '@app/common/database';
 
 const extension = (attachment: string) => {
     const imageLink = attachment.split('.');
@@ -37,7 +37,7 @@ export class Feature {
         if (reaction.message.author?.bot) return false;
 
         // Skip non gifv embeds
-        // TODO: #1:6h/dev Add support for embeds
+        // TODO: Add support for embeds
         if (reaction.message.embeds.length > 0 && reaction.message.embeds[0].data.type !== 'gifv') return false;
 
         // Skip private threads
@@ -50,7 +50,7 @@ export class Feature {
     @On({ event: 'messageReactionAdd' })
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) return;
+        if (!await isFeatureEnabled(FeatureId.STARBOARD, reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
@@ -78,27 +78,24 @@ export class Feature {
         if (!this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
-        const settings = await prisma.settings.findFirst({
-            where: {
-                guild: {
-                    id: reaction.message.guild.id
-                },
+        const starboards = await db
+            .selectFrom('starboards')
+            .select('allowedReactions')
+            .select('minimumReactions')
+            .select('starboardChannelId')
+            .where('guildId', '=', reaction.message.guild.id)
+            .execute();
 
-            },
-            include: {
-                starboards: true
-            }
-        });
-        if (!settings) return;
-        if (settings.starboards.length === 0) return;
+        // Check if this guild has any starboards
+        if (starboards.length === 0) return;
 
-        // Check that atleast one starboard has the reaction enabled
-        if (settings.starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
+        // Check that at least one starboard has the reaction enabled
+        if (starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
 
         this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // For each starboard
-        for (const starboard of settings.starboards) {
+        for (const starboard of starboards) {
             // Skip if this post doesn't have enough reactions
             if ((reaction.count ?? 0) < starboard.minimumReactions) return;
 
@@ -164,7 +161,7 @@ export class Feature {
                 }
                 await starChannel.send({ content: `**⭐ 1** | <#${reaction.message.channel.id}>`, embeds: [embed] });
 
-                // TODO: #2:6h/dev Add support for pinging the user
+                // TODO: Add support for pinging the user
                 // Ping the user if the feature is enabled
                 // if (features.starboard.pingUser) {
                 // const reply = await starboardMessage.reply(`<@${reaction.message.author.id}> you made it on the starboard`);
@@ -182,7 +179,7 @@ export class Feature {
     @On({ event: 'messageReactionRemove' })
     async messageReactionRemove([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled(Features.STARBOARD, reaction.message.guild?.id)) return;
+        if (!await isFeatureEnabled(FeatureId.STARBOARD, reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) {
@@ -220,27 +217,23 @@ export class Feature {
         }
 
         // Skip if the starboard isn't setup
-        const settings = await prisma.settings.findFirst({
-            where: {
-                guild: {
-                    id: reaction.message.guild.id
-                },
+        const starboards = await db
+            .selectFrom('starboards')
+            .select('allowedReactions')
+            .select('starboardChannelId')
+            .where('guildId', '=', reaction.message.guild.id)
+            .execute();
 
-            },
-            include: {
-                starboards: true
-            }
-        });
-        if (!settings) return;
-        if (settings.starboards.length === 0) return;
+        // Check if this guild has any starboards
+        if (starboards.length === 0) return;
 
-        // Check that atleast one starboard has the reaction enabled
-        if (settings.starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
+        // Check that at least one starboard has the reaction enabled
+        if (starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
 
         this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
 
         // For each starboard
-        for (const starboard of settings.starboards) {
+        for (const starboard of starboards) {
 
             // Check if this is a valid emoji reaction
             if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;

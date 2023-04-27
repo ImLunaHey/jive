@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
 import type { TextChannel } from 'discord.js';
 
 class Service {
@@ -42,27 +42,26 @@ class Service {
         const guild = client.guilds.cache.get('927461441051701280');
         if (!guild) return;
 
-        const user = await prisma.guildMember.findUnique({ where: { id: userId } });
-        await prisma.guildMember.upsert({
-            where: {
-                id: userId
-            },
-            create: {
+        // Get the user's xp
+        const user = await db
+            .selectFrom('guild_members')
+            .select('xp')
+            .where('id', '=', userId)
+            .executeTakeFirst();
+
+        // Update the user's xp
+        await db
+            .insertInto('guild_members')
+            .values({
                 id: userId,
+                guildId: guild.id,
                 xp,
-                coins: 0,
-                guild: {
-                    connect: {
-                        id: guild.id
-                    }
-                }
-            },
-            update: {
-                xp: {
-                    increment: xp
-                }
-            }
-        });
+            })
+            .onDuplicateKeyUpdate(eb => ({
+                xp: eb.bxp('xp', '+', xp)
+            }))
+            .execute();
+
 
         // Check if the user has leveled up
         const userLevelBefore = this.getLevel(user?.xp ?? 0);
@@ -71,7 +70,7 @@ class Service {
             const successChannel = guild.channels.cache.get('1042598577156919376');
             if (!successChannel) return;
 
-            // TODO: #1:6h/dev Workout what to do about people with XP from the old system
+            // TODO: Workout what to do about people with XP from the old system
             // // Get all the roles
             // const roles = await guild.roles.fetch();
 

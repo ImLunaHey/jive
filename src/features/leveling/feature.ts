@@ -2,13 +2,13 @@ import type { GuildMember, VoiceChannel } from 'discord.js';
 import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
-import { prisma } from '@app/common/prisma-client';
 import { levelService } from '@app/features/leveling/service';
 import { outdent } from 'outdent';
 import { client } from '@app/client';
 import { store } from '@app/store';
 import mee6LevelsApi from 'mee6-levels-api';
-import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { db } from '@app/common/database';
 
 @Discord()
 export class Feature {
@@ -21,22 +21,11 @@ export class Feature {
     @On({ event: 'ready' })
     async ready(): Promise<void> {
         // Fetch each guild that has this feature enabled
-        const guilds = await prisma.guild.findMany({
-            where: {
-                settings: {
-                    leveling: {
-                        enabled: true
-                    }
-                }
-            },
-            include: {
-                settings: {
-                    include: {
-                        leveling: true
-                    }
-                }
-            }
-        });
+        const guilds = await db
+            .selectFrom('leveling')
+            .select('guildId as id')
+            .where('enabled', '=', true)
+            .execute();
 
         for (const guild of guilds) {
             // Get all the users who are currently in voice channels
@@ -56,7 +45,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled(Features.LEVELING, message.guild?.id)) return;
+        if (!await isFeatureEnabled(FeatureId.LEVELING, message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -68,7 +57,7 @@ export class Feature {
         if (message.author.bot) return;
 
         // Check if the message was sent in the #level-up channel
-        // TODO: #1:6h/dev Make this configurable
+        // TODO: Make this configurable
 
         // NOTE: This name sucks
         // Add the user to the usersWhoChattedThisMinute set
@@ -79,7 +68,7 @@ export class Feature {
 
     @On({ event: 'voiceStateUpdate' })
     async voiceStateUpdate([oldState, newState]: ArgsOf<'voiceStateUpdate'>): Promise<void> {
-        if (!await isFeatureEnabled(Features.LEVELING, newState.guild?.id)) return;
+        if (!await isFeatureEnabled(FeatureId.LEVELING, newState.guild?.id)) return;
 
         // Check if the user has joined a voice channel
         if (oldState.channelId === null && newState.channelId !== null) {
@@ -111,8 +100,18 @@ export class Feature {
         interaction: CommandInteraction
     ) {
         try {
-            const user = await prisma.guildMember.findUnique({ where: { id: member?.id ?? interaction.member?.user.id } });
+            const memberId = member?.id ?? interaction.member?.user.id;
+            if (!memberId) return;
+
+            // Get the user's xp
+            const user = await db
+                .selectFrom('guild_members')
+                .select('xp')
+                .where('id', '=', memberId)
+                .executeTakeFirst();
+
             const xp = user?.xp ?? 0;
+
             await interaction.reply({
                 embeds: [
                     new EmbedBuilder({
@@ -148,12 +147,14 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         try {
-            const users = await prisma.guildMember.findMany({
-                orderBy: {
-                    xp: 'desc'
-                },
-                take: 10
-            });
+            // Get the top 10 users
+            const users = await db
+                .selectFrom('guild_members')
+                .select('id')
+                .select('xp')
+                .orderBy('xp', 'desc')
+                .limit(10)
+                .execute();
 
             const leaderboard = await Promise.all(users.map(async (user, index) => {
                 const guildMember = client.users.cache.get(user.id) ?? await client.users?.fetch(user.id).catch(() => null);
@@ -219,27 +220,23 @@ export class Feature {
             });
 
             for (const user of leaderboard) {
-                await prisma.guildMember.upsert({
-                    where: {
-                        id: user.id
-                    },
-                    update: {
-                        xp: user.xp.totalXp
-                    },
-                    create: {
+                await db
+                    .insertInto('guild_members')
+                    .values({
                         id: user.id,
+                        guildId: interaction.guild.id,
                         xp: user.xp.totalXp,
-                        coins: 0,
-                        guild: {
-                            connect: {
-                                id: interaction.guild.id
-                            }
-                        }
-                    }
-                });
+                    })
+                    .onDuplicateKeyUpdate({
+                        xp: user.xp.totalXp
+                    })
+                    .execute();
             }
 
-            this.logger.info('Successfully imported the leaderboard for guild "%s" with %s members', interaction.guild.name, leaderboard.length);
+            this.logger.info('Successfully imported leaderboard', {
+                guildId: interaction.guild.id,
+                users: leaderboard.length,
+            });
 
             // Tell the user that the leaderboard has been imported
             await interaction.editReply({

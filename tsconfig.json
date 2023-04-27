@@ -24,6 +24,9 @@
     "paths": {
       "@app/*": ["src/*"]
     },
+    "lib": [
+      "es6"
+    ],
     "moduleSuffixes": [""]
   },
   "exclude": ["node_modules"],

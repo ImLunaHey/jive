@@ -1,5 +1,5 @@
-import { Features } from '@app/common/is-feature-enabled';
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
+import { FeatureId } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import { CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { Discord, Slash } from 'discordx';
@@ -48,13 +48,11 @@ export class Feature {
         }
 
         // Get the current settings
-        const settings = await prisma.settings.findFirst({
-            where: {
-                guild: {
-                    id: guild.id
-                }
-            }
-        });
+        const settings = await db
+            .selectFrom('settings')
+            .select('featuresEnabled')
+            .where('guildId', '=', guild.id)
+            .executeTakeFirst();
 
         // Reply with the current features
         await interaction.editReply({
@@ -64,39 +62,39 @@ export class Feature {
                 fields: [
                     {
                         name: 'Audit Log',
-                        value: settings?.featuresEnabled.includes(Features.AUDIT_LOG) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.AUDIT_LOG) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Auto Delete',
-                        value: settings?.featuresEnabled.includes(Features.AUTO_DELETE) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.AUTO_DELETE) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Custom Commands',
-                        value: settings?.featuresEnabled.includes(Features.CUSTOM_COMMANDS) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.CUSTOM_COMMANDS) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Dynamic Channel Names',
-                        value: settings?.featuresEnabled.includes(Features.DYNAMIC_CHANNEL_NAMES) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.DYNAMIC_CHANNEL_NAMES) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Invite Tracking',
-                        value: settings?.featuresEnabled.includes(Features.INVITE_TRACKING) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.INVITE_TRACKING) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Leveling',
-                        value: settings?.featuresEnabled.includes(Features.LEVELING) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.LEVELING) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Moderation',
-                        value: settings?.featuresEnabled.includes(Features.MODERATION) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.MODERATION) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Starboard',
-                        value: settings?.featuresEnabled.includes(Features.STARBOARD) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.STARBOARD) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Welcome',
-                        value: settings?.featuresEnabled.includes(Features.WELCOME) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes(FeatureId.WELCOME) ? 'Enabled ✅' : 'Disabled ❌',
                     },
                 ]
             }],

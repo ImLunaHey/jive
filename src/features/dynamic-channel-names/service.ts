@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
 import { replaceVariablesForGuild } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
@@ -16,22 +16,20 @@ class DynamicChannelNamesService {
         // Wait until the client is ready
         while (!client.readyAt) await sleep(1_000);
 
-        const dynamicChannels = await prisma.dynamicChannel.findMany({
-            include: {
-                settings: {
-                    include: {
-                        guild: true
-                    }
-                }
-            }
-        });
+        // Get the dynamicChannel settings for every guild that it enabled
+        const dynamicChannels = await db
+            .selectFrom('dynamic_channels')
+            .select('guildId')
+            .select('channelId')
+            .select('template')
+            .where('enabled', '=', true)
+            .execute();
 
         // Update all dynamic channel names
         for (const dynamicChannel of dynamicChannels) {
             // Get the guild
-            const guildId = dynamicChannel.settings?.guild?.id;
-            if (!guildId) continue;
-            const guild = await client.guilds.fetch(guildId);
+            if (!dynamicChannel.guildId) continue;
+            const guild = await client.guilds.fetch(dynamicChannel.guildId);
 
             // Get the channel
             const channel = await guild.channels.fetch(dynamicChannel.channelId);

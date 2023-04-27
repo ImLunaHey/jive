@@ -37,16 +37,16 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
     // Run the script
     const result = vm.run(`
         ${getSquirrelly}
-        const Sqrl = getSquirrelly();
-        Sqrl.defaultConfig.autoEscape = false;
+        const Squirrelly = getSquirrelly();
+        Squirrelly.defaultConfig.autoEscape = false;
 
-        Sqrl.filters.define('reverse', (data) => {
+        Squirrelly.filters.define('reverse', (data) => {
             if (typeof data === 'string') return data.split('').reverse().join('');
             if (Array.isArray(data)) return data.reverse();
             return data;
         });
         
-        Sqrl.filters.define('random', (data) => {
+        Squirrelly.filters.define('random', (data) => {
             if (Array.isArray(data)) return data[Math.floor(Math.random() * data.length)];
             if (typeof data === 'string') return data[Math.floor(Math.random() * data.length)];
             return data;
@@ -55,7 +55,7 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
         let output;
 
         try {
-            output = String(Sqrl.render(args.template, args.data, { useWith: true }));
+            output = String(Squirrelly.render(args.template, args.data, { useWith: true }));
         } catch {
             output = 'Failed to render message, please contact <@784365843810222080>.';
         }
@@ -142,7 +142,7 @@ export const templateResultToMessage = (result: string): MessageCreateOptions =>
         if (typeof message === 'object') return message as MessageCreateOptions;
         return {
             embeds: [{
-                title: `Failed to render message, recieved "${typeof message}" message.`,
+                title: `Failed to render message, received "${typeof message}" message.`,
                 description: 'Please contact <@784365843810222080>.',
                 color: Colors.Red,
             }]

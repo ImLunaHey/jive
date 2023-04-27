@@ -1,10 +1,9 @@
 import { client } from '@app/client';
-import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
+import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
-import type { Welcome } from '@prisma/client';
 import type { GuildMember, TextChannel } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 
@@ -16,7 +15,14 @@ export class Feature {
         this.logger.info('Initialised');
     }
 
-    async welcomeMember(member: GuildMember, settings: Welcome) {
+    async welcomeMember(member: GuildMember, settings: {
+        joinChannelId: string | null;
+        joinMessage: string | null;
+        joinMessageTimeout: number | null;
+        joinDm: boolean;
+        addRoles: string[];
+        removeRoles: string[];
+    }) {
         // If join channel is set send the welcome message if there is one
         if (settings.joinChannelId) {
             // Fetch the welcome channel
@@ -48,14 +54,14 @@ export class Feature {
         }
 
         // Add the roles
-        if (settings.addRoles) {
+        if (settings.addRoles.length >= 1) {
             for (const role of settings.addRoles) {
                 await member.roles.add(role);
             }
         }
 
         // Remove the roles
-        if (settings.removeRoles) {
+        if (settings.removeRoles.length >= 1) {
             for (const role of settings.removeRoles) {
                 await member.roles.remove(role);
             }
@@ -65,18 +71,20 @@ export class Feature {
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(Features.WELCOME, member.guild.id)) return;
+        if (!await isFeatureEnabled(FeatureId.WELCOME, member.guild.id)) return;
 
         // Get settings
-        const settings = await prisma.welcome.findFirst({
-            where: {
-                settings: {
-                    guild: {
-                        id: member.guild.id
-                    }
-                }
-            }
-        });
+        const settings = await db
+            .selectFrom('welcomes')
+            .select('waitUntilGate')
+            .select('joinChannelId')
+            .select('joinMessage')
+            .select('joinMessageTimeout')
+            .select('joinDm')
+            .select('addRoles')
+            .select('removeRoles')
+            .where('guildId', '=', member.guild.id)
+            .executeTakeFirst();
 
         // Check if the guild has this feature setup
         if (!settings) return;
@@ -91,18 +99,20 @@ export class Feature {
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(Features.WELCOME, newMember.guild.id)) return;
+        if (!await isFeatureEnabled(FeatureId.WELCOME, newMember.guild.id)) return;
 
         // Get settings
-        const settings = await prisma.welcome.findFirst({
-            where: {
-                settings: {
-                    guild: {
-                        id: newMember.guild.id
-                    }
-                }
-            }
-        });
+        const settings = await db
+            .selectFrom('welcomes')
+            .select('waitUntilGate')
+            .select('joinChannelId')
+            .select('joinMessage')
+            .select('joinMessageTimeout')
+            .select('joinDm')
+            .select('addRoles')
+            .select('removeRoles')
+            .where('guildId', '=', newMember.guild.id)
+            .executeTakeFirst();
 
         // Check if the guild has this feature setup
         if (!settings) return;

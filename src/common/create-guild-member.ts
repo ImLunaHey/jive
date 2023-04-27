@@ -1,20 +1,25 @@
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
 import type { CommandInteraction } from 'discord.js';
 import type { Client, Next } from 'discordx';
 
 const createGuildMember = async (guildId: string, userId: string) => {
-    return prisma.guildMember.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
+    // Create the guild if need be
+    await db
+        .insertInto('guilds')
+        .ignore()
+        .values({
+            id: guildId,
+        })
+        .execute();
+
+    // Create the guild member
+    await db
+        .insertInto('guild_members')
+        .values({
             id: userId,
-            guild: {
-                connect: {
-                    id: guildId
-                }
-            }
-        }
-    });
+            guildId,
+        })
+        .execute();
 };
 
 export const GuildMemberGuard = async (interaction: CommandInteraction, _client: Client, next: Next) => {

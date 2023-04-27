@@ -1,12 +1,12 @@
 import { inspect } from 'util';
 import { client } from '@app/client';
-import { prisma } from '@app/common/prisma-client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
 import { ActionRowBuilder, AttachmentBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import type { Canvas } from '@napi-rs/canvas';
+import { db } from '@app/common/database';
 
 const applyText = (canvas: Canvas, text: string) => {
     const context = canvas.getContext('2d');
@@ -46,7 +46,11 @@ export class Feature {
     @On({ event: 'ready' })
     async ready(): Promise<void> {
         // Get count of guilds
-        const guildCount = await prisma.guild.count();
+        const guildCount = await db
+            .selectFrom('guilds')
+            .select(db.fn.count<number>('id').as('count'))
+            .executeTakeFirst().then(result => result?.count ?? 0);
+
         this.logger.info('Fetched guild count', {
             guildCount,
         });
@@ -63,14 +67,14 @@ export class Feature {
         if (channel.type !== ChannelType.GuildText) return;
 
         // Get the status
-        const status = env.MAINTENCE_MODE ? 'in maintence mode' : 'online';
+        const status = env.MAINTENANCE_MODE ? 'in maintenance mode' : 'online';
 
         // Create the embed
         const embed = new EmbedBuilder({
             title: 'Bot status',
             description: `The bot is ${status} and ready to go!`,
             // Orange or green
-            color: env.MAINTENCE_MODE ? Colors.Orange : Colors.Green,
+            color: env.MAINTENANCE_MODE ? Colors.Orange : Colors.Green,
         });
 
         // Fetch the messages
@@ -231,10 +235,10 @@ export class Feature {
                 const code = interaction.fields.getTextInputValue('code');
 
                 // Evaluate our input
-                const evaled = eval(`(async () => { ${code} })()`) as unknown;
+                const evaluated = eval(`(async () => { ${code} })()`) as unknown;
 
                 // Cleanup result
-                let result = evaled;
+                let result = evaluated;
                 if (isPromiseLike(result)) result = await result;
                 if (typeof result !== 'string') result = inspect(result, { depth: 1 });
 

@@ -85,7 +85,7 @@ export class Feature {
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
-        // TODO: #1:6h/dev Add a way to check if the user is a moderator when warning a user
+        // TODO: Add a way to check if the user is a moderator when warning a user
         //        (e.g. a moderator role)
         //        This should come from the database
         // Check if the user has the KICK_MEMBERS permission
@@ -110,7 +110,7 @@ export class Feature {
                 return;
             }
 
-            // TODO: #2:6h/dev Add warning to database
+            // TODO: Add warning to database
 
             // Send a message to the user that they were warned
             await member.send({
@@ -152,7 +152,7 @@ export class Feature {
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
-        // TODO: #3:6h/dev Add a way to check if the user is a moderator when kicking a user
+        // TODO: Add a way to check if the user is a moderator when kicking a user
         //        (e.g. a moderator role)
         //        This should come from the database
         // Check if the user has the KICK_MEMBERS permission
@@ -177,7 +177,7 @@ export class Feature {
                 return;
             }
 
-            // TODO: #4:6h/dev Add kick to database
+            // TODO: Add kick to database
             // This can be used by the auditlog to enrich the auditlog message
             // Kicked wasi#7226.
 
@@ -225,7 +225,7 @@ export class Feature {
         // Don't handle users with weird permissions
         if (typeof interaction.member?.permissions === 'string') return;
 
-        // TODO: #5:6h/dev Add a way to check if the user is a moderator when banning a user
+        // TODO: Add a way to check if the user is a moderator when banning a user
         //        (e.g. a moderator role)
         //        This should come from the database
         // Check if the user has the BAN_MEMBERS permission

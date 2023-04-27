@@ -1,9 +1,9 @@
 import { type ArgsOf, Discord, On } from 'discordx';
 import { globalLogger } from '@app/logger';
-import { prisma } from '@app/common/prisma-client';
 import { client } from '@app/client';
 import { ChannelType } from 'discord.js';
-import { Features, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { db } from '@app/common/database';
 
 @Discord()
 export class Feature {
@@ -19,7 +19,7 @@ export class Feature {
 
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
-            if (!await isFeatureEnabled(Features.INVITE_TRACKING, guildId)) return;
+            if (!await isFeatureEnabled(FeatureId.INVITE_TRACKING, guildId)) return;
 
             // Fetch the invites
             this.logger.debug(`Fetching invites for guild ${guildId}...`);
@@ -42,14 +42,12 @@ export class Feature {
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>): Promise<void> {
         // Fetch the invites before the user joined
-        const guildInvitesBeforeUserJoined = await prisma.invite.findMany({
-            where: {
-                guildId: member.guild.id,
-            },
-            include: {
-                guild: true
-            }
-        });
+        const guildInvitesBeforeUserJoined = await db
+            .selectFrom('invites')
+            .select('code')
+            .select('uses')
+            .where('guildId', '=', member.guild.id)
+            .execute();
 
         // Fetch the invites after the user joined
         const guildInvitesNow = await member.guild.invites.fetch();
@@ -58,7 +56,7 @@ export class Feature {
         // const vanityData = await member.guild.fetchVanityData();
 
         // Find the invite code that was used
-        // TODO: #1:6h/dev Add support for vanity invites
+        // TODO: Add support for vanity invites
         const inviteCode = guildInvitesBeforeUserJoined.find((invite) => {
             // // Check if the invite was a vanity invite
             // if (invite.code === vanityData.code && vanityData.uses !== guildInvitesBeforeUserJoined.find((invite) => invite.code === vanityData.code)?.uses) return true;
@@ -74,23 +72,18 @@ export class Feature {
         // Update the invite uses, skip if the invite is a DM invite
         if (inviteUsed) await this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
 
-        // Skip if the feature is disabled
-        const settings = await prisma.settings.findFirst({
-            where: {
-                guild: {
-                    id: member.guild.id
-                },
+        // Get the invite tracking settings
+        const inviteTracking = await db
+            .selectFrom('invite_trackings')
+            .select('channelId')
+            .where('guildId', '=', member.guild.id)
+            .executeTakeFirst();
 
-            },
-            include: {
-                inviteTracking: true
-            }
-        });
-        if (!settings) return;
-        if (!settings.inviteTracking?.channelId) return;
+        // Skip if the feature is disabled
+        if (!inviteTracking || !inviteTracking.channelId) return;
 
         // Post a message in the invite tracking channel
-        const inviteTrackingChannel = member.guild.channels.cache.get(settings.inviteTracking.channelId);
+        const inviteTrackingChannel = member.guild.channels.cache.get(inviteTracking.channelId);
         if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
         if (!inviteUsed) {
@@ -123,27 +116,21 @@ export class Feature {
         }
     }
 
-    async setInviteUses(guildId: string | undefined, code: string, uses: number) {
+    async setInviteUses(guildId: string | undefined, code: string, uses = 1) {
         // Skip DM invites
         if (!guildId) return;
 
         // Update the invite uses
-        await prisma.invite.upsert({
-            where: {
-                code
-            },
-            update: {
-                uses: uses ?? 1
-            },
-            create: {
+        await db
+            .insertInto('invites')
+            .values({
                 code,
-                uses: uses ?? 1,
-                guild: {
-                    connect: {
-                        id: guildId
-                    }
-                },
-            }
-        });
+                uses,
+                guildId,
+            })
+            .onDuplicateKeyUpdate({
+                uses,
+            })
+            .execute();
     }
 }

@@ -1,9 +1,9 @@
+import { randomUUID } from 'crypto';
 import { GuildMemberGuard } from '@app/common/create-guild-member';
-import { prisma } from '@app/common/prisma-client';
+import { db } from '@app/common/database';
 import { sleep } from '@app/common/sleep';
 import { levelService } from '@app/features/leveling/service';
 import { globalLogger } from '@app/logger';
-import { EntityType, ItemSubType, ItemType, Location, Slot } from '@prisma/client';
 import type {
     AnySelectMenuInteraction,
     AutocompleteInteraction
@@ -24,10 +24,12 @@ import {
 } from 'discord.js';
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
+import { json } from '@app/common/json';
+import { Location, Locations } from '@app/common/database/enums';
 
 const coinEmoji = '<:coins:1083037299220152351>';
 
-const emojibar = (value: number, options?: {
+const emojiBar = (value: number, options?: {
     bars?: {
         full: {
             start: string;
@@ -70,17 +72,25 @@ const emojibar = (value: number, options?: {
 const capitalise = (string: string) => string && string[0].toUpperCase() + string.slice(1);
 const locationAutoComplete = async (interaction: AutocompleteInteraction) => {
     const selected = interaction.options.getString('location')?.toLowerCase();
-    const selectedLocations = (selected ? Object.values(Location).filter(location => location.toLowerCase().startsWith(selected)) : Object.values(Location)).slice(0, 25);
-    const selectedLocationsCreatureCounts = await prisma.$transaction(selectedLocations.map(location => prisma.creatureTemplate.count({ where: { location } })));
-    const locations = selectedLocations.map(location => ({
+    const filteredLocations = (selected ? Locations.filter(location => location.toLowerCase().startsWith(selected)) : Locations).slice(0, 25);
+    const selectedLocations = await Promise.all(filteredLocations.map(async location => ({
         location,
-        count: selectedLocationsCreatureCounts[selectedLocations.indexOf(location)],
-    })).filter(({ count }) => count >= 1).map(({ location, count }) => {
-        return {
-            name: `${capitalise(location.toLowerCase())} [${count} creatures]`,
-            value: location,
-        };
-    });
+        count: await db
+            .selectFrom('creature_templates')
+            .select(db.fn.count<number>('id').as('count'))
+            .where('location', '=', location)
+            .executeTakeFirst().then(_ => _?.count ?? 0)
+    })));
+
+    const locations = selectedLocations
+        .filter(({ count }) => count >= 1)
+        .map(({ location, count }) => {
+            return {
+                name: `${capitalise(location.toLowerCase())} [${count} creatures]`,
+                value: location,
+            };
+        });
+
     await interaction.respond(locations);
 };
 
@@ -107,7 +117,13 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's balance
-        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await db
+            .selectFrom('guild_members')
+            .select('coins')
+            .where('id', '=', interaction.user.id)
+            .executeTakeFirst();
+
+        // Get the user's balance
         const balance = user?.coins ?? 0;
 
         // If the user has too much money, don't let them beg
@@ -124,14 +140,12 @@ export class Feature {
         const random = Math.floor(Math.random() * 100);
 
         // Otherwise, let them beg
-        await prisma.guildMember.update({
-            where: { id: interaction.member?.user.id },
-            data: {
-                coins: {
-                    increment: random
-                }
-            }
-        });
+        await db
+            .updateTable('guild_members')
+            .set(eb => ({
+                coins: eb.bxp('coins', '+', random),
+            }))
+            .execute();
 
         // Send the balance
         await interaction.editReply({
@@ -149,36 +163,64 @@ export class Feature {
      * @returns 
      */
     async isExploring(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction) {
+        if (!interaction.member?.user.id) return;
+
         // Get the user's encounter
-        const user = await prisma.guildMember.findUnique({
-            where: { id: interaction.member?.user.id },
-            include: {
-                encounter: {
-                    include: {
-                        creatures: {
-                            include: {
-                                template: true,
-                            }
-                        },
-                        initatives: true,
-                        guildMembers: true,
-                    },
-                },
-            },
-        });
-        if (!user?.encounter) return false;
+        const encounter = await db
+            .transaction()
+            .execute(async trx => {
+                const encounter = await trx
+                    .selectFrom('encounters')
+                    .select('id')
+                    .select('turn')
+                    .select('guildMembers')
+                    .where('id', '=', interaction.user.id)
+                    .executeTakeFirst();
+
+                if (!encounter) return;
+
+                return {
+                    ...encounter,
+                    guildMembers: await Promise.all((encounter?.guildMembers ?? []).map(async guildMemberId => {
+                        return trx
+                            .selectFrom('guild_members')
+                            .select('health')
+                            .where('id', '=', guildMemberId)
+                            .executeTakeFirstOrThrow();
+                    }))
+                }
+            });
+
+        // Check if they're in an encounter
+        if (!encounter) return false;
+
+        // Get the encounter's initiatives
+        const initiatives = await db
+            .selectFrom('initiatives')
+            .where('encounterId', '=', encounter.id)
+            .execute();
+
+        // Get the encounter's creates
+        const creatures = await db
+            .selectFrom('creatures')
+            .select('name')
+            .select('health')
+            .innerJoin('creature_templates', 'creature_templates.id', 'templateId')
+            .select('creature_templates.health as templateHealth')
+            .where('encounterId', '=', encounter.id)
+            .execute();
 
         // Respond with their encounter
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${user.encounter.turn}/${user.encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${initiatives.length}]`,
                 description: outdent`
-                    You rejoin the battle against ${user.encounter.creatures.map(creature => creature.name).join(', ')}.
-                    Their health is at ${emojibar(user.encounter.creatures.reduce((a, b) => a + b.health, 0), { maxValue: user.encounter.creatures.reduce((a, b) => a + b.template.health, 0) })}.
+                    You rejoin the battle against ${creatures.map(creature => creature.name).join(', ')}.
+                    Their health is at ${emojiBar(creatures.reduce((a, b) => a + b.health, 0), { maxValue: creatures.reduce((a, b) => a + b.templateHealth, 0) })}.
                 `,
                 fields: [{
                     name: 'Current turn',
-                    value: `<@${user.id}>`,
+                    value: `<@${interaction.user.id}>`,
                     inline: true,
                     // }, {
                     //     name: 'Next turn',
@@ -188,13 +230,13 @@ export class Feature {
                     //     inline: true,
                 }, {
                     name: 'Party',
-                    value: user.encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
+                    value: encounter.guildMembers.map(guildMember => `<@${guildMember.id}>: ${guildMember.health}`).join('\n'),
                 }, {
                     name: 'Creatures',
-                    value: user.encounter.creatures.map(creature => `${creature.name}: ${creature.health}`).join('\n'),
+                    value: creatures.map(creature => `${creature.name}: ${creature.health}`).join('\n'),
                 }],
                 footer: {
-                    text: `Encounter ID: ${user.encounter.id}`
+                    text: `Encounter ID: ${encounter.id}`
                 }
             }],
             components: [
@@ -246,19 +288,24 @@ export class Feature {
         if (await this.isExploring(interaction)) return;
 
         // Get the user
-        const user = await prisma.guildMember.findUnique({
-            where: {
-                id: interaction.member?.user.id
-            }
-        });
+        const user = await db
+            .selectFrom('guild_members')
+            .select('location')
+            .where('id', '=', interaction.user.id)
+            .executeTakeFirst();
+
         if (!user) return;
 
         // Grab a list of creatures that can be encountered in this area
-        const creatures = await prisma.creatureTemplate.findMany({
-            where: {
-                location: user.location
-            }
-        });
+        const creatures = await db
+            .selectFrom('creature_templates')
+            .select('id')
+            .select('health')
+            .select('name')
+            .select('attack')
+            .select('defence')
+            .where('location', '=', user.location)
+            .execute();
 
         // Check if we found a creature
         if (creatures.length === 0) {
@@ -277,45 +324,56 @@ export class Feature {
         const encounterCreatures = Array.from({ length: creatureCount }, () => creatures[Math.floor(Math.random() * creatures.length)]);
 
         // Save the encounter
-        const encounter = await prisma.encounter.create({
-            data: {
+        const encounterId = randomUUID();
+        await db
+            .insertInto('encounters')
+            .values({
+                id: encounterId,
+                guildId: interaction.guild.id,
+                guildMembers: json([
+                    interaction.user.id,
+                ]),
                 location: user.location,
-                creatures: {
-                    createMany: {
-                        data: encounterCreatures.map(createTemplate => ({
-                            health: createTemplate.health,
-                            name: createTemplate.name,
-                            attack: createTemplate.attack,
-                            defence: createTemplate.defence,
-                            templateId: createTemplate.id,
-                        })),
-                    },
-                },
-                guild: {
-                    connect: {
-                        id: interaction.guild.id
-                    }
-                },
-                guildMembers: {
-                    connect: {
-                        id: interaction.member?.user.id
-                    }
-                },
-            },
-            include: {
-                creatures: true,
-                guildMembers: true,
-                initatives: true,
-            },
-        });
+                start: new Date(),
+                turn: 0,
+            })
+            .execute();
+
+        // Create the creatures for this encounter
+        await db
+            .insertInto('creatures')
+            .values(encounterCreatures.map(createTemplate => ({
+                health: createTemplate.health,
+                name: createTemplate.name,
+                attack: createTemplate.attack,
+                defence: createTemplate.defence,
+                templateId: createTemplate.id,
+                encounterId,
+                id: randomUUID(),
+            })))
+            .execute();
+
+        // Fetch the newly created encounter
+        const encounter = await db
+            .selectFrom('encounters')
+            .select('turn')
+            .select('guildMembers')
+            .select('creatures')
+            .innerJoin('guild_members', 'id', 'guildMembers')
+            .executeTakeFirstOrThrow();
+
+        // Fetch the initiatives
+        const initiatives = await db
+            .selectFrom('initiatives')
+            .execute();
 
         // Respond with their encounter
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${initiatives.length}]`,
                 description: outdent`
                     You encounter ${encounterCreatures.map(creature => creature.name).join(', ')}.
-                    Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}. ${emojibar(100)}
+                    Their total health is ${encounterCreatures.map(creature => creature.health).reduce((a, b) => a + b, 0)}. ${emojiBar(100)}
                 `,
                 fields: [{
                     name: 'Party',
@@ -360,7 +418,7 @@ export class Feature {
                 id: encounterId
             },
             include: {
-                initatives: true,
+                initiatives: true,
             },
         });
 
@@ -377,12 +435,12 @@ export class Feature {
         }
 
         // // Check if it's the user's turn
-        // const initiative = encounter.initatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initatives[0].entityId === interaction.member?.user.id;
+        // const initiative = encounter.initiatives[0].entityType === EntityType.GUILD_MEMBER && encounter.initiatives[0].entityId === interaction.member?.user.id;
         // if (!initiative) {
         //     await interaction.reply({
         //         ephemeral: true,
         //         embeds: [{
-        //             title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+        //             title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
         //             description: 'It\'s not your turn.'
         //         }]
         //     });
@@ -410,7 +468,7 @@ export class Feature {
                     },
                 },
                 guildMembers: true,
-                initatives: true,
+                initiatives: true,
             },
         });
         if (!encounter) return;
@@ -521,7 +579,7 @@ export class Feature {
 
             // Create the embed
             const embed = new EmbedBuilder({
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                 description: outdent`
                     ${deadCreatures.length === encounter.creatures.length ? 'You have defeated the creatures.' : 'The creatures have defeated you.'}
 
@@ -587,25 +645,25 @@ export class Feature {
                     },
                 },
                 guildMembers: true,
-                initatives: true,
+                initiatives: true,
             }
         });
 
-        // TODO: #1:6h/dev Handle this
+        // TODO: Handle this
         if (!initialEncounter) return;
-        if (initialEncounter?.initatives.length === 0) return;
+        if (initialEncounter?.initiatives.length === 0) return;
 
         // Check if the encounter is over
         if (await this.checkForTheDead(initialEncounter.id, interaction)) return;
 
         // Remove the turns that have already happened
-        const initatives = initialEncounter.initatives.slice(initialEncounter.turn);
+        const initiatives = initialEncounter.initiatives.slice(initialEncounter.turn);
 
-        if (initialEncounter.turn === 0) this.logger.info(`Starting battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives`);
-        else this.logger.info(`Resuming battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initatives.length} initatives, starting at turn ${initialEncounter.turn}`);
+        if (initialEncounter.turn === 0) this.logger.info(`Starting battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initiatives.length} initiatives`);
+        else this.logger.info(`Resuming battle loop for encounter ${initialEncounter.id} with ${initialEncounter.initiatives.length} initiatives, starting at turn ${initialEncounter.turn}`);
 
         // Loop through each initative
-        for (const initiative of initatives) {
+        for (const initiative of initiatives) {
             // Increment the turn
             const encounter = await prisma.encounter.update({
                 where: {
@@ -619,18 +677,18 @@ export class Feature {
                 include: {
                     creatures: true,
                     guildMembers: true,
-                    initatives: true,
+                    initiatives: true,
                 },
             });
 
-            this.logger.info(`Starting turn ${encounter.turn} for encounter ${encounter.id} with ${encounter.initatives.length} initatives`);
+            this.logger.info(`Starting turn ${encounter.turn} for encounter ${encounter.id} with ${encounter.initiatives.length} initiatives`);
 
             // Check if the encounter is over
             if (await this.checkForTheDead(encounter.id, interaction)) break;
 
             if (initiative.entityType === EntityType.CREATURE) {
                 // Get the creature
-                // TODO: #1:6h/dev Ensure creature exists
+                // TODO: Ensure creature exists
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const creature = encounter.creatures.find(creature => creature.id === initiative.entityId)!;
 
@@ -681,7 +739,7 @@ export class Feature {
                 // Show the attack
                 await interaction.editReply({
                     embeds: [{
-                        title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                        title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                         description: outdent`
                             ${creature.name} attacks <@${guildMember.id}> for ${damage} damage.
                         `,
@@ -707,12 +765,12 @@ export class Feature {
                 }
 
                 // Get the next initative
-                // const nextInitiative = encounter.initatives[encounter.turn + 1] ?? encounter.initatives[0];
+                // const nextInitiative = encounter.initiatives[encounter.turn + 1] ?? encounter.initiatives[0];
 
                 // Show them a list of actions they can take
                 await interaction.editReply({
                     embeds: [{
-                        title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                        title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                         fields: [{
                             name: 'Current turn',
                             value: `<@${guildMember.id}>`,
@@ -775,13 +833,13 @@ export class Feature {
             include: {
                 creatures: true,
                 guildMembers: true,
-                initatives: true,
+                initiatives: true,
             }
         });
         if (!encounter) return;
 
-        // If there are no more initatives, reset the turn
-        if (encounter.initatives.length === encounter.turn) {
+        // If there are no more initiatives, reset the turn
+        if (encounter.initiatives.length === encounter.turn) {
             await prisma.encounter.update({
                 where: {
                     id: encounter.id
@@ -854,7 +912,7 @@ export class Feature {
                 id: encounter.id
             },
             data: {
-                initatives: {
+                initiatives: {
                     createMany: {
                         data: initiatives
                     }
@@ -900,7 +958,7 @@ export class Feature {
                         template: true,
                     },
                 },
-                initatives: true,
+                initiatives: true,
             },
         });
         if (!encounter) return;
@@ -917,7 +975,7 @@ export class Feature {
         // Show them a list of actions they can take
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                 fields: [{
                     name: 'Turn',
                     value: `<@${interaction.member?.user.id}>`,
@@ -962,7 +1020,7 @@ export class Feature {
                 }
             },
             include: {
-                initatives: true,
+                initiatives: true,
             }
         });
         if (!encounter) return;
@@ -992,7 +1050,7 @@ export class Feature {
         if (!creature) {
             await interaction.editReply({
                 embeds: [{
-                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                    title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                     description: 'That creature doesn\'t exist',
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
@@ -1036,7 +1094,7 @@ export class Feature {
         // Send them a message
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                 description: `You attacked ${creature.name} with a melee attack for ${weapon?.damage ?? 1} damage`,
                 footer: {
                     text: `Encounter ID: ${encounter.id}`
@@ -1084,7 +1142,7 @@ export class Feature {
                         template: true,
                     },
                 },
-                initatives: true,
+                initiatives: true,
             },
         });
         if (!encounter) return;
@@ -1101,7 +1159,7 @@ export class Feature {
         // Show them a list of actions they can take
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                 fields: [{
                     name: 'Turn',
                     value: `<@${interaction.member?.user.id}>`,
@@ -1146,7 +1204,7 @@ export class Feature {
                 }
             },
             include: {
-                initatives: true,
+                initiatives: true,
             }
         });
         if (!encounter) return;
@@ -1178,7 +1236,7 @@ export class Feature {
         if (!creature) {
             await interaction.editReply({
                 embeds: [{
-                    title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                    title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                     description: 'That creature doesn\'t exist',
                     footer: {
                         text: `Encounter ID: ${encounter.id}`
@@ -1248,7 +1306,7 @@ export class Feature {
                 creatures: true,
                 guild: true,
                 guildMembers: true,
-                initatives: true,
+                initiatives: true,
             },
         });
 
@@ -1274,7 +1332,7 @@ export class Feature {
         //         await interaction.reply({
         //             ephemeral: true,
         //             embeds: [{
-        //                 title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+        //                 title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
         //                 description: 'It\'s not your turn.',
         //             }],
         //             components: []
@@ -1306,7 +1364,7 @@ export class Feature {
         // Respond with the result
         await interaction.editReply({
             embeds: [{
-                title: `Encounter [${encounter.turn}/${encounter.initatives.length}]`,
+                title: `Encounter [${encounter.turn}/${encounter.initiatives.length}]`,
                 description: 'You run away from the encounter.',
                 footer: {
                     text: `Encounter ID: ${encounter.id}`
@@ -1399,7 +1457,7 @@ export class Feature {
                 },
             },
             include: {
-                initatives: true,
+                initiatives: true,
             }
         });
 
@@ -1538,7 +1596,7 @@ export class Feature {
                 },
             },
             include: {
-                initatives: true,
+                initiatives: true,
             }
         });
 
@@ -1556,7 +1614,7 @@ export class Feature {
         }
 
         // Show the inventory
-        await this.showInventory(interaction, `Encounter [${encounter.turn}/${encounter.initatives.length}]`, 'encounter-inventory');
+        await this.showInventory(interaction, `Encounter [${encounter.turn}/${encounter.initiatives.length}]`, 'encounter-inventory');
     }
 
     @ButtonComponent({
@@ -1617,18 +1675,20 @@ export class Feature {
             type: ApplicationCommandOptionType.String,
             autocomplete: locationAutoComplete
         })
-        locationId: string,
+        locationName: string,
         interaction: CommandInteraction
     ) {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user
-        const user = await prisma.guildMember.findUnique({
-            where: {
-                id: interaction.member?.user.id
-            },
-        });
+        const user = await db
+            .selectFrom('guild_members')
+            .select('encounterId')
+            .select('location')
+            .where('id', '=', interaction.user.id)
+            .executeTakeFirst();
+
         if (!user) return;
 
         // Don't allow travelling if the user's in an encounter
@@ -1644,9 +1704,8 @@ export class Feature {
             return;
         }
 
-        // Get the location
-        const location = Location[locationId as keyof typeof Location];
-        if (!location) {
+        // Check if a location exists with that name
+        if (!Locations.includes(locationName)) {
             // Respond with the result
             await interaction.editReply({
                 embeds: [{
@@ -1658,7 +1717,7 @@ export class Feature {
         }
 
         // Check if the user is already in the location
-        if (user.location === location) {
+        if (user.location === locationName) {
             // Respond with the result
             await interaction.editReply({
                 embeds: [{
@@ -1671,20 +1730,19 @@ export class Feature {
         }
 
         // Update the user's location
-        await prisma.guildMember.update({
-            where: {
-                id: interaction.member?.user.id,
-            },
-            data: {
-                location,
-            },
-        });
+        await db
+            .updateTable('guild_members')
+            .set({
+                location: locationName,
+            })
+            .where('id', '=', interaction.user.id)
+            .execute();
 
         // Respond with the result
         await interaction.editReply({
             embeds: [{
                 title: 'Travel',
-                description: `You travel to ${location}.`,
+                description: `You travel to ${locationName}.`,
                 color: Colors.Blue,
             }],
         });
@@ -1702,13 +1760,12 @@ export class Feature {
             type: ApplicationCommandOptionType.String,
             async autocomplete(interaction) {
                 const name = interaction.options.getString('name');
-                const creatures = await prisma.creatureTemplate.findMany({
-                    where: name ? {
-                        name: {
-                            contains: name
-                        }
-                    } : {}
-                });
+                const creatures = await db
+                    .selectFrom('creature_templates')
+                    .select('id')
+                    .select('name')
+                    .where('name', 'like', name)
+                    .execute();
 
                 await interaction.respond(creatures.map(creature => {
                     return {
@@ -1746,13 +1803,21 @@ export class Feature {
         }
 
         // Get the creature template(s)
-        const creatures = await prisma.creatureTemplate.findMany({
-            where: {
-                ...(creatureId ? { id: creatureId } : {}),
-                ...(location ? { location } : {}),
-            },
-            take: 5, // Limit to 5 results
-        });
+        const creatures = await db
+            .selectFrom('creature_templates')
+            .select('imageUrl')
+            .select('name')
+            .select('emoji')
+            .select('description')
+            .select('location')
+            .select('rarity')
+            .select('attack')
+            .select('defence')
+            .select('health')
+            .$if(creatureId !== undefined, qb => qb.where('id', '=', creatureId as string))
+            .$if(location !== undefined, qb => qb.where('location', '=', location as Location))
+            .limit(5)
+            .execute();
 
         // If they picked a creature and it doesn't exist
         if (creatureId && creatures.length === 0) {
@@ -1875,7 +1940,34 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's details
-        const user = await prisma.guildMember.findUnique({ where: { id: guildMember?.id ?? interaction.member?.user.id } });
+        const user = await db
+            .selectFrom('guild_members')
+            .select('xp')
+            .select('location')
+            .select('health')
+            .select('strength')
+            .select('dexterity')
+            .select('wisdom')
+            .select('intelligence')
+            .select('constitution')
+            .select('charisma')
+            .select('alchemy')
+            .select('woodcutting')
+            .select('farming')
+            .select('luck')
+            .select('stealth')
+            .select('mining')
+            .select('smithing')
+            .select('cooking')
+            .select('fishing')
+            .select('crafting')
+            .select('enchanting')
+            .select('summoning')
+            .select('performing')
+            .select('research')
+            .select('coins')
+            .where('id', '=', guildMember?.id ?? interaction.user.id)
+            .executeTakeFirst();
         if (!user) {
             await interaction.editReply({
                 embeds: [{
@@ -1916,7 +2008,7 @@ export class Feature {
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
                         **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress}%)
-                        ${emojibar(levelProgress)}
+                        ${emojiBar(levelProgress)}
                     `,
                     inline: false,
                 }, {
@@ -1971,11 +2063,19 @@ export class Feature {
     async daily(
         interaction: CommandInteraction
     ) {
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         // Check if the user has already claimed their daily
-        const daily = await prisma.rateLimit.findFirst({ where: { id: 'economy:daily', guildMember: { id: interaction.member?.user.id } } });
+        const daily = await db
+            .selectFrom('rate_limits')
+            .select('lastReset')
+            .where('id', '=', 'economy:daily')
+            .where('memberId', '=', interaction.user.id)
+            .executeTakeFirst();
 
         // Only allow them to claim their daily once per 24 hours
         if (daily && daily.lastReset.getTime() > (Date.now() - 86_400_000)) {
@@ -1989,34 +2089,49 @@ export class Feature {
         }
 
         // Mark the daily as claimed for this user in this guild
-        await prisma.rateLimit.create({
-            data: {
+        await db
+            .insertInto('rate_limits')
+            .values({
                 id: 'economy:daily',
                 count: 0,
                 lastReset: new Date(),
-                guildMember: {
-                    connect: {
-                        id: interaction.member?.user.id
-                    }
-                }
-            }
-        });
+                memberId: interaction.user.id,
+                guildId,
+            })
+            .execute();
 
         // Give them their daily coins
-        const guildMember = await prisma.guildMember.update({
-            where: { id: interaction.member?.user.id },
-            data: {
-                coins: {
-                    increment: 100
-                }
-            }
-        });
+        const balance = await db
+            .transaction()
+            .execute(async trx => {
+                // Give the coins to the user
+                await trx
+                    .insertInto('guild_members')
+                    .values({
+                        id: interaction.user.id,
+                        guildId,
+                        coins: 100,
+                    })
+                    .onDuplicateKeyUpdate(eb => ({
+                        coins: eb.bxp('coins', '+', 100)
+                    }))
+                    .execute();
+
+                // Return the new coin count
+                const user = await trx
+                    .selectFrom('guild_members')
+                    .select('coins')
+                    .where('id', '=', interaction.user.id)
+                    .executeTakeFirst();
+
+                return user?.coins ?? 0;
+            });
 
         // Send the balance
         await interaction.editReply({
             embeds: [{
                 title: 'Daily',
-                description: `You get your daily coins and get \`${100}\` coins. You now have \`${guildMember.coins + 100}\` coins.`
+                description: `You get your daily coins and get \`${100}\` coins. You now have \`${balance}\` coins.`
             }]
         });
     }
@@ -2040,14 +2155,24 @@ export class Feature {
         }) amount: number,
         interaction: CommandInteraction
     ) {
-        if (!interaction.guild?.id) return;
+        const userId = interaction.member?.user.id;
+        const guildId = interaction.guild?.id;
+        if (!userId) return;
+        if (!guildId) return;
 
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
         try {
+            // Get the user
+            const user = await db
+                .selectFrom('guild_members')
+                .select('coins')
+                .where('id', '=', userId)
+                .executeTakeFirst();
+
             // Get the user's balance
-            const userBalance = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } }).then(user => user?.coins ?? 0);
+            const userBalance = user?.coins ?? 0;
 
             // If the user doesn't have enough money, don't let them give
             if (userBalance < amount) {
@@ -2064,34 +2189,28 @@ export class Feature {
             }
 
             // Transfer the coins
-            await prisma.$transaction([
-                prisma.guildMember.update({
-                    where: { id: interaction.member?.user.id },
-                    data: {
-                        coins: {
-                            decrement: amount
-                        }
-                    }
-                }),
-                prisma.guildMember.upsert({
-                    where: { id: target.id },
-                    create: {
-                        id: target.id,
-                        xp: 0,
+            await db.transaction().execute(async trx => {
+                // Remove the coins from person A
+                await trx
+                    .updateTable('guild_members')
+                    .set(eb => ({
+                        coins: eb.bxp('coins', '-', amount)
+                    }))
+                    .execute();
+
+                // Add the coins to person B
+                await trx
+                    .insertInto('guild_members')
+                    .values({
+                        id: userId,
+                        guildId,
                         coins: amount,
-                        guild: {
-                            connect: {
-                                id: interaction.guild.id,
-                            },
-                        },
-                    },
-                    update: {
-                        coins: {
-                            increment: amount,
-                        },
-                    },
-                }),
-            ]);
+                    })
+                    .onDuplicateKeyUpdate(eb => ({
+                        coins: eb.bxp('coins', '+', amount)
+                    }))
+                    .execute();
+            });
 
             // Send the balance
             await interaction.editReply({
@@ -2116,19 +2235,27 @@ export class Feature {
     async shop(
         interaction: CommandInteraction
     ) {
+        if (!interaction.member?.user.id) return;
+
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferReply({ ephemeral: false });
 
         // Get the user
-        const user = await prisma.guildMember.findUnique({ where: { id: interaction.member?.user.id } });
+        const user = await db
+            .selectFrom('guild_members')
+            .select('location')
+            .where('id', '=', interaction.member?.user.id)
+            .executeTakeFirst();
         if (!user) return;
 
         // Show a list of shops in the current location
-        const shops = await prisma.shop.findMany({
-            where: {
-                location: user.location,
-            },
-        });
+        const shops = await db
+            .selectFrom('shops')
+            .select('id')
+            .select('name')
+            .select('description')
+            .where('location', '=', user.location)
+            .execute();
 
         // If there are no shops, tell the user
         if (shops.length === 0) {
@@ -2175,15 +2302,23 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the shop
-        const shop = await prisma.shop.findUnique({ where: { id: interaction.values[0] } });
+        const shop = await db
+            .selectFrom('shops')
+            .select('id')
+            .select('name')
+            .where('id', '=', interaction.values[0])
+            .executeTakeFirst();
         if (!shop) return;
 
         // Get the items
-        const items = await prisma.itemTemplate.findMany({
-            where: {
-                shopId: shop.id,
-            },
-        });
+        const items = await db
+            .selectFrom('item_templates')
+            .select('name')
+            .select('emoji')
+            .select('description')
+            .select('price')
+            .where('shopId', '=', shop.id)
+            .execute();
 
         // Send the shop
         await interaction.editReply({

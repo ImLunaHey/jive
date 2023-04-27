@@ -19,7 +19,7 @@ export const start = async () => {
     await import('./features/custom-commands');
     await import('./features/debug');
     await import('./features/dynamic-channel-names');
-    await import('./features/economy');
+    // await import('./features/economy');
     await import('./features/features');
     await import('./features/invite-tracking');
     await import('./features/leveling');
