@@ -25,7 +25,8 @@ import {
 import { ButtonComponent, Discord, Guard, SelectMenuComponent, Slash, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 import { json } from '@app/common/json';
-import { Location, Locations } from '@app/common/database/enums';
+import type { Location} from '@app/common/database/enums';
+import { Locations } from '@app/common/database/enums';
 
 const coinEmoji = '<:coins:1083037299220152351>';
 
