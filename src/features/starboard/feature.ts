@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import type { MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
 import { ChannelType, EmbedBuilder } from 'discord.js';
@@ -50,7 +50,7 @@ export class Feature {
     @On({ event: 'messageReactionAdd' })
     async messageReactionAdd([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled(FeatureId.STARBOARD, reaction.message.guild?.id)) return;
+        if (!await isFeatureEnabled('STARBOARD', reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) return;
@@ -179,7 +179,7 @@ export class Feature {
     @On({ event: 'messageReactionRemove' })
     async messageReactionRemove([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
         // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled(FeatureId.STARBOARD, reaction.message.guild?.id)) return;
+        if (!await isFeatureEnabled('STARBOARD', reaction.message.guild?.id)) return;
 
         // Skip if the message is in a DM
         if (!reaction.message.guild) {

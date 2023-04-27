@@ -7,7 +7,7 @@ import { outdent } from 'outdent';
 import { client } from '@app/client';
 import { store } from '@app/store';
 import mee6LevelsApi from 'mee6-levels-api';
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
 
 @Discord()
@@ -45,7 +45,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled(FeatureId.LEVELING, message.guild?.id)) return;
+        if (!await isFeatureEnabled('LEVELING', message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;
@@ -68,7 +68,7 @@ export class Feature {
 
     @On({ event: 'voiceStateUpdate' })
     async voiceStateUpdate([oldState, newState]: ArgsOf<'voiceStateUpdate'>): Promise<void> {
-        if (!await isFeatureEnabled(FeatureId.LEVELING, newState.guild?.id)) return;
+        if (!await isFeatureEnabled('LEVELING', newState.guild?.id)) return;
 
         // Check if the user has joined a voice channel
         if (oldState.channelId === null && newState.channelId !== null) {

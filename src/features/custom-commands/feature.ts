@@ -1,4 +1,4 @@
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { ChannelType } from 'discord.js';
@@ -16,7 +16,7 @@ export class Feature {
 
     @On({ event: 'messageCreate' })
     async messageCreate([message]: ArgsOf<'messageCreate'>): Promise<void> {
-        if (!await isFeatureEnabled(FeatureId.CUSTOM_COMMANDS, message.guild?.id)) return;
+        if (!await isFeatureEnabled('CUSTOM_COMMANDS', message.guild?.id)) return;
 
         // Check if the message was sent in a guild
         if (!message.guild?.id) return;

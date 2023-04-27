@@ -2,7 +2,7 @@ import { type ArgsOf, Discord, On } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { client } from '@app/client';
 import { ChannelType } from 'discord.js';
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
 
 @Discord()
@@ -19,7 +19,7 @@ export class Feature {
 
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
-            if (!await isFeatureEnabled(FeatureId.INVITE_TRACKING, guildId)) return;
+            if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) return;
 
             // Fetch the invites
             this.logger.debug(`Fetching invites for guild ${guildId}...`);

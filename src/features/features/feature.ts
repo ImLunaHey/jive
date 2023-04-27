@@ -1,5 +1,4 @@
 import { db } from '@app/common/database';
-import { FeatureId } from '@app/common/is-feature-enabled';
 import { globalLogger } from '@app/logger';
 import { CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { Discord, Slash } from 'discordx';
@@ -62,39 +61,39 @@ export class Feature {
                 fields: [
                     {
                         name: 'Audit Log',
-                        value: settings?.featuresEnabled.includes(FeatureId.AUDIT_LOG) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('AUDIT_LOG') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Auto Delete',
-                        value: settings?.featuresEnabled.includes(FeatureId.AUTO_DELETE) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('AUTO_DELETE') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Custom Commands',
-                        value: settings?.featuresEnabled.includes(FeatureId.CUSTOM_COMMANDS) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('CUSTOM_COMMANDS') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Dynamic Channel Names',
-                        value: settings?.featuresEnabled.includes(FeatureId.DYNAMIC_CHANNEL_NAMES) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('DYNAMIC_CHANNEL_NAMES') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Invite Tracking',
-                        value: settings?.featuresEnabled.includes(FeatureId.INVITE_TRACKING) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('INVITE_TRACKING') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Leveling',
-                        value: settings?.featuresEnabled.includes(FeatureId.LEVELING) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('LEVELING') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Moderation',
-                        value: settings?.featuresEnabled.includes(FeatureId.MODERATION) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('MODERATION') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Starboard',
-                        value: settings?.featuresEnabled.includes(FeatureId.STARBOARD) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('STARBOARD') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                     {
                         name: 'Welcome',
-                        value: settings?.featuresEnabled.includes(FeatureId.WELCOME) ? 'Enabled ✅' : 'Disabled ❌',
+                        value: settings?.featuresEnabled.includes('WELCOME') ? 'Enabled ✅' : 'Disabled ❌',
                     },
                 ]
             }],

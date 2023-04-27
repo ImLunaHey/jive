@@ -1,9 +1,8 @@
 import { client } from '@app/client';
 import { channelTypeToName } from '@app/common/channel-type-to-name';
-import type { AuditLog } from '@app/common/database';
 import { db } from '@app/common/database';
 import { hexToColour } from '@app/common/hex-to-colour';
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { timeLength } from '@app/common/time';
 import { globalLogger } from '@app/logger';
 import { EmbedBuilder } from '@discordjs/builders';
@@ -71,7 +70,7 @@ export class Feature {
     // Leave
     @On({ event: 'guildMemberRemove' })
     async guildMemberRemove([member]: ArgsOf<'guildMemberRemove'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, member.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', member.guild?.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(member.guild);
@@ -135,7 +134,7 @@ export class Feature {
     // Join
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, member.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', member.guild?.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(member.guild);
@@ -185,7 +184,7 @@ export class Feature {
     // Ban
     @On({ event: 'guildBanAdd' })
     async guildBanAdd([ban]: ArgsOf<'guildBanAdd'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, ban.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', ban.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(ban.guild);
@@ -236,7 +235,7 @@ export class Feature {
 
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, newMember.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', newMember.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(newMember.guild);
@@ -329,7 +328,7 @@ export class Feature {
 
     @On({ event: 'guildUpdate' })
     async guildUpdate([oldGuild, newGuild]: ArgsOf<'guildUpdate'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, newGuild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', newGuild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(newGuild);
@@ -482,7 +481,7 @@ export class Feature {
 
     @On({ event: 'roleCreate' })
     async roleCreate([role]: ArgsOf<'roleCreate'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, role.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', role.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(role.guild);
@@ -544,7 +543,7 @@ export class Feature {
 
     @On({ event: 'roleDelete' })
     async guildRoleDelete([role]: ArgsOf<'roleDelete'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, role.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', role.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(role.guild);
@@ -610,7 +609,7 @@ export class Feature {
 
     @On({ event: 'roleUpdate' })
     async guildRoleUpdate([oldRole, newRole]: ArgsOf<'roleUpdate'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, newRole.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', newRole.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(newRole.guild);
@@ -713,7 +712,7 @@ export class Feature {
     @On({ event: 'emojiCreate' })
     async guildEmojiCreate([emoji]: ArgsOf<'emojiCreate'>) {
         if (!emoji.name) return;
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, emoji.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', emoji.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(emoji.guild);
@@ -771,7 +770,7 @@ export class Feature {
     @On({ event: 'emojiDelete' })
     async guildEmojiDelete([emoji]: ArgsOf<'emojiDelete'>) {
         if (!emoji.name) return;
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, emoji.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', emoji.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(emoji.guild);
@@ -833,7 +832,7 @@ export class Feature {
 
     @On({ event: 'channelCreate' })
     async channelCreate([channel]: ArgsOf<'channelCreate'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, channel.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', channel.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(channel.guild);
@@ -930,7 +929,7 @@ export class Feature {
         if (newChannel.type === ChannelType.DM) return;
 
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, oldChannel.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', oldChannel.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(newChannel.guild);
@@ -1058,7 +1057,7 @@ export class Feature {
         if (channel.type === ChannelType.DM) return;
 
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, channel.guild.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', channel.guild.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(channel.guild);
@@ -1117,7 +1116,7 @@ export class Feature {
         if (!invite.guild) return;
 
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, invite.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', invite.guild?.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(invite.guild);
@@ -1154,7 +1153,7 @@ export class Feature {
         if (!invite.guild) return;
 
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, invite.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', invite.guild?.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(invite.guild);
@@ -1189,7 +1188,7 @@ export class Feature {
     // messageDelete
     @On({ event: 'messageDelete' })
     async messageDelete([message]: ArgsOf<'messageDelete'>) {
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, message.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', message.guild?.id)) return;
 
         // Skip bot messages
         if (message.author?.bot) return;
@@ -1256,7 +1255,7 @@ export class Feature {
         if (!firstMessage?.guild?.id) return;
 
         // Check this feature is enabled
-        if (!await isFeatureEnabled(FeatureId.AUDIT_LOG, messages.first()?.guild?.id)) return;
+        if (!await isFeatureEnabled('AUDIT_LOG', messages.first()?.guild?.id)) return;
 
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(firstMessage.guild);

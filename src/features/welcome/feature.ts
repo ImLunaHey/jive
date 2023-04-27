@@ -1,6 +1,6 @@
 import { client } from '@app/client';
 import { db } from '@app/common/database';
-import { FeatureId, isFeatureEnabled } from '@app/common/is-feature-enabled';
+import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { globalLogger } from '@app/logger';
@@ -71,7 +71,7 @@ export class Feature {
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.WELCOME, member.guild.id)) return;
+        if (!await isFeatureEnabled('WELCOME', member.guild.id)) return;
 
         // Get settings
         const settings = await db
@@ -99,7 +99,7 @@ export class Feature {
     @On({ event: 'guildMemberUpdate' })
     async guildMemberUpdate([oldMember, newMember]: ArgsOf<'guildMemberUpdate'>) {
         // Check if the feature is enabled
-        if (!await isFeatureEnabled(FeatureId.WELCOME, newMember.guild.id)) return;
+        if (!await isFeatureEnabled('WELCOME', newMember.guild.id)) return;
 
         // Get settings
         const settings = await db
