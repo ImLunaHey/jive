@@ -19,6 +19,6 @@ const getHashFromEnv = () => {
 let commitHash: string;
 export const getCommitHash = () => {
     if (commitHash) return commitHash;
-    commitHash = getHashFromEnv() ?? getHashFromDisk() ?? 'unknown';
+    commitHash = (getHashFromEnv() ?? getHashFromDisk() ?? 'unknown').substring(0, 12);
     return commitHash;
 };
