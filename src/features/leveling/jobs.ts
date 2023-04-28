@@ -8,7 +8,7 @@ export class Jobs {
     private logger = globalLogger.child({ service: 'Leveling:Jobs' });
 
     constructor() {
-        this.logger.info('Jobs Initialised');
+        this.logger.info('Initialised');
     }
 
     @Cron.PreventOverlap
