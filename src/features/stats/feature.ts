@@ -18,7 +18,7 @@ export class Feature {
     }
 
     @On({
-        event: 'messageCreate'
+        event: 'messageCreate',
     })
     async onMessageCreate([message]: ArgsOf<'messageCreate'>) {
         if (!message.guild?.id) return;
@@ -32,10 +32,19 @@ export class Feature {
         await service.newMessage(message);
     }
 
+    // @On({
+    //     event: 'messageReactionAdd',
+    // })
+    // onMessageReactionAdd(
+    //     [reaction, user]: ArgsOf<'messageReactionAdd'>
+    // ) {
+
+    // }
+
     @On({
         event: 'guildMemberAdd',
     })
-    async guildMemberAdd(
+    async onGuildMemberAdd(
         [member]: ArgsOf<'guildMemberAdd'>
     ) {
         // Record when a member joins
@@ -53,7 +62,7 @@ export class Feature {
     }
 
     @On({
-        event: 'guildMemberRemove'
+        event: 'guildMemberRemove',
     })
     async guildMemberRemove(
         [guildMember]: ArgsOf<'guildMemberRemove'>
@@ -238,7 +247,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: 'opt-out-no'
+        id: 'opt-out-no',
     })
     async optOutNo(
         interaction: ButtonInteraction,
@@ -259,7 +268,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: 'opt-out-yes'
+        id: 'opt-out-yes',
     })
     async optOutConfirmation(
         interaction: ButtonInteraction,
@@ -331,7 +340,9 @@ export class Feature {
             .then(channels => {
                 // Only show public channels
                 return channels.filter(channel => {
-                    return interaction.guild?.channels.resolve(channel.channelId)?.permissionsFor(interaction.guild.id)?.has('ViewChannel');
+                    const isPublic = interaction.guild?.channels.resolve(channel.channelId)?.permissionsFor(interaction.guild.id)?.has('ViewChannel');
+                    const isForVerified = interaction.guild?.channels.resolve(channel.channelId)?.permissionsFor('965589467832401950')?.has('ViewChannel');
+                    return isPublic || isForVerified;
                 });
             });
 
