@@ -2,8 +2,8 @@ import { db } from '@app/common/database';
 import { getDate } from '@app/common/get-date';
 import { service } from '@app/features/stats/service';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
-import { type ArgsOf, Discord, On, Slash, ButtonComponent } from 'discordx';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
+import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
 @Discord()
@@ -202,10 +202,16 @@ export class Feature {
         description: 'Get stats for this server.',
     })
     async stats(
+        @SlashOption({
+            name: 'private',
+            description: 'Reply with a private message?',
+            required: false,
+            type: ApplicationCommandOptionType.Boolean,
+        }) ephemeral = false,
         interaction: CommandInteraction,
     ) {
         // Show the bot thinking
-        if (!interaction.deferred) await interaction.deferReply();
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral, });
 
         // Get the most active channels for today
         const mostActiveChannels = await db
