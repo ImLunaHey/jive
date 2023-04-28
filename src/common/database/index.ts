@@ -238,6 +238,7 @@ export type ChannelStat = {
     guildId: ColumnType<string, string, never>;
     channelId: ColumnType<string, string, never>;
     hour: ColumnType<number, number, never>;
+    date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
     count: number;
 };
 export type Welcome = {
@@ -260,26 +261,26 @@ export type Database = {
     attacks: Attack;
     audit_logs: AuditLog;
     auto_deletes: AutoDelete;
-    creatures: Creature;
+    channel_stats: ChannelStat;
     creature_templates: CreatureTemplate;
+    creatures: Creature;
     custom_commands: CustomCommand;
     dynamic_channels: DynamicChannel;
     encounters: Encounter;
     extra_messages: ExtraMessage;
-    guilds: Guild;
     guild_members: GuildMember;
+    guilds: Guild;
     initiatives: Initiative;
-    invites: Invite;
     invite_tracking: InviteTracking;
-    items: Item;
+    invites: Invite;
     item_templates: ItemTemplate;
+    items: Item;
     leveling: Leveling;
     purchases: Purchase;
     rate_limits: RateLimit;
     settings: Settings;
     shops: Shop;
     starboards: Starboard;
-    channel_stats: ChannelStat;
     welcomes: Welcome;
 };
 

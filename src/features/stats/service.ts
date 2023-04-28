@@ -8,9 +8,18 @@ class Service {
     public stats: {
         guildId: string;
         channelId: string;
+        date: `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
         hour: number;
         count: number;
     }[] = [];
+
+    getDate(): `${number}${number}${number}${number}-${number}${number}-${number}${number}` {
+        const today = new Date();
+        const year = today.getFullYear().toString() as `${number}${number}${number}${number}`;
+        const month = String(today.getMonth() + 1).padStart(2, '0') as `${number}${number}`;
+        const day = String(today.getDate()).padStart(2, '0') as `${number}${number}`;
+        return `${year}-${month}-${day}`;
+    }
 
     newMessage(message: Message) {
         try {
@@ -24,6 +33,7 @@ class Service {
                 this.stats.push({
                     guildId,
                     channelId,
+                    date: this.getDate(),
                     hour,
                     count: 1,
                 });
@@ -50,8 +60,9 @@ class Service {
                     .values({
                         guildId: data.guildId,
                         channelId: data.channelId,
-                        count: data.count,
+                        date: data.date,
                         hour: data.hour,
+                        count: data.count,
                     })
                     .onDuplicateKeyUpdate(eb => ({
                         count: eb.bxp('count', '+', data.count)
