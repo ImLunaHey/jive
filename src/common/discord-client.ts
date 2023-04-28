@@ -47,7 +47,11 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('interactionCreate', (interaction: Interaction) => {
-        client.executeInteraction(interaction);
+        try {
+            client.executeInteraction(interaction);
+        } catch (error: unknown) {
+            globalLogger.error('Interaction error', { error });
+        }
     });
 
     client.on('messageCreate', async (message: Message) => {
