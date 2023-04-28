@@ -4,7 +4,8 @@ import { getDate } from '@app/common/get-date';
 import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -32,22 +33,50 @@ export class Feature {
     }
 
     @On({
+        event: 'guildMemberAdd',
+    })
+    async guildMemberAdd(
+        [member]: ArgsOf<'guildMemberAdd'>
+    ) {
+        // Record when a member joins
+        await db
+            .insertInto('guild_members')
+            .values({
+                id: member.id,
+                guildId: member.guild.id,
+                joinedTimestamp: new Date().getTime(),
+            })
+            .onDuplicateKeyUpdate({
+                joinedTimestamp: new Date().getTime(),
+            })
+            .execute();
+    }
+
+    @On({
         event: 'guildMemberRemove'
     })
     async guildMemberRemove(
-        [member]: ArgsOf<'guildMemberRemove'>
+        [guildMember]: ArgsOf<'guildMemberRemove'>
     ) {
-        // If we don't know when they joined just bail
-        if (!member.joinedTimestamp) return;
+        // Get the member
+        const member = await db
+            .selectFrom('guild_members')
+            .select('joinedTimestamp')
+            .where('guildId', '=', guildMember.guild.id)
+            .where('id', '=', guildMember.id)
+            .executeTakeFirst();
+
+        // Get the join timestamp
+        const joinedTimestamp = guildMember.joinedTimestamp ?? member?.joinedTimestamp ?? 0;
 
         // Check how long they were here in ms
-        const diffMs = new Date().getTime() - member.joinedTimestamp;
+        const diffMs = new Date().getTime() - joinedTimestamp;
 
         // Get the current fastest leave time
         const guildStats = await db
             .selectFrom('guild_stats')
             .select('fastestLeave')
-            .where('guildId', '=', member.guild.id)
+            .where('guildId', '=', guildMember.guild.id)
             .executeTakeFirst();
 
         const newFastest = async () => {
@@ -58,15 +87,15 @@ export class Feature {
                     title: 'New leave record! 🥇',
                     fields: [{
                         name: 'Name',
-                        value: member.displayName,
+                        value: guildMember.displayName,
                         inline: true,
                     }, {
                         name: 'Account Created',
-                        value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                        value: `<t:${Math.floor(guildMember.user.createdTimestamp / 1000)}:R>`,
                         inline: true,
                     }, {
                         name: 'Time here',
-                        value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
+                        value: joinedTimestamp ? timeLength(new Date(joinedTimestamp)) : 'Unknown',
                         inline: true,
                     }]
                 }]
@@ -76,7 +105,7 @@ export class Feature {
             await db
                 .insertInto('guild_stats')
                 .values({
-                    guildId: member.guild.id,
+                    guildId: guildMember.guild.id,
                     fastestLeave: diffMs,
                 })
                 .onDuplicateKeyUpdate({
@@ -132,6 +161,7 @@ export class Feature {
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: true,
+                joinedTimestamp: new Date().getTime(),
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: true,
@@ -247,6 +277,7 @@ export class Feature {
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: true,
+                joinedTimestamp: new Date().getTime(),
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: false,

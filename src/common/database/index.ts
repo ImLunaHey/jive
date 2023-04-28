@@ -134,7 +134,10 @@ export type GuildMember = {
     encounterId: string | null;
 
     // Should we capture stats for this user
-    statsOptedIn: boolean;
+    statsOptedIn: ColumnType<boolean, boolean | undefined, boolean>;
+
+    // When did they join
+    joinedTimestamp: number;
 };
 export type Initiative = {
     id: string;

@@ -9,6 +9,9 @@ const createGuildMember = async (guildId: string, userId: string) => {
         .ignore()
         .values({
             id: guildId,
+            coins: 0,
+            enabled: false,
+            ticketNumber: 1,
         })
         .execute();
 
@@ -18,6 +21,7 @@ const createGuildMember = async (guildId: string, userId: string) => {
         .values({
             id: userId,
             guildId,
+            joinedTimestamp: new Date().getTime(),
         })
         .execute();
 };
