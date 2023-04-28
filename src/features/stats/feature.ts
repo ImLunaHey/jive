@@ -114,7 +114,8 @@ export class Feature {
                 description: outdent`
                         You hit \`no\`. 📊
                     `,
-            }]
+            }],
+            components: [],
         });
     }
 
@@ -151,7 +152,8 @@ export class Feature {
                 description: outdent`
                     We've deleted all existing stats for you and are no longer collecting stats about you. 📊
                 `,
-            }]
+            }],
+            components: [],
         });
     }
 
