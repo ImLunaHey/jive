@@ -43,8 +43,9 @@ class Service {
             this.stats[existingStatIndex].count += 1;
         } catch (error: unknown) {
             this.logger.error('Failed recording stats', {
-                error
+                error,
             });
+            console.log(error);
         }
     }
 
@@ -71,8 +72,9 @@ class Service {
             }
         } catch (error: unknown) {
             this.logger.error('Failed writing stats to database', {
-                error
+                error,
             });
+            console.log(error);
         }
     }
 }
