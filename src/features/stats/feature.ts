@@ -50,41 +50,49 @@ export class Feature {
             .where('guildId', '=', member.guild.id)
             .executeTakeFirst();
 
-        // This wasn't a new record
-        if (!guildStats?.fastestLeave || (diffMs > guildStats?.fastestLeave)) return;
-
-        // Post that we have a new fastest
-        const channel = client.channels.resolve('957109896313184316') as TextChannel;
-        await channel.send({
-            embeds: [{
-                title: 'New leave record! 🥇',
-                fields: [{
-                    name: 'Name',
-                    value: member.displayName,
-                    inline: true,
-                }, {
-                    name: 'Account Created',
-                    value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
-                    inline: true,
-                }, {
-                    name: 'Time here',
-                    value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
-                    inline: true,
+        const newFastest = async () => {
+            // Post that we have a new fastest
+            const channel = client.channels.resolve('957109896313184316') as TextChannel;
+            await channel.send({
+                embeds: [{
+                    title: 'New leave record! 🥇',
+                    fields: [{
+                        name: 'Name',
+                        value: member.displayName,
+                        inline: true,
+                    }, {
+                        name: 'Account Created',
+                        value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                        inline: true,
+                    }, {
+                        name: 'Time here',
+                        value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
+                        inline: true,
+                    }]
                 }]
-            }]
-        });
+            });
 
-        // Update the database
-        await db
-            .insertInto('guild_stats')
-            .values({
-                guildId: member.guild.id,
-                fastestLeave: diffMs,
-            })
-            .onDuplicateKeyUpdate({
-                fastestLeave: diffMs,
-            })
-            .execute();
+            // Update the database
+            await db
+                .insertInto('guild_stats')
+                .values({
+                    guildId: member.guild.id,
+                    fastestLeave: diffMs,
+                })
+                .onDuplicateKeyUpdate({
+                    fastestLeave: diffMs,
+                })
+                .execute();
+        }
+
+        // This was the first leave
+        if (!guildStats?.fastestLeave) return newFastest();
+
+        // This wasn't a new record
+        if (guildStats?.fastestLeave && (diffMs > guildStats?.fastestLeave)) return;
+
+        // This was a new record
+        return newFastest();
     }
 
     @Slash({
