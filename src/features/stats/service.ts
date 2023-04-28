@@ -50,6 +50,8 @@ class Service {
     }
 
     async writeData() {
+        if (this.stats.length === 0) return;
+
         this.logger.info('Writing stats to database', {
             rows: this.stats.length,
         });
