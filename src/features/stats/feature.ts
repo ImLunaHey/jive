@@ -26,7 +26,7 @@ export class Feature {
 
         this.logger.info('Backfilling members for guilds', {
             guildCount: client.guilds.cache.size,
-        })
+        });
 
         // Loop through all the guilds we have
         for (const [, guild] of client.guilds.cache) {
@@ -35,6 +35,15 @@ export class Feature {
                 .select(db.fn.count<number>('id').as('memberCount'))
                 .where('id', '=', guild.id)
                 .executeTakeFirst();
+
+            // Fetch all the guild members for this guild
+            await guild.members.fetch();
+
+            this.logger.info('Backfilling members for guild', {
+                guildId: guild.id,
+                memberCount: guild.memberCount,
+                membersMissing: guild.memberCount - (guildMembers?.memberCount ?? 0),
+            });
 
             // If this server has all it's members added then skip it
             if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
