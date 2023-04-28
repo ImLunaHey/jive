@@ -2,8 +2,8 @@ import { db } from '@app/common/database';
 import { getDate } from '@app/common/get-date';
 import { service } from '@app/features/stats/service';
 import { globalLogger } from '@app/logger';
-import { CommandInteraction } from 'discord.js';
-import { type ArgsOf, Discord, On, Slash } from 'discordx';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
+import { type ArgsOf, Discord, On, Slash, ButtonComponent } from 'discordx';
 import { outdent } from 'outdent';
 
 @Discord()
@@ -17,7 +17,7 @@ export class Feature {
     @On({
         event: 'messageCreate'
     })
-    onMessageCreate([message]: ArgsOf<'messageCreate'>) {
+    async onMessageCreate([message]: ArgsOf<'messageCreate'>) {
         if (!message.guild?.id) return;
 
         this.logger.info('New message', {
@@ -26,7 +26,130 @@ export class Feature {
         });
 
         // Record a new message happened
-        service.newMessage(message);
+        await service.newMessage(message);
+    }
+
+    @Slash({
+        name: 'opt-in',
+        description: 'Opt into stats collection.',
+    })
+    async optIn(
+        interaction: CommandInteraction,
+    ) {
+        // Show the bot thinking
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
+
+        // Mark that this user opted into stats collection
+        await db
+            .updateTable('guild_members')
+            .set({
+                statsOptedIn: true,
+            })
+            .where('id', '=', interaction.id)
+            .where('guildId', '=', interaction.guildId)
+            .execute();
+
+        // Tell the user that we've enabled stats for them.
+        await interaction.editReply({
+            embeds: [{
+                title: 'Stats collection',
+                description: outdent`
+                    We're now collecting stats about you. 📊
+
+                    Thanks for opting in.
+                `,
+            }]
+        });
+    }
+
+    @Slash({
+        name: 'opt-out',
+        description: 'Opt out of stats collection.',
+    })
+    async optOut(
+        interaction: CommandInteraction,
+    ) {
+        // Show the bot thinking
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
+
+        // Ask the user if they're sure they want to opt-out.
+        await interaction.editReply({
+            embeds: [{
+                title: 'Stats collection',
+                description: outdent`
+                    Are you sure you want to opt-out? 📊
+
+                    This will disable stats collection from now on and delete all your existing stats.
+                `,
+            }],
+            components: [
+                new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents([
+                        new ButtonBuilder()
+                            .setCustomId('true')
+                            .setLabel('Yes')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId('false')
+                            .setLabel('No')
+                            .setStyle(ButtonStyle.Secondary)
+                    ])
+            ]
+        });
+    }
+
+    @ButtonComponent({
+        id: 'opt-out-confirmation'
+    })
+    async optOutConfirmation(
+        interaction: ButtonInteraction,
+    ) {
+        // Show the bot thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        // Check if they pressed yes/no
+        const optingOut = interaction.customId === 'true';
+
+        // If they cancelled then let them know nothing happened
+        if (!optingOut) {
+            await interaction.update({
+                embeds: [{
+                    title: 'Stats collection',
+                    description: outdent`
+                        You hit \`no\`. 📊
+                    `,
+                }]
+            });
+
+            return;
+        }
+
+        // Mark that this user opted into stats collection
+        await db
+            .updateTable('guild_members')
+            .set({
+                statsOptedIn: false,
+            })
+            .where('id', '=', interaction.id)
+            .where('guildId', '=', interaction.guildId)
+            .execute();
+
+        // Delete all existing stats about the user
+        await db
+            .deleteFrom('guild_member_stats')
+            .where('memberId', '=', interaction.user.id)
+            .execute();
+
+        // Tell the user that we've disabled stats
+        // and removed all existing stats for them.
+        await interaction.update({
+            embeds: [{
+                title: 'Stats collection',
+                description: outdent`
+                    We've deleted all existing stats for you and are no longer collecting stats about you. 📊
+                `,
+            }]
+        });
     }
 
     @Slash({

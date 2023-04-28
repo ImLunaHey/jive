@@ -8,7 +8,8 @@
     "test": "dotenv -e .env.test -- npx jest --detectOpenHandles",
     "coverage": "npm run test -- --coverage",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "create:migration": "touch \"./src/migrations/$(node -e 'console.log(new Date().getTime())').ts\""
   },
   "type": "module",
   "dependencies": {

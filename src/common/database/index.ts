@@ -106,6 +106,7 @@ export type Guild = {
 export type GuildMember = {
     id: ColumnType<string, string, never>;
     guildId: ColumnType<string, string, never>;
+
     xp: ColumnType<number, number | undefined, number>;
     coins: ColumnType<number, number | undefined, number>;
     health: ColumnType<number, number | undefined, number>;
@@ -131,6 +132,9 @@ export type GuildMember = {
     performing: ColumnType<number, number | undefined, number>;
     cooking: ColumnType<number, number | undefined, number>;
     encounterId: string | null;
+
+    // Should we capture stats for this user
+    statsOptedIn: boolean;
 };
 export type Initiative = {
     id: string;
@@ -241,6 +245,13 @@ export type ChannelStat = {
     date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
     count: number;
 };
+export type GuildMemberStat = {
+    memberId: ColumnType<string, string, never>;
+    guildId: ColumnType<string, string, never>;
+    hour: ColumnType<number, number, never>;
+    date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
+    count: number;
+};
 export type Welcome = {
     id: string;
     guildId: ColumnType<string, string, never>;
@@ -269,6 +280,7 @@ export type Database = {
     encounters: Encounter;
     extra_messages: ExtraMessage;
     guild_members: GuildMember;
+    guild_member_stats: GuildMemberStat;
     guilds: Guild;
     initiatives: Initiative;
     invite_tracking: InviteTracking;
