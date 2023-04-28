@@ -129,19 +129,19 @@ export class Feature {
                 .insertInto('guild_stats')
                 .values({
                     guildId: guildMember.guild.id,
-                    fastestLeave: diffInSeconds,
+                    fastestLeave: Math.floor(diffInMilliseconds / 1_000),
                 })
                 .onDuplicateKeyUpdate({
-                    fastestLeave: diffInSeconds,
+                    fastestLeave: Math.floor(diffInMilliseconds / 1_000),
                 })
                 .execute();
         }
 
         // This was the first leave
-        if (!guildStats?.fastestLeave) return newFastest();
+        if (guildStats?.fastestLeave === undefined) return newFastest();
 
         // This wasn't a new record
-        if (guildStats?.fastestLeave && (diffInSeconds > guildStats?.fastestLeave)) return;
+        if (guildStats?.fastestLeave && (Math.floor(diffInMilliseconds / 1_000) >= guildStats?.fastestLeave)) return;
 
         // This was a new record
         return newFastest();
