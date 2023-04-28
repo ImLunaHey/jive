@@ -270,7 +270,7 @@ export type Database = {
     guild_members: GuildMember;
     initiatives: Initiative;
     invites: Invite;
-    invite_trackings: InviteTracking;
+    invite_tracking: InviteTracking;
     items: Item;
     item_templates: ItemTemplate;
     leveling: Leveling;

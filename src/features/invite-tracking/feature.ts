@@ -74,7 +74,7 @@ export class Feature {
 
         // Get the invite tracking settings
         const inviteTracking = await db
-            .selectFrom('invite_trackings')
+            .selectFrom('invite_tracking')
             .select('channelId')
             .where('guildId', '=', member.guild.id)
             .executeTakeFirst();
