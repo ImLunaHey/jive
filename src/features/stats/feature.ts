@@ -18,6 +18,36 @@ export class Feature {
     }
 
     @On({
+        event: 'ready',
+    })
+    async ready() {
+        for (const [, guild] of client.guilds.cache) {
+            const guildMembers = await db
+                .selectFrom('guild_members')
+                .select(db.fn.count<number>('id').as('memberCount'))
+                .where('id', '=', guild.id)
+                .executeTakeFirst();
+
+            // If this server has all it's members added then skip it
+            if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
+
+            // For each guild member record their joined timestamp
+            for (const [, member] of guild.members.cache)
+                await db
+                    .insertInto('guild_members')
+                    .values({
+                        id: member.id,
+                        guildId: member.guild.id,
+                        joinedTimestamp: new Date().getTime() / 1_000,
+                    })
+                    .onDuplicateKeyUpdate({
+                        joinedTimestamp: new Date().getTime() / 1_000,
+                    })
+                    .execute();
+        }
+    }
+
+    @On({
         event: 'messageCreate',
     })
     async onMessageCreate([message]: ArgsOf<'messageCreate'>) {
@@ -31,15 +61,6 @@ export class Feature {
         // Record a new message happened
         await service.newMessage(message);
     }
-
-    // @On({
-    //     event: 'messageReactionAdd',
-    // })
-    // onMessageReactionAdd(
-    //     [reaction, user]: ArgsOf<'messageReactionAdd'>
-    // ) {
-
-    // }
 
     @On({
         event: 'guildMemberAdd',
