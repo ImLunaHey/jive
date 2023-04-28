@@ -296,7 +296,13 @@ export class Feature {
             .where('date', '=', getDate())
             .groupBy('channelId')
             .orderBy('totalCount', 'desc')
-            .execute();
+            .execute()
+            .then(channels => {
+                // Only show public channels
+                return channels.filter(channel => {
+                    return interaction.guild?.channels.resolve(channel.channelId)?.permissionsFor(interaction.guild.id)?.has('ViewChannel');
+                });
+            });
 
         // Get the most active members for today
         const mostActiveMembers = await db
