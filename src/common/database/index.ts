@@ -252,6 +252,10 @@ export type GuildMemberStat = {
     date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
     count: number;
 };
+export type GuildStat = {
+    guildId: ColumnType<string, string, never>;
+    fastestLeave: number;
+};
 export type Welcome = {
     id: string;
     guildId: ColumnType<string, string, never>;
@@ -282,6 +286,7 @@ export type Database = {
     guild_members: GuildMember;
     guild_member_stats: GuildMemberStat;
     guilds: Guild;
+    guild_stats: GuildStat;
     initiatives: Initiative;
     invite_tracking: InviteTracking;
     invites: Invite;

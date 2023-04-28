@@ -1,8 +1,10 @@
+import { client } from '@app/client';
 import { db } from '@app/common/database';
 import { getDate } from '@app/common/get-date';
+import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, TextChannel } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -27,6 +29,62 @@ export class Feature {
 
         // Record a new message happened
         await service.newMessage(message);
+    }
+
+    @On({
+        event: 'guildMemberRemove'
+    })
+    async guildMemberRemove(
+        [member]: ArgsOf<'guildMemberRemove'>
+    ) {
+        // If we don't know when they joined just bail
+        if (!member.joinedTimestamp) return;
+
+        // Check how long they were here in ms
+        const diffMs = new Date().getTime() - member.joinedTimestamp;
+
+        // Get the current fastest leave time
+        const guildStats = await db
+            .selectFrom('guild_stats')
+            .select('fastestLeave')
+            .where('guildId', '=', member.guild.id)
+            .executeTakeFirst();
+
+        // This wasn't a new record
+        if (!guildStats?.fastestLeave || (diffMs > guildStats?.fastestLeave)) return;
+
+        // Post that we have a new fastest
+        const channel = client.channels.resolve('957109896313184316') as TextChannel;
+        await channel.send({
+            embeds: [{
+                title: 'New leave record! 🥇',
+                fields: [{
+                    name: 'Name',
+                    value: member.displayName,
+                    inline: true,
+                }, {
+                    name: 'Account Created',
+                    value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                    inline: true,
+                }, {
+                    name: 'Time here',
+                    value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp)) : 'Unknown',
+                    inline: true,
+                }]
+            }]
+        });
+
+        // Update the time if it's faster
+        await db
+            .insertInto('guild_stats')
+            .values({
+                guildId: member.guild.id,
+                fastestLeave: 0,
+            })
+            .onDuplicateKeyUpdate({
+                fastestLeave: diffMs,
+            })
+            .execute();
     }
 
     @Slash({
