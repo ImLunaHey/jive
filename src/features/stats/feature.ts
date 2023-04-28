@@ -86,11 +86,11 @@ export class Feature {
                 new ActionRowBuilder<ButtonBuilder>()
                     .addComponents([
                         new ButtonBuilder()
-                            .setCustomId('true')
+                            .setCustomId('opt-out-yes')
                             .setLabel('Yes')
-                            .setStyle(ButtonStyle.Secondary),
+                            .setStyle(ButtonStyle.Danger),
                         new ButtonBuilder()
-                            .setCustomId('false')
+                            .setCustomId('opt-out-no')
                             .setLabel('No')
                             .setStyle(ButtonStyle.Secondary)
                     ])
@@ -99,30 +99,33 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: 'opt-out-confirmation'
+        id: 'opt-out-no'
+    })
+    async optOutNo(
+        interaction: ButtonInteraction,
+    ) {
+        // Show the bot thinking
+        if (!interaction.deferred) await interaction.deferUpdate();
+
+        // Let them know nothing happened
+        await interaction.update({
+            embeds: [{
+                title: 'Stats collection',
+                description: outdent`
+                        You hit \`no\`. 📊
+                    `,
+            }]
+        });
+    }
+
+    @ButtonComponent({
+        id: 'opt-out-yes'
     })
     async optOutConfirmation(
         interaction: ButtonInteraction,
     ) {
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferUpdate();
-
-        // Check if they pressed yes/no
-        const optingOut = interaction.customId === 'true';
-
-        // If they cancelled then let them know nothing happened
-        if (!optingOut) {
-            await interaction.update({
-                embeds: [{
-                    title: 'Stats collection',
-                    description: outdent`
-                        You hit \`no\`. 📊
-                    `,
-                }]
-            });
-
-            return;
-        }
 
         // Mark that this user opted into stats collection
         await db
