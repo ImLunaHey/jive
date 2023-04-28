@@ -78,8 +78,21 @@ export class Feature {
         // If we don't have a joined timestamp bail
         if (!member || !member.joinedTimestamp) return;
 
+        // Get a new Date object for the timestamp
+        const joinedTimestamp = new Date(member.joinedTimestamp * 1_000);
+
         // Check how long they were here in seconds
-        const diffInSeconds = (new Date().getTime() / 1_000) - member.joinedTimestamp;
+        const diffInMilliseconds = new Date().getTime() - joinedTimestamp.getTime();
+
+        this.logger.info('Member left the server', {
+            memberId: guildMember.id,
+            guildId: guildMember.guild.id,
+            joinedTimestamp: member.joinedTimestamp,
+            diffInMilliseconds,
+        });
+
+        // Somehow their join timestamp was ahead of the current time?
+        if (diffInMilliseconds <= 0) return;
 
         // Get the current fastest leave time
         const guildStats = await db
@@ -104,7 +117,7 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Time here',
-                        value: member.joinedTimestamp ? timeLength(new Date(member.joinedTimestamp * 1_000)) : 'Unknown',
+                        value: diffInMilliseconds ? timeLength(joinedTimestamp) : 'Unknown',
                         inline: true,
                     }],
                     color: Colors.Blurple,
