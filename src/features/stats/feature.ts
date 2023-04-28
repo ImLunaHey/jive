@@ -69,8 +69,28 @@ export class Feature {
     async optOut(
         interaction: CommandInteraction,
     ) {
+        // Only allow this in guilds
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
+
+        // Check if the user is already opted-in
+        const isOptedIn = await service.isMemberOptedIn(interaction.guild?.id, interaction.user.id);
+
+        // Tell the member they're not opted in
+        if (!isOptedIn) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Stats collection',
+                    description: outdent`
+                        You're not opted in. 📊
+                    `,
+                }],
+            });
+
+            return;
+        }
 
         // Ask the user if they're sure they want to opt-out.
         await interaction.editReply({
