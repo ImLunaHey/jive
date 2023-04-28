@@ -21,23 +21,29 @@ export class Feature {
         event: 'messageCreate'
     })
     onMessageCreate([message]: ArgsOf<'messageCreate'>) {
-        const guildId = message.guild?.id;
-        if (!guildId) return;
+        try {
+            const guildId = message.guild?.id;
+            if (!guildId) return;
 
-        const channelId = message.channel.id;
-        const hour = new Date().getHours();
-        const existingStatIndex = this.stats.findIndex(stat => stat.guildId === guildId && stat.channelId === channelId && stat.hour === hour);
-        if (existingStatIndex === undefined) {
-            this.stats.push({
-                guildId,
-                channelId,
-                hour,
-                count: 1,
+            const channelId = message.channel.id;
+            const hour = new Date().getHours();
+            const existingStatIndex = this.stats.findIndex(stat => stat.guildId === guildId && stat.channelId === channelId && stat.hour === hour);
+            if (existingStatIndex === undefined) {
+                this.stats.push({
+                    guildId,
+                    channelId,
+                    hour,
+                    count: 1,
+                });
+                return;
+            }
+
+            this.stats[existingStatIndex].count += 1;
+        } catch (error: unknown) {
+            this.logger.error('Failed when recording stats', {
+                error
             });
-            return;
         }
-
-        this.stats[existingStatIndex].count += 1;
     }
 
     @Cron.PreventOverlap
