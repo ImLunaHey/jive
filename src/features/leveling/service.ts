@@ -56,7 +56,7 @@ class Service {
                 id: userId,
                 guildId: guild.id,
                 xp,
-                joinedTimestamp: new Date().getTime(),
+                joinedTimestamp: new Date().getTime() / 1_000,
             })
             .onDuplicateKeyUpdate(eb => ({
                 xp: eb.bxp('xp', '+', xp)

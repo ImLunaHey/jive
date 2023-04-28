@@ -53,10 +53,10 @@ export class Feature {
             .values({
                 id: member.id,
                 guildId: member.guild.id,
-                joinedTimestamp: new Date().getTime(),
+                joinedTimestamp: new Date().getTime() / 1_000,
             })
             .onDuplicateKeyUpdate({
-                joinedTimestamp: new Date().getTime(),
+                joinedTimestamp: new Date().getTime() / 1_000,
             })
             .execute();
     }
@@ -76,10 +76,13 @@ export class Feature {
             .executeTakeFirst();
 
         // Get the join timestamp
-        const joinedTimestamp = guildMember.joinedTimestamp ?? member?.joinedTimestamp ?? 0;
+        const joinedTimestamp = guildMember.joinedTimestamp ?? member?.joinedTimestamp;
+
+        // If we don't have a joined timestamp bail
+        if (!joinedTimestamp) return;
 
         // Check how long they were here in ms
-        const diffMs = new Date().getTime() - joinedTimestamp;
+        const diffInSeconds = (new Date().getTime() / 1_000) - joinedTimestamp;
 
         // Get the current fastest leave time
         const guildStats = await db
@@ -104,7 +107,7 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Time here',
-                        value: joinedTimestamp ? timeLength(new Date(joinedTimestamp)) : 'Unknown',
+                        value: joinedTimestamp ? timeLength(new Date(joinedTimestamp * 1_000)) : 'Unknown',
                         inline: true,
                     }],
                     color: Colors.Blurple,
@@ -116,10 +119,10 @@ export class Feature {
                 .insertInto('guild_stats')
                 .values({
                     guildId: guildMember.guild.id,
-                    fastestLeave: diffMs,
+                    fastestLeave: diffInSeconds,
                 })
                 .onDuplicateKeyUpdate({
-                    fastestLeave: diffMs,
+                    fastestLeave: diffInSeconds,
                 })
                 .execute();
         }
@@ -128,7 +131,7 @@ export class Feature {
         if (!guildStats?.fastestLeave) return newFastest();
 
         // This wasn't a new record
-        if (guildStats?.fastestLeave && (diffMs > guildStats?.fastestLeave)) return;
+        if (guildStats?.fastestLeave && (diffInSeconds > guildStats?.fastestLeave)) return;
 
         // This was a new record
         return newFastest();
@@ -171,7 +174,7 @@ export class Feature {
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: true,
-                joinedTimestamp: new Date().getTime(),
+                joinedTimestamp: new Date().getTime() / 1_000,
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: true,
@@ -287,7 +290,7 @@ export class Feature {
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: true,
-                joinedTimestamp: new Date().getTime(),
+                joinedTimestamp: new Date().getTime() / 1_000,
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: false,

@@ -21,7 +21,7 @@ const createGuildMember = async (guildId: string, userId: string) => {
         .values({
             id: userId,
             guildId,
-            joinedTimestamp: new Date().getTime(),
+            joinedTimestamp: new Date().getTime() / 1_000,
         })
         .execute();
 };

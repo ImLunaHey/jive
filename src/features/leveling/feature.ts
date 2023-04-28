@@ -226,7 +226,7 @@ export class Feature {
                         id: user.id,
                         guildId: interaction.guild.id,
                         xp: user.xp.totalXp,
-                        joinedTimestamp: new Date().getTime(),
+                        joinedTimestamp: new Date().getTime() / 1_000,
                     })
                     .onDuplicateKeyUpdate({
                         xp: user.xp.totalXp
