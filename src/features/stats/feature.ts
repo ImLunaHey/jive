@@ -168,17 +168,23 @@ export class Feature {
     async optOutConfirmation(
         interaction: ButtonInteraction,
     ) {
+        // Only allow this in guilds
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Mark that this user opted into stats collection
         await db
-            .updateTable('guild_members')
-            .set({
+            .insertInto('guild_members')
+            .values({
+                id: interaction.user.id,
+                guildId: interaction.guild.id,
+                statsOptedIn: true,
+            })
+            .onDuplicateKeyUpdate({
                 statsOptedIn: false,
             })
-            .where('id', '=', interaction.id)
-            .where('guildId', '=', interaction.guildId)
             .execute();
 
         // Delete all existing stats about the user
