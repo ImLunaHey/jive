@@ -61,12 +61,15 @@ export class Feature {
 
         // Mark that this user opted into stats collection
         await db
-            .updateTable('guild_members')
-            .set({
+            .insertInto('guild_members')
+            .values({
+                id: interaction.user.id,
+                guildId: interaction.guild.id,
                 statsOptedIn: true,
             })
-            .where('id', '=', interaction.id)
-            .where('guildId', '=', interaction.guildId)
+            .onDuplicateKeyUpdate({
+                statsOptedIn: true,
+            })
             .execute();
 
         // Tell the user that we've enabled stats for them.
@@ -243,7 +246,7 @@ export class Feature {
             }, {
                 title: 'Most active members today',
                 description: outdent`
-                    ${mostActiveMembers.map(member => `<#${member.memberId}> - ${member.totalCount} messages`).join('\n')}
+                    ${mostActiveMembers.map(member => `<@${member.memberId}> - ${member.totalCount} messages`).join('\n')}
 
                     Use \`/opt-in\` to opt into stats collection.
                 `
