@@ -197,12 +197,29 @@ export class Feature {
             .orderBy('totalCount', 'desc')
             .execute();
 
+        // Get the most active members for today
+        const mostActiveMembers = await db
+            .selectFrom('guild_member_stats')
+            .select('memberId')
+            .select(db.fn.sum<number>('count').as('totalCount'))
+            .where('date', '=', getDate())
+            .groupBy('memberId')
+            .orderBy('totalCount', 'desc')
+            .execute();
+
         // Reply with the stats
         await interaction.editReply({
             embeds: [{
                 title: 'Most active channels today',
                 description: outdent`
                     ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
+                `
+            }, {
+                title: 'Most active members today',
+                description: outdent`
+                    ${mostActiveMembers.map(member => `<#${member.memberId}> - ${member.totalCount} messages`).join('\n')}
+
+                    Use \`/opt-in\` to opt into stats collection.
                 `
             }]
         });
