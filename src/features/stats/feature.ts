@@ -5,7 +5,7 @@ import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
 import { globalLogger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, Colors } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
@@ -106,7 +106,8 @@ export class Feature {
                         name: 'Time here',
                         value: joinedTimestamp ? timeLength(new Date(joinedTimestamp)) : 'Unknown',
                         inline: true,
-                    }]
+                    }],
+                    color: Colors.Blurple,
                 }]
             });
 
