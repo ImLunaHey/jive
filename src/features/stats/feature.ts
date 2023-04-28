@@ -54,7 +54,7 @@ export class Feature {
             embeds: [{
                 title: 'Most active channels today',
                 description: outdent`
-                    ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`)}
+                    ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
                 `
             }]
         });
