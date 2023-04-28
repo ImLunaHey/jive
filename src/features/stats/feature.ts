@@ -47,6 +47,9 @@ export class Feature {
     }
 
     async writeData() {
+        this.logger.info('Writing stats to database', {
+            rows: this.stats.length,
+        });
         for (const data of this.stats) {
             delete this.stats[this.stats.indexOf(data)];
             await db
