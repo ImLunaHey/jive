@@ -1,4 +1,5 @@
 import { db } from '@app/common/database';
+import { getDate } from '@app/common/get-date';
 import { globalLogger } from '@app/logger';
 import type { Message } from 'discord.js';
 
@@ -13,14 +14,6 @@ class Service {
         count: number;
     }[] = [];
 
-    getDate(): `${number}${number}${number}${number}-${number}${number}-${number}${number}` {
-        const today = new Date();
-        const year = today.getFullYear().toString() as `${number}${number}${number}${number}`;
-        const month = String(today.getMonth() + 1).padStart(2, '0') as `${number}${number}`;
-        const day = String(today.getDate()).padStart(2, '0') as `${number}${number}`;
-        return `${year}-${month}-${day}`;
-    }
-
     newMessage(message: Message) {
         try {
             const guildId = message.guild?.id;
@@ -33,7 +26,7 @@ class Service {
                 this.stats.push({
                     guildId,
                     channelId,
-                    date: this.getDate(),
+                    date: getDate(),
                     hour,
                     count: 1,
                 });
