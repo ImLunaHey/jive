@@ -9,8 +9,7 @@ export const globalLogger = winston.createLogger({
     level: 'info',
     format: winston.format.json({
         replacer(_key: string, value: unknown) {
-            if (value instanceof Error) return serializeError(value);
-            return value;
+            return serializeError(value);
         },
     }),
     defaultMeta: {
