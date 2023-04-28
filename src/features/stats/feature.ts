@@ -21,6 +21,14 @@ export class Feature {
         event: 'ready',
     })
     async ready() {
+        // Fetch all the guilds were in
+        await client.guilds.fetch();
+
+        this.logger.info('Backfilling members for guilds', {
+            guildCount: client.guilds.cache.size,
+        })
+
+        // Loop through all the guilds we have
         for (const [, guild] of client.guilds.cache) {
             const guildMembers = await db
                 .selectFrom('guild_members')
