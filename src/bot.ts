@@ -29,6 +29,7 @@ export const start = async () => {
     await import('./features/reddit');
     await import('./features/setup');
     await import('./features/starboard');
+    await import('./features/stats');
     await import('./features/void');
     await import('./features/welcome');
 

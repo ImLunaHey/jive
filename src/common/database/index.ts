@@ -234,6 +234,12 @@ export type Starboard = {
     allowedReactions: string[];
     triggerChannelId: string | null;
 };
+export type ChannelStat = {
+    guildId: ColumnType<string, string, never>;
+    channelId: ColumnType<string, string, never>;
+    hour: ColumnType<number, number, never>;
+    count: number;
+};
 export type Welcome = {
     id: string;
     guildId: ColumnType<string, string, never>;
@@ -273,6 +279,7 @@ export type Database = {
     settings: Settings;
     shops: Shop;
     starboards: Starboard;
+    channel_stats: ChannelStat;
     welcomes: Welcome;
 };
 
