@@ -74,12 +74,12 @@ export class Feature {
             }]
         });
 
-        // Update the time if it's faster
+        // Update the database
         await db
             .insertInto('guild_stats')
             .values({
                 guildId: member.guild.id,
-                fastestLeave: 0,
+                fastestLeave: diffMs,
             })
             .onDuplicateKeyUpdate({
                 fastestLeave: diffMs,
