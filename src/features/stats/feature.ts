@@ -27,7 +27,7 @@ export class Feature {
         const channelId = message.channel.id;
         const hour = new Date().getHours();
         const existingStatIndex = this.stats.findIndex(stat => stat.guildId === guildId && stat.channelId === channelId && stat.hour === hour);
-        if (!existingStatIndex) {
+        if (existingStatIndex === undefined) {
             this.stats.push({
                 guildId,
                 channelId,
