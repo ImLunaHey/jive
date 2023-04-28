@@ -108,7 +108,7 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Let them know nothing happened
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Stats collection',
                 description: outdent`
@@ -145,7 +145,7 @@ export class Feature {
 
         // Tell the user that we've disabled stats
         // and removed all existing stats for them.
-        await interaction.update({
+        await interaction.editReply({
             embeds: [{
                 title: 'Stats collection',
                 description: outdent`
