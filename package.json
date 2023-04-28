@@ -33,6 +33,7 @@
     "discordx": "^11.7.6",
     "dotenv": "^16.0.3",
     "dotenv-cli": "^7.2.1",
+    "error-serializer": "^5.1.0",
     "eslint": "^8.39.0",
     "eta": "^2.0.1",
     "handlebars": "^4.7.7",
