@@ -36,8 +36,28 @@ export class Feature {
     async optIn(
         interaction: CommandInteraction,
     ) {
+        // Only allow this in guilds
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
+
+        // Check if the user is already opted-in
+        const isOptedIn = await service.isMemberOptedIn(interaction.guild?.id, interaction.user.id);
+
+        // Tell the member they're already opted in.
+        if (isOptedIn) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Stats collection',
+                    description: outdent`
+                        You're already opted in. 📊
+                    `,
+                }],
+            });
+
+            return;
+        }
 
         // Mark that this user opted into stats collection
         await db
