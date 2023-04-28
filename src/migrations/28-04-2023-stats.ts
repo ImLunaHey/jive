@@ -12,6 +12,7 @@ export const up = async (db: Kysely<unknown>) => {
         .addColumn('date', 'date', col => col.notNull())
         .addColumn('hour', 'integer', col => col.notNull())
         .addColumn('count', 'integer', col => col.notNull())
+        .addUniqueConstraint('guild_id_channel_id_date_hour_unique', ['guild_id', 'channel_id', 'date', 'hour'])
         .execute();
 };
 

@@ -54,8 +54,9 @@ class Service {
             rows: this.stats.length,
         });
         try {
-            for (const data of this.stats) {
-                delete this.stats[this.stats.indexOf(data)];
+            const stats = structuredClone(this.stats);
+            this.stats = [];
+            for (const data of stats) {
                 await db
                     .insertInto('channel_stats')
                     .values({
