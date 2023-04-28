@@ -21,6 +21,13 @@ export class Feature {
         event: 'messageCreate'
     })
     onMessageCreate([message]: ArgsOf<'messageCreate'>) {
+        if (!message.guild?.id) return;
+
+        this.logger.info('New message', {
+            guildId: message.guild?.id,
+            channelId: message.channel.id,
+        });
+
         try {
             const guildId = message.guild?.id;
             if (!guildId) return;
@@ -40,7 +47,7 @@ export class Feature {
 
             this.stats[existingStatIndex].count += 1;
         } catch (error: unknown) {
-            this.logger.error('Failed when recording stats', {
+            this.logger.error('Failed recording stats', {
                 error
             });
         }
@@ -56,20 +63,26 @@ export class Feature {
         this.logger.info('Writing stats to database', {
             rows: this.stats.length,
         });
-        for (const data of this.stats) {
-            delete this.stats[this.stats.indexOf(data)];
-            await db
-                .insertInto('channel_stats')
-                .values({
-                    guildId: data.guildId,
-                    channelId: data.channelId,
-                    count: data.count,
-                    hour: data.hour,
-                })
-                .onDuplicateKeyUpdate(eb => ({
-                    count: eb.bxp('count', '+', data.count)
-                }))
-                .execute();
+        try {
+            for (const data of this.stats) {
+                delete this.stats[this.stats.indexOf(data)];
+                await db
+                    .insertInto('channel_stats')
+                    .values({
+                        guildId: data.guildId,
+                        channelId: data.channelId,
+                        count: data.count,
+                        hour: data.hour,
+                    })
+                    .onDuplicateKeyUpdate(eb => ({
+                        count: eb.bxp('count', '+', data.count)
+                    }))
+                    .execute();
+            }
+        } catch (error: unknown) {
+            this.logger.error('Failed writing stats to database', {
+                error
+            });
         }
     }
 }
