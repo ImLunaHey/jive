@@ -8,6 +8,7 @@ export const globalLogger = winston.createLogger({
     format: winston.format.json(),
     defaultMeta: {
         botName: pkg.name,
+        pid: process.pid,
     },
     transports: [],
 });

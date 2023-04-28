@@ -1,7 +1,7 @@
 import { db } from '@app/common/database';
 import { globalLogger } from '@app/logger';
 import { Cron, Expression } from '@reflet/cron';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
