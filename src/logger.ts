@@ -2,15 +2,21 @@ import winston from 'winston';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/axiom-node';
 import chalk from 'chalk';
 import * as pkg from '@app/../package.json';
+import { serializeError } from 'serialize-error';
 import { getCommitHash } from '@app/common/get-commit-hash';
 
 export const globalLogger = winston.createLogger({
     level: 'info',
-    format: winston.format.json(),
+    format: winston.format.json({
+        replacer(_key: string, value: unknown) {
+            if (value instanceof Error) return serializeError(value);
+            return value;
+        },
+    }),
     defaultMeta: {
         botName: pkg.name,
         pid: process.pid,
-        commitHash: getCommitHash()
+        commitHash: getCommitHash(),
     },
     transports: [],
 });
