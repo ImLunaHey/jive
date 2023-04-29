@@ -46,7 +46,7 @@ export class Feature {
             });
 
             // If this server has all it's members added then skip it
-            if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
+            // if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
 
             // For each guild member record their joined timestamp
             for (const [, member] of guild.members.cache)
@@ -55,10 +55,10 @@ export class Feature {
                     .values({
                         id: member.id,
                         guildId: member.guild.id,
-                        joinedTimestamp: new Date().getTime() / 1_000,
+                        joinedTimestamp: (member.joinedTimestamp ?? new Date().getTime()) / 1_000,
                     })
                     .onDuplicateKeyUpdate({
-                        joinedTimestamp: new Date().getTime() / 1_000,
+                        joinedTimestamp: (member.joinedTimestamp ?? new Date().getTime()),
                     })
                     .execute();
         }
