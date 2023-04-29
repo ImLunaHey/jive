@@ -1,4 +1,4 @@
-export const emojiBar = (value: number, options?: {
+export const emojiBar = (progress: number, options?: {
     bars?: {
         full: {
             start: string;
@@ -29,7 +29,7 @@ export const emojiBar = (value: number, options?: {
     const maxValue = options?.maxValue ?? 100;
     const size = options?.size ?? 5;
     const bar = [];
-    const full = Math.round(size * (value / maxValue > 1 ? 1 : value / maxValue));
+    const full = Math.round(size * (progress / maxValue > 1 ? 1 : progress / maxValue));
     const empty = size - full > 0 ? size - full : 0;
     for (let i = 1; i <= full; i++) bar.push(bars.full.bar);
     for (let i = 1; i <= empty; i++) bar.push(bars.empty.bar);

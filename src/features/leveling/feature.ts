@@ -1,4 +1,4 @@
-import type { GuildMember, VoiceChannel } from 'discord.js';
+import type { GuildMember, TextChannel, VoiceChannel } from 'discord.js';
 import { Colors } from 'discord.js';
 import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
@@ -158,6 +158,9 @@ export class Feature {
             await emojiServer.emojis.fetch(emojiId);
         }));
 
+        // Check if the bot has external emoji support
+        const externalEmojiSupport = (interaction.channel as TextChannel).permissionsFor(client.botId)?.has('UseExternalEmojis') ?? false;
+
         // Send the balance
         await interaction.editReply({
             embeds: [{
@@ -170,7 +173,7 @@ export class Feature {
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
                         **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress}%)
-                        ${emojiBar(levelProgress)}
+                        ${externalEmojiSupport ? emojiBar(levelProgress) : `**Progress**: ${levelProgress}/100`}
                     `,
                     inline: false,
                 }]
