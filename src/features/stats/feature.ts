@@ -43,10 +43,8 @@ export class Feature {
                 guildId: guild.id,
                 memberCount: guild.memberCount,
                 membersMissing: guild.memberCount - (guildMembers?.memberCount ?? 0),
+                membersExisting: guildMembers?.memberCount ?? 0,
             });
-
-            // If this server has all it's members added then skip it
-            if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
 
             // For each guild member record their joined timestamp
             for (const [, member] of guild.members.cache)

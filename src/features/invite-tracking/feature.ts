@@ -18,6 +18,10 @@ export class Feature {
         // Fetch all the guilds
         await client.guilds.fetch();
 
+        this.logger.info('Backfilling invites for guilds', {
+            guildCount: client.guilds.cache.size,
+        });
+
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
             if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) continue;
