@@ -143,7 +143,7 @@ export class Feature {
             return undefined;
         });
 
-        console.log({ guildInvitesBeforeUserJoined, guildInvitesNow, inviteUsed });
+        this.logger.info('Got invite data', { guildInvitesBeforeUserJoined, guildInvitesNow: guildInvitesNow.map(_ => ({ uses: _.uses, code: _.code })), inviteUsed });
 
         // Get the invite tracking settings
         const inviteTracking = await db
