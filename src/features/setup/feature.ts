@@ -9,6 +9,7 @@ import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
 import { db } from '@app/common/database';
 import { json } from '@app/common/json';
+import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {
@@ -16,6 +17,38 @@ export class Feature {
 
     constructor() {
         this.logger.info('Initialised');
+    }
+
+    @Slash({
+        name: 'privacy',
+        description: 'Read the privacy policy',
+    })
+    async privacy(
+        interaction: CommandInteraction,
+    ) {
+        // Only works in guilds
+        if (!interaction.guild?.id) return;
+
+        // Create the privacy policy embed
+        const embed = new EmbedBuilder()
+            .setColor('#0099ff')
+            .setTitle('Privacy Policy')
+            .setDescription('This Privacy Policy outlines the types of data we collect from users of our Discord bots and how we use, share, and protect that data.')
+            .addFields(
+                { name: 'Data Collection', value: 'Our Discord bots collect the following data from users:\n\nUser ID\nGuild ID\nJoined timestamp\nChannel message count (anonymous)\n\nIf a user chooses to opt-in, we also collect the following anonymous data:\n\nUser post count per hour' },
+                { name: 'Data Use', value: 'We use the collected data to generate analytics and statistics for our Discord bots. The data is used to identify trends and usage patterns, which help us improve the functionality and performance of our bots. We do not use the data for any other purposes.' },
+                { name: 'Data Sharing', value: 'We do not share any user data with third parties. The data we collect is used exclusively for our Discord bots.' },
+                { name: 'Data Protection', value: 'We take the security of user data seriously and have implemented measures to protect it. Our servers and databases are secured using industry-standard encryption and security protocols. Access to user data is limited to authorized personnel who require it for their job duties.' },
+                { name: 'Data Retention and Deletion', value: 'We retain user data for as long as necessary to provide our Discord bots\' services. If a user chooses to opt-out, we will delete all personal data associated with that user from our servers and databases.' },
+                { name: 'Contact Information', value: 'If you have any questions or concerns about our privacy policy or the data we collect, you may message ImLunaHey#2485 on Discord.' },
+                { name: 'Changes to Privacy Policy', value: 'We reserve the right to modify this privacy policy at any time without prior notice. Any changes will be reflected on this page.' },
+            );
+
+        // Send the privacy policy
+        await interaction.reply({
+            ephemeral: true,
+            embeds: [embed]
+        });
     }
 
     createToggleButton(id: FeatureId, name: string, enabled: boolean) {
