@@ -55,10 +55,10 @@ export class Feature {
                     .values({
                         id: member.id,
                         guildId: member.guild.id,
-                        joinedTimestamp: (member.joinedTimestamp ?? new Date().getTime()) / 1_000,
+                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? new Date().getTime()) / 1_000),
                     })
                     .onDuplicateKeyUpdate({
-                        joinedTimestamp: (member.joinedTimestamp ?? new Date().getTime()),
+                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? new Date().getTime()) / 1_000),
                     })
                     .execute();
         }
