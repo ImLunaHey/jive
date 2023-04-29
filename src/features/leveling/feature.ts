@@ -143,7 +143,9 @@ export class Feature {
         const levelProgress = levelService.getLevelProgress(user.xp);
 
         // Make sure we have the emojis cached
-        const emojiServer = client.guilds.cache.get('1083034561048481902');
+        if (!client.guilds.cache.get('1083034561048481902')) await client.guilds.fetch('1083034561048481902');
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const emojiServer = client.guilds.cache.get('1083034561048481902')!;
         await Promise.all([
             '1083768174383726673',
             '1083768215324340344',
@@ -152,8 +154,8 @@ export class Feature {
             '1083768196236050442',
             '1083768245489778798',
         ].map(async emojiId => {
-            if (emojiServer?.emojis.cache.has(emojiId)) return;
-            await emojiServer?.emojis.fetch(emojiId);
+            if (emojiServer.emojis.cache.has(emojiId)) return;
+            await emojiServer.emojis.fetch(emojiId);
         }));
 
         // Send the balance
