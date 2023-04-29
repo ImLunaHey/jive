@@ -23,7 +23,7 @@ export class Feature {
         });
 
         // Update the invite uses for all guilds
-        for (const guildId in client.guilds.cache) {
+        for (const [guildId] of client.guilds.cache) {
             if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) continue;
 
             // Get the guild
