@@ -1,7 +1,7 @@
 import { type ArgsOf, Discord, On } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { client } from '@app/client';
-import { ChannelType } from 'discord.js';
+import { ChannelType, Colors } from 'discord.js';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
 
@@ -42,6 +42,8 @@ export class Feature {
 
             // Update the invite uses
             for (const invite of invites?.values() ?? []) {
+                if (!invite.inviter?.id) continue;
+
                 // Update the invite uses
                 await db
                     .insertInto('invites')
@@ -49,6 +51,7 @@ export class Feature {
                         code: invite.code,
                         uses: invite.uses ?? 0,
                         guildId,
+                        memberId: invite.inviter?.id,
                     })
                     .onDuplicateKeyUpdate({
                         uses: invite.uses ?? 0,
@@ -68,6 +71,7 @@ export class Feature {
                         code: vanityData.code,
                         uses: vanityData.uses ?? 0,
                         guildId,
+                        memberId: guild.ownerId,
                     })
                     .execute();
             }
@@ -92,13 +96,14 @@ export class Feature {
                 code: newGuild.vanityURLCode,
                 uses: 0,
                 guildId: newGuild.id,
+                memberId: newGuild.ownerId,
             })
             .execute();
     }
 
     @On({ event: 'inviteCreate' })
     async inviteCreate([invite]: ArgsOf<'inviteCreate'>): Promise<void> {
-        if (!invite.guild?.id) return;
+        if (!invite.guild?.id || !invite.inviter?.id) return;
 
         // Update the invite uses
         await db
@@ -108,6 +113,7 @@ export class Feature {
                 code: invite.code,
                 uses: invite.uses ?? 0,
                 guildId: invite.guild.id,
+                memberId: invite.inviter.id,
             })
             .execute();
     }
@@ -159,7 +165,7 @@ export class Feature {
         const inviteTrackingChannel = member.guild.channels.cache.get(inviteTracking.channelId);
         if (inviteTrackingChannel?.type !== ChannelType.GuildText) return;
 
-        if (!inviteUsed) {
+        if (!inviteUsed || !inviteUsed.inviter?.id) {
             await inviteTrackingChannel?.send({
                 embeds: [{
                     title: 'Invite used',
@@ -169,18 +175,52 @@ export class Feature {
             return;
         }
 
+        // Update the invite uses
+        await db
+            .insertInto('invites')
+            .ignore()
+            .values({
+                code: inviteUsed.code,
+                uses: inviteUsed.uses ?? 1,
+                guildId: member.guild.id,
+                memberId: inviteUsed.inviter.id,
+            })
+            .onDuplicateKeyUpdate(eb => ({
+                uses: eb.bxp('uses', '+', 1),
+            }))
+            .execute();
+
+        // Get the person who made this invite
+        const inviter = inviteUsed.inviter?.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown';
+
+        // Get the total count of invites for this user
+        const totalInvites = await db
+            .selectFrom('invites')
+            .select(db.fn.sum('uses').as('uses'))
+            .where('memberId', '=', inviteUsed.inviter?.id)
+            .executeTakeFirst();
+
         // Post a message in the invite tracking channel
         await inviteTrackingChannel?.send({
             embeds: [{
                 title: 'Invite used',
-                description: `<@${member.id}> was invited by ${inviteUsed.inviter?.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown'}`,
+                description: `<@${member.id}> was invited by ${inviter} using \`${inviteUsed.code}\``,
                 fields: [
                     {
                         name: 'Uses',
                         value: inviteUsed.uses?.toString() ?? '1',
                         inline: true
-                    }
-                ]
+                    }, {
+                        name: 'Inviter',
+                        value: inviter,
+                        inline: true
+                    }, {
+                        name: 'Total invites',
+                        value: totalInvites?.uses.toString() ?? '1',
+                        inline: true
+                    },
+                ],
+                color: Colors.Green,
             }]
         });
     }
