@@ -9,7 +9,6 @@ import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
 import { db } from '@app/common/database';
 import { json } from '@app/common/json';
-import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {

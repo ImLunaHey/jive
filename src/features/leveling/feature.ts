@@ -1,4 +1,5 @@
 import type { GuildMember, VoiceChannel } from 'discord.js';
+import { Colors } from 'discord.js';
 import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
@@ -9,6 +10,7 @@ import { store } from '@app/store';
 import mee6LevelsApi from 'mee6-levels-api';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
+import { emojiBar } from '@app/common/emoji-bar';
 
 @Discord()
 export class Feature {
@@ -85,6 +87,79 @@ export class Feature {
             if (!usersInVC) store.setState({ usersInVC: new Map([[newState.guild.id, new Set(newState.id)]]) });
             else usersInVC.delete(newState.id);
         }
+    }
+
+    @Slash({
+        name: 'profile',
+        description: 'Check a profile',
+    })
+    async profile(
+        @SlashOption({
+            name: 'user',
+            description: 'The user to check',
+            required: false,
+            type: ApplicationCommandOptionType.User,
+        })
+        guildMember: GuildMember | undefined,
+        interaction: CommandInteraction
+    ) {
+        if (!interaction.guild?.id) return;
+
+        // Show the bot thinking
+        await interaction.deferReply({ ephemeral: false });
+
+        // Get the user's details
+        const user = await db
+            .selectFrom('guild_members')
+            .select('xp')
+            .where('id', '=', guildMember?.id ?? interaction.user.id)
+            .executeTakeFirst();
+        if (!user) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Profile',
+                    description: 'No profile found for this user.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // Check we have a user
+        const member = guildMember?.user ?? interaction.member?.user;
+        if (!member) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Profile',
+                    description: 'No profile found for this user.',
+                    color: Colors.Red,
+                }],
+            });
+            return;
+        }
+
+        // Get the level details
+        const currentLevelXp = levelService.getCurrentLevelXp(user.xp);
+        const levelProgress = levelService.getLevelProgress(user.xp);
+
+        // Send the balance
+        await interaction.editReply({
+            embeds: [{
+                author: {
+                    name: `${member.username}'s profile`,
+                    icon_url: guildMember?.avatarURL() ?? interaction.user.avatarURL() ?? undefined
+                },
+                fields: [{
+                    name: 'PROGRESS',
+                    value: outdent`
+                        **Level:** ${levelService.convertXpToLevel(user.xp)}
+                        **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress}%)
+                        ${emojiBar(levelProgress)}
+                    `,
+                    inline: false,
+                }]
+            }]
+        });
     }
 
     @Slash({
