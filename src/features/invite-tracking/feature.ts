@@ -15,28 +15,97 @@ export class Feature {
 
     @On({ event: 'ready' })
     async ready(): Promise<void> {
+        // Fetch all the guilds
         await client.guilds.fetch();
 
         // Update the invite uses for all guilds
         for (const guildId in client.guilds.cache) {
-            if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) return;
+            if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) continue;
+
+            // Get the guild
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) continue;
 
             // Fetch the invites
-            this.logger.debug(`Fetching invites for guild ${guildId}...`);
-            const invites = await client.guilds.cache.get(guildId)?.invites.fetch();
-            this.logger.debug(`Fetched ${invites?.size ?? 0} invites for guild ${guildId}`);
+            this.logger.debug('Fetching invites for guild', {
+                guildId,
+            });
+            const invites = await guild.invites.fetch();
+            this.logger.debug('Fetched invites for guild', {
+                guildId,
+                inviteCount: invites?.size ?? 0,
+            });
 
             // Update the invite uses
             for (const invite of invites?.values() ?? []) {
-                await this.setInviteUses(invite.guild?.id, invite.code, invite.uses ?? 1);
+                // Update the invite uses
+                await db
+                    .insertInto('invites')
+                    .values({
+                        code: invite.code,
+                        uses: invite.uses ?? 0,
+                        guildId,
+                    })
+                    .onDuplicateKeyUpdate({
+                        uses: invite.uses ?? 0,
+                    })
+                    .execute();
+            }
+
+            // Fetch the vanity URL
+            const vanityData = await guild.fetchVanityData();
+
+            // Update the invite uses
+            if (vanityData.code) {
+                await db
+                    .insertInto('invites')
+                    .ignore()
+                    .values({
+                        code: vanityData.code,
+                        uses: vanityData.uses ?? 0,
+                        guildId,
+                    })
+                    .execute();
             }
         }
     }
 
+    @On({ event: 'guildUpdate' })
+    async guildUpdate([oldGuild, newGuild]: ArgsOf<'guildUpdate'>) {
+        if (!await isFeatureEnabled('INVITE_TRACKING', newGuild.id)) return;
+
+        // If the url is the same skip
+        if (oldGuild.vanityURLCode === newGuild.vanityURLCode) return;
+
+        // If the url was removed skip
+        if (!newGuild.vanityURLCode) return;
+
+        // Update the invite uses
+        await db
+            .insertInto('invites')
+            .ignore()
+            .values({
+                code: newGuild.vanityURLCode,
+                uses: 0,
+                guildId: newGuild.id,
+            })
+            .execute();
+    }
+
     @On({ event: 'inviteCreate' })
     async inviteCreate([invite]: ArgsOf<'inviteCreate'>): Promise<void> {
+        if (!invite.guild?.id) return;
+
         // Update the invite uses
-        await this.setInviteUses(invite.guild?.id, invite.code, invite.uses ?? 1);
+        await db
+            .insertInto('invites')
+            .ignore()
+            .values({
+                code: invite.code,
+                uses: invite.uses ?? 0,
+                guildId: invite.guild.id,
+            })
+            .execute();
     }
 
     @On({ event: 'guildMemberAdd' })
@@ -52,25 +121,23 @@ export class Feature {
         // Fetch the invites after the user joined
         const guildInvitesNow = await member.guild.invites.fetch();
 
-        // Fetch the vanity invite data after the user joined
-        // const vanityData = await member.guild.fetchVanityData();
-
         // Find the invite code that was used
-        // TODO: Add support for vanity invites
-        const inviteCode = guildInvitesBeforeUserJoined.find((invite) => {
-            // // Check if the invite was a vanity invite
-            // if (invite.code === vanityData.code && vanityData.uses !== guildInvitesBeforeUserJoined.find((invite) => invite.code === vanityData.code)?.uses) return true;
-
-            // Check if the invite was a normal invite
-            const inviteAfterJoined = guildInvitesNow.find((inviteBefore) => inviteBefore.code === invite.code);
-            return inviteAfterJoined?.uses !== invite.uses;
+        const inviteCode = guildInvitesBeforeUserJoined.find(invite => {
+            const inviteAfterJoined = guildInvitesNow.find(inviteBefore => inviteBefore.code === invite.code);
+            return inviteAfterJoined?.uses !== invite.uses
         })?.code;
 
         // Find the invite that was used
-        const inviteUsed = guildInvitesNow.find((invite) => invite.code === inviteCode);
-
-        // Update the invite uses, skip if the invite is a DM invite
-        if (inviteUsed) await this.setInviteUses(inviteUsed.guild?.id, inviteUsed.code, inviteUsed.uses ?? 1);
+        const inviteUsed = guildInvitesNow.find(invite => invite.code === inviteCode) ?? await member.guild.fetchVanityData().then(newVanityData => {
+            if (!newVanityData.code) return undefined;
+            const oldVanityData = guildInvitesBeforeUserJoined.find(invite => invite.code === newVanityData.code);
+            if (oldVanityData && newVanityData.uses > oldVanityData?.uses) return {
+                code: newVanityData.code,
+                uses: newVanityData.uses,
+                inviter: member.guild.members.cache.get(member.guild.ownerId),
+            };
+            return undefined;
+        });
 
         // Get the invite tracking settings
         const inviteTracking = await db
@@ -93,44 +160,22 @@ export class Feature {
                     description: `<@${member.id}> joined using an unknown invite`,
                 }]
             });
-        } else {
-            // Post a message in the invite tracking channel
-            await inviteTrackingChannel?.send({
-                embeds: [{
-                    title: 'Invite used',
-                    description: `<@${member.id}> joined using invite ${inviteUsed.code}`,
-                    fields: [
-                        {
-                            name: 'Uses',
-                            value: inviteUsed.uses?.toString() ?? '1',
-                            inline: true
-                        },
-                        {
-                            name: 'Inviter',
-                            value: inviteUsed.inviter?.toString() ?? 'Unknown',
-                            inline: true
-                        }
-                    ]
-                }]
-            });
+            return;
         }
-    }
 
-    async setInviteUses(guildId: string | undefined, code: string, uses = 1) {
-        // Skip DM invites
-        if (!guildId) return;
-
-        // Update the invite uses
-        await db
-            .insertInto('invites')
-            .values({
-                code,
-                uses,
-                guildId,
-            })
-            .onDuplicateKeyUpdate({
-                uses,
-            })
-            .execute();
+        // Post a message in the invite tracking channel
+        await inviteTrackingChannel?.send({
+            embeds: [{
+                title: 'Invite used',
+                description: `<@${member.id}> was invited by ${inviteUsed.inviter?.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown'}`,
+                fields: [
+                    {
+                        name: 'Uses',
+                        value: inviteUsed.uses?.toString() ?? '1',
+                        inline: true
+                    }
+                ]
+            }]
+        });
     }
 }
