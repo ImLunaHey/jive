@@ -143,6 +143,8 @@ export class Feature {
             return undefined;
         });
 
+        console.log({ guildInvitesBeforeUserJoined, guildInvitesNow, inviteUsed });
+
         // Get the invite tracking settings
         const inviteTracking = await db
             .selectFrom('invite_tracking')
