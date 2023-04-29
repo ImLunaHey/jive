@@ -33,7 +33,7 @@ export class Feature {
             const guildMembers = await db
                 .selectFrom('guild_members')
                 .select(db.fn.count<number>('id').as('memberCount'))
-                .where('id', '=', guild.id)
+                .where('guildId', '=', guild.id)
                 .executeTakeFirst();
 
             // Fetch all the guild members for this guild
