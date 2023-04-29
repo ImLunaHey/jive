@@ -18,7 +18,7 @@ const check = async (feature: Feature, guildId?: string) => {
         .executeTakeFirst();
 
     try {
-        return settings?.featuresEnabled.includes(feature);
+        return settings?.featuresEnabled.includes(feature) ?? false;
     } catch (error) {
         globalLogger.error(error);
 
