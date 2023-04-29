@@ -40,7 +40,7 @@ export class Feature {
                 { name: 'Data Sharing', value: 'We do not share any user data with third parties. The data we collect is used exclusively for our Discord bots.' },
                 { name: 'Data Protection', value: 'We take the security of user data seriously and have implemented measures to protect it. Our servers and databases are secured using industry-standard encryption and security protocols. Access to user data is limited to authorized personnel who require it for their job duties.' },
                 { name: 'Data Retention and Deletion', value: 'We retain user data for as long as necessary to provide our Discord bots\' services. If a user chooses to opt-out, we will delete all personal data associated with that user from our servers and databases.' },
-                { name: 'Contact Information', value: 'If you have any questions or concerns about our privacy policy or the data we collect, you may message ImLunaHey#2485 on Discord.' },
+                { name: 'Contact Information', value: 'If you have any questions or concerns about our privacy policy or the data we collect, you may message <@784365843810222080> (ImLunaHey#2485).' },
                 { name: 'Changes to Privacy Policy', value: 'We reserve the right to modify this privacy policy at any time without prior notice. Any changes will be reflected on this page.' },
             );
 
