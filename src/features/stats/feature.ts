@@ -419,7 +419,13 @@ export class Feature {
             .where('guildId', '=', interaction.guild.id)
             .orderBy('joinedTimestamp', 'asc')
             .limit(10)
-            .execute();
+            .execute()
+            .then(members => {
+                // Only show members that resolve
+                return members.filter(member => {
+                    return interaction.guild?.members.resolve(member.id)?.displayName !== undefined;
+                });
+            });
 
         // Reply with the stats
         await interaction.editReply({
@@ -438,7 +444,7 @@ export class Feature {
             }, {
                 title: 'Oldest members',
                 description: outdent`
-                    ${oldestMembers.map(member => `<@${member.id}> - <t:${Math.floor(member.joinedTimestamp * 1_000)}:R>`).join('\n')}
+                    ${oldestMembers.map(member => `<@${member.id}> - <t:${member.joinedTimestamp}:R>`).join('\n')}
                 `
             }]
         });
