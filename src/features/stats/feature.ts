@@ -46,7 +46,7 @@ export class Feature {
             });
 
             // If this server has all it's members added then skip it
-            // if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
+            if (guildMembers?.memberCount && guildMembers?.memberCount >= guild.memberCount) continue;
 
             // For each guild member record their joined timestamp
             for (const [, member] of guild.members.cache)
@@ -377,6 +377,9 @@ export class Feature {
         }) ephemeral = false,
         interaction: CommandInteraction,
     ) {
+        // Only run in guilds
+        if (!interaction.guild?.id) return;
+
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferReply({ ephemeral, });
 
@@ -408,6 +411,16 @@ export class Feature {
             .orderBy('totalCount', 'desc')
             .execute();
 
+        // Get the members who have been in this guild the longest
+        const oldestMembers = await db
+            .selectFrom('guild_members')
+            .select('id')
+            .select('joinedTimestamp')
+            .where('guildId', '=', interaction.guild.id)
+            .orderBy('joinedTimestamp', 'asc')
+            .limit(10)
+            .execute();
+
         // Reply with the stats
         await interaction.editReply({
             embeds: [{
@@ -421,6 +434,11 @@ export class Feature {
                     ${mostActiveMembers.map(member => `<@${member.memberId}> - ${member.totalCount} messages`).join('\n')}
 
                     Use \`/opt-in\` to opt into stats collection.
+                `
+            }, {
+                title: 'Oldest members',
+                description: outdent`
+                    ${oldestMembers.map(member => `<@${member.id}> - <t:${Math.floor(member.joinedTimestamp * 1_000)}:R>`).join('\n')}
                 `
             }]
         });
