@@ -2,6 +2,7 @@ import type { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
+import { DatabaseError } from '@planetscale/database';
 
 const clients = new Map<string, Client>();
 
@@ -59,8 +60,12 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('error', (error: Error) => {
-        globalLogger.error('Client error', { error });
-        console.log(error);
+        globalLogger.error('Client error', error instanceof DatabaseError ? {
+            error: {
+                message: error.body.message,
+                code: error.body.code,
+            },
+        } : { error });
     });
 
     // Save the client for later
