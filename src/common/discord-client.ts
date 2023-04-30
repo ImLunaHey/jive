@@ -6,6 +6,21 @@ import { DatabaseError } from '@planetscale/database';
 
 const clients = new Map<string, Client>();
 
+const parseDatabaseError = (error: DatabaseError) => {
+    const targetArray = error.body.message.split(': ');
+
+    return {
+        type: targetArray[2].split(': ')[0],
+        code: targetArray[2].match(/code = (\w+)/)?.[1],
+        description: targetArray[2].match(/desc = (.+?) \(errno/)?.[1],
+        errno: targetArray[2].match(/\(errno (\d+)\)/)?.[1],
+        sqlstate: targetArray[2].match(/\(sqlstate (\w+)\)/)?.[1],
+        callerID: targetArray[2].match(/\(CallerID: (.+)\):/)?.[1],
+        sql: targetArray[2].match(/Sql: "(.+?)"/)?.[1].replace(/\`/g, "'"),
+        bindVars: targetArray[2].match(/BindVars: {(.+?)}/)?.[1],
+    };
+}
+
 /**
  * Creates or returns a named discord.js client
  */
@@ -60,12 +75,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('error', (error: Error) => {
-        globalLogger.error('Client error', error instanceof DatabaseError ? {
-            error: {
-                message: error.body.message,
-                code: error.body.code,
-            },
-        } : { error });
+        globalLogger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
     });
 
     // Save the client for later
@@ -74,3 +84,4 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     // Give them the newly created client
     return client;
 };
+
