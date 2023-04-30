@@ -25,7 +25,7 @@ export const up = async (db: Kysely<unknown>) => {
         .addColumn('guild_id', 'varchar(36)', col => col.notNull())
         .addColumn('enabled', 'boolean', col => col.defaultTo(true))
         .addColumn('channel_id', 'varchar(36)', col => col.notNull())
-        .addColumn('ignored_actions', 'json', col => col.defaultTo('[]'))
+        .addColumn('ignored_actions', 'json', col => col.defaultTo('["JOIN", "LEAVE", "BAN", "KICK", "MUTE", "UNMUTE", "WARN", "UNWARN", "PURGE", "ROLE_ADD", "ROLE_REMOVE", "ROLE_CREATE", "ROLE_DELETE", "ROLE_EDIT", "CHANNEL_CREATE", "CHANNEL_DELETE", "CHANNEL_EDIT", "MESSAGE_DELETE", "MESSAGE_BULK_DELETE", "MESSAGE_EDIT", "VOICE_KICK", "VOICE_MUTE", "VOICE_UNMUTE", "VOICE_MOVE", "VOICE_DEAFEN", "VOICE_UNDEAFEN", "GUILD_EDIT", "INVITE_CREATE", "INVITE_DELETE", "EMOJI_CREATE", "EMOJI_DELETE", "EMOJI_EDIT", "MEMBER_UPDATE", ]'))
         .addColumn('ignore_bots', 'boolean', col => col.defaultTo(false))
         .addColumn('ignored_roles', 'json', col => col.defaultTo('[]'))
         .addColumn('ignored_users', 'json', col => col.defaultTo('[]'))
