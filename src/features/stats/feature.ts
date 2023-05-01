@@ -42,7 +42,7 @@ export class Feature {
             this.logger.info('Backfilling members for guild', {
                 guildId: guild.id,
                 memberCount: guild.memberCount,
-                membersMissing: (guildMembers?.memberCount ?? guild.memberCount) - guild.memberCount,
+                membersMissing: guild.memberCount - (guildMembers?.memberCount ?? guild.memberCount),
                 membersExisting: guildMembers?.memberCount ?? 0,
             });
 
