@@ -141,7 +141,7 @@ export class Feature {
         const inviteUsed = guildInvitesNow.find(invite => invite.code === inviteCode) ?? await member.guild.fetchVanityData().then(newVanityData => {
             if (!newVanityData.code) return undefined;
             const oldVanityData = guildInvitesBeforeUserJoined.find(invite => invite.code === newVanityData.code);
-            if (oldVanityData && newVanityData.uses > oldVanityData?.uses) return {
+            if (oldVanityData && newVanityData.uses !== oldVanityData?.uses) return {
                 code: newVanityData.code,
                 uses: newVanityData.uses,
                 inviter: member.guild.members.cache.get(member.guild.ownerId),
