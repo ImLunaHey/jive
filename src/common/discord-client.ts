@@ -19,7 +19,7 @@ const parseDatabaseError = (error: DatabaseError) => {
         sql: targetArray[2].match(/Sql: "(.+?)"/)?.[1].replace(/\`/g, "'"),
         bindVars: targetArray[2].match(/BindVars: {(.+?)}/)?.[1],
     };
-}
+};
 
 /**
  * Creates or returns a named discord.js client
@@ -76,6 +76,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
 
     client.on('error', (error: Error) => {
         globalLogger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
+        console.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
     });
 
     // Save the client for later
