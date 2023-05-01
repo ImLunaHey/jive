@@ -7,7 +7,8 @@ import { client } from '@app/client';
 const { name } = pkg;
 
 export const start = async () => {
-    globalLogger.info('Starting bot', {
+    const logger = globalLogger.child({ service: 'bot' });
+    logger.info('Starting bot', {
         name,
         env: env.NODE_ENV,
         logLevel: env.LOG_LEVEL,

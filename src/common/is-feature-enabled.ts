@@ -4,6 +4,8 @@ import { globalLogger } from '@app/logger';
 
 const globallyEnabled: Feature[] = [];
 
+const logger = globalLogger.child('common:is-feature-enabled');
+
 const check = async (feature: Feature, guildId?: string) => {
     if (!guildId) return false;
 
@@ -20,17 +22,18 @@ const check = async (feature: Feature, guildId?: string) => {
     try {
         return settings?.featuresEnabled.includes(feature) ?? false;
     } catch (error) {
-        globalLogger.error(error);
+        logger.error(error);
 
         return false;
     }
 };
 
+
 export const isFeatureEnabled = async (feature: Feature, guildId?: string) => {
     // Check if the feature is enabled
     const enabled = await check(feature, guildId);
 
-    globalLogger.info('Checked if feature is enabled', {
+    logger.info('Checked if feature is enabled', {
         feature,
         guildId,
         enabled,

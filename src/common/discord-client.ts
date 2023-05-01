@@ -39,6 +39,9 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (clients.has(name)) return clients.get(name)!;
 
+    // Create logger instance
+    const logger = globalLogger.child({ service: 'discord-client' });
+
     // Create a discord.js client instance
     const client = new Client({
         simpleCommand: {
@@ -50,19 +53,19 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.once('ready', async () => {
-        globalLogger.info('Connected to discord', {
+        logger.info('Connected to discord', {
             username: client.user?.username,
         });
 
         // Make sure all guilds are in cache
-        globalLogger.info('Fetching all guilds');
+        logger.info('Fetching all guilds');
         await client.guilds.fetch();
 
         // init all application commands
-        globalLogger.info('Initializing all application commands');
+        logger.info('Initializing all application commands');
         await client.initApplicationCommands();
 
-        globalLogger.info('Bot is ready', {
+        logger.info('Bot is ready', {
             username: client.user?.username,
         });
     });
@@ -71,7 +74,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         try {
             client.executeInteraction(interaction);
         } catch (error: unknown) {
-            globalLogger.error('Interaction error', { error });
+            logger.error('Interaction error', { error });
         }
     });
 
@@ -80,7 +83,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('error', (error: Error) => {
-        globalLogger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
+        logger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
         console.error('Client error', error instanceof DatabaseError ? { error, parsedError: parseDatabaseError(error) } : serializeError(error));
     });
 

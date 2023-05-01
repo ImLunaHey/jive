@@ -222,7 +222,7 @@ export class Feature {
             });
         } catch (error: unknown) {
             if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            globalLogger.error('Failed to get user\'s level + XP', error);
+            this.logger.error('Failed to get user\'s level + XP', error);
             await interaction.reply({
                 content: 'Failed to get your levels + XP, please let a member of staff know.',
                 ephemeral: true,
