@@ -185,9 +185,9 @@ export class Feature {
                 guildId: member.guild.id,
                 memberId: inviteUsed.inviter.id,
             })
-            .onDuplicateKeyUpdate(eb => ({
-                uses: eb.bxp('uses', '+', 1),
-            }))
+            .onDuplicateKeyUpdate({
+                uses: inviteUsed.uses ?? 1,
+            })
             .execute();
 
         // Get the person who made this invite
