@@ -211,7 +211,7 @@ export class Feature {
                 fields: [
                     {
                         name: 'Uses',
-                        value: inviteUsed.uses?.toString() ?? '1',
+                        value: `${inviteUsed.uses ?? 1}`,
                         inline: true
                     }, {
                         name: 'Inviter',
@@ -219,7 +219,7 @@ export class Feature {
                         inline: true
                     }, {
                         name: 'Total invites',
-                        value: totalInvites?.uses.toString() ?? '1',
+                        value: `${totalInvites?.uses ?? 1}`,
                         inline: true
                     },
                 ],
