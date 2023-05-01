@@ -132,10 +132,13 @@ export class Feature {
         const guildInvitesNow = await member.guild.invites.fetch();
 
         // Find the invite code that was used
-        const inviteCode = guildInvitesBeforeUserJoined.find(invite => {
-            const inviteAfterJoined = guildInvitesNow.find(inviteBefore => inviteBefore.code === invite.code);
-            return inviteAfterJoined?.uses !== invite.uses
-        })?.code;
+        const inviteCode = guildInvitesNow.map(aItem => {
+            const bItem = guildInvitesBeforeUserJoined.find(item => item.code === aItem.code);
+            if (!bItem || !aItem.uses) return { code: aItem.code, diff: 0 };
+            const max = Math.max(aItem.uses, bItem.uses);
+            const min = Math.min(aItem.uses, bItem.uses);
+            return { code: aItem.code, diff: max - min };
+        }).find(item => item.diff >= 1)?.code;
 
         // Find the invite that was used
         const inviteUsed = guildInvitesNow.find(invite => invite.code === inviteCode) ?? await member.guild.fetchVanityData().then(newVanityData => {
