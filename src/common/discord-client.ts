@@ -3,6 +3,7 @@ import { Client } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { env } from '@app/env';
 import { DatabaseError } from '@planetscale/database';
+import { serializeError } from 'serialize-error';
 
 const clients = new Map<string, Client>();
 
@@ -80,7 +81,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
 
     client.on('error', (error: Error) => {
         globalLogger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
-        console.error('Client error', error instanceof DatabaseError ? { error, parsedError: parseDatabaseError(error) } : { error });
+        console.error('Client error', error instanceof DatabaseError ? { error, parsedError: parseDatabaseError(error) } : serializeError(error));
     });
 
     // Save the client for later
