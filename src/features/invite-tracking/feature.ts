@@ -211,7 +211,7 @@ export class Feature {
                 fields: [
                     {
                         name: 'Code',
-                        value: inviteUsed.code,
+                        value: '`' + inviteUsed.code + '`',
                         inline: true,
                     }, {
                         name: 'Uses',
@@ -223,7 +223,7 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Invitee',
-                        value: `${member.displayName} <@${member.id}>`,
+                        value: `<@${member.id}>`,
                         inline: true,
                     }, {
                         name: 'Total invites',
