@@ -62,14 +62,14 @@ export class Feature {
                     title: '⚠️ IMPORTANT MESSAGE ⚠️',
                     description: 'Please set your profile image to anything other than the default or you will be kicked.',
                 }],
-                content: `${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}>`).join(' ')}`,
+                content: `${[...membersWithDefaultProfileImage.values()].slice(0, 50).map(member => `<@${member.id}>`).join(' ')}`,
             });
             return;
         }
 
         // Kick members who have a default profile image
         if (kick) {
-            const membersToKick = [...membersWithDefaultProfileImage.values()].slice(0, 20);
+            const membersToKick = [...membersWithDefaultProfileImage.values()].slice(0, 50);
 
             // Send kick message
             await interaction.editReply({
@@ -96,7 +96,6 @@ export class Feature {
                     ${emoji} \`${membersWithDefaultProfileImage.size}/${members.size}\` **(\`${Math.floor(members.size / membersWithDefaultProfileImage.size)}%\`)** members have a default profile image.
                 `
             }],
-            content: warn ? `${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}>`).join(' ')}` : undefined,
         });
     }
 }
