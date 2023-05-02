@@ -22,6 +22,12 @@ export class Feature {
             type: ApplicationCommandOptionType.Number,
             required: true
         }) amount: number,
+        @SlashOption({
+            name: 'amount',
+            description: 'Keep pinned messages?',
+            type: ApplicationCommandOptionType.Boolean,
+            required: false
+        }) keepPinned = true,
         interaction: CommandInteraction
     ) {
         // Don't handle users with weird permissions
@@ -40,18 +46,23 @@ export class Feature {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            if (amount < 1 || amount > 100) {
+            if (amount < 1) {
                 await interaction.editReply({
-                    content: 'Please specify an amount between 1 and 100.'
+                    content: 'Please specify an amount above 1.'
                 });
                 return;
             }
 
-            const messages = await (interaction.channel as TextChannel).messages.fetch({ limit: amount });
-            await (interaction.channel as TextChannel).bulkDelete(messages, true);
-            await interaction.editReply({
-                content: `Cleared ${amount} messages.`
-            });
+            // Discord only allows you to delete 100 at a time
+            const chunks = amount / 100;
+            for (let i = 0; i <= chunks; i++) {
+                const messages = await (interaction.channel as TextChannel).messages.fetch({ limit: amount });
+                const filteredMessages = keepPinned ? messages.filter(message => !message.pinned) : messages;
+                await (interaction.channel as TextChannel).bulkDelete(filteredMessages, true);
+                await interaction.editReply({
+                    content: `Cleared ${amount} messages.`
+                });
+            }
         } catch (error: unknown) {
             if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
             this.logger.error('Failed to clear messages', error);
