@@ -28,7 +28,6 @@ const check = async (feature: Feature, guildId?: string) => {
     }
 };
 
-
 export const isFeatureEnabled = async (feature: Feature, guildId?: string) => {
     // Check if the feature is enabled
     const enabled = await check(feature, guildId);

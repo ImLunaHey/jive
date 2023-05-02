@@ -194,24 +194,41 @@ export class Feature {
             .where('memberId', '=', inviteUsed.inviter?.id)
             .executeTakeFirst();
 
+        // Record who invited this member
+        if (inviteUsed.inviter?.id) {
+            await db
+                .updateTable('guild_members')
+                .set({
+                    invitedBy: inviteUsed.inviter.id,
+                })
+                .execute();
+        }
+
         // Post a message in the invite tracking channel
         await inviteTrackingChannel?.send({
             embeds: [{
                 title: 'Invite used',
-                description: `<@${member.id}> was invited by ${inviter} using \`${inviteUsed.code}\``,
                 fields: [
                     {
+                        name: 'Code',
+                        value: inviteUsed.code,
+                        inline: true,
+                    }, {
                         name: 'Uses',
                         value: `${inviteUsed.uses ?? 1}`,
-                        inline: true
+                        inline: true,
                     }, {
                         name: 'Inviter',
                         value: inviter,
-                        inline: true
+                        inline: true,
+                    }, {
+                        name: 'Invitee',
+                        value: `${member.displayName} <@${member.id}>`,
+                        inline: true,
                     }, {
                         name: 'Total invites',
                         value: `${totalInvites?.uses ?? 1}`,
-                        inline: true
+                        inline: true,
                     },
                 ],
                 color: Colors.Green,
