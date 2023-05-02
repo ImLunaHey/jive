@@ -23,6 +23,7 @@ export class Feature {
     @Slash({
         name: 'audit',
         description: 'Audit the server',
+        defaultMemberPermissions: 'Administrator',
     })
     async audit(
         @SlashOption({
@@ -93,7 +94,7 @@ export class Feature {
         await interaction.editReply({
             embeds: [{
                 description: outdent`
-                    ${emoji} \`${membersWithDefaultProfileImage.size}/${members.size}\` **(\`${Math.floor(members.size / membersWithDefaultProfileImage.size)}%\`)** members have a default profile image.
+                    ${emoji} \`${membersWithDefaultProfileImage.size}/${members.size}\` **(\`${Math.floor(membersWithDefaultProfileImage.size / members.size)}%\`)** members have a default profile image.
                 `
             }],
         });
