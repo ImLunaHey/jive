@@ -1,7 +1,7 @@
-import { type ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { client } from '@app/client';
-import { ChannelType, Colors } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction, GuildMember, User } from 'discord.js';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
 
@@ -237,6 +237,39 @@ export class Feature {
                 ],
                 color: Colors.Green,
             }]
+        });
+    }
+
+    @Slash({
+        name: 'invites',
+        description: 'See how many people someone has invited.',
+    })
+    async invites(
+        @SlashOption({
+            name: 'member',
+            description: 'Who to check',
+            type: ApplicationCommandOptionType.User,
+        })
+        member: GuildMember,
+        interaction: CommandInteraction,
+    ) {
+        // Show bot thinking
+        if (!interaction.deferred) await interaction.deferReply();
+
+        // Get invite count for member
+        const totalInviteCount = await db
+            .selectFrom('invites')
+            .select(db.fn.sum<number>('uses').as('uses'))
+            .where('memberId', '=', member.id)
+            .executeTakeFirst()
+            .then(invites => invites?.uses ?? 0);
+
+        // Reply with invite count
+        await interaction.editReply({
+            embeds: [{
+                title: 'Invite stats',
+                description: `<@${member.id}> has invited a total of ${totalInviteCount} members`,
+            }],
         });
     }
 }
