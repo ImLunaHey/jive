@@ -15,7 +15,7 @@ export class Feature {
     }
 
     @ContextMenu({
-        name: 'Mark member as verified',
+        name: 'Verify member',
         defaultMemberPermissions: 'Administrator',
         type: ApplicationCommandType.User,
     })
