@@ -220,7 +220,7 @@ export class Feature {
                     }, {
                         name: '\u200B',
                         value: '\u200B',
-                        inline: false,
+                        inline: true,
                     }, {
                         name: 'Invitee',
                         value: `<@${member.id}>`,
