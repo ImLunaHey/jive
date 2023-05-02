@@ -46,7 +46,6 @@ export class Feature {
                     })
                     .onDuplicateKeyUpdate({
                         uses: invite.uses ?? 0,
-                        memberId: invite.inviter?.id,
                     })
                     .execute();
             }
