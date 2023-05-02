@@ -1,6 +1,6 @@
 import { ContextMenu, Discord, Guild } from 'discordx';
 import { globalLogger } from '@app/logger';
-import type { TextChannel } from 'discord.js';
+import { Colors, TextChannel } from 'discord.js';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
 import { outdent } from 'outdent';
 
@@ -19,8 +19,37 @@ export class Feature {
         type: ApplicationCommandType.Message,
     })
     async verify(interaction: MessageContextMenuCommandInteraction) {
+        // Show bot thinking
+        if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
+
+        // Get the member who we need to verify
         const member = await interaction.guild?.members.fetch(interaction.targetId);
         if (!member) return;
+
+        // Check if they have a default profile image
+        if (member.displayAvatarURL() === `https://cdn.discordapp.com/embed/avatars/${Number(member.user.discriminator) % 5}.png`) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Failed to verify member',
+                    description: 'The member has a default profile image.',
+                    color: Colors.Red,
+                }],
+            })
+            return;
+        }
+
+        // Check if they're have the needed roles
+        const hasNeededRoles = member.roles.cache.has('957080658461749378');
+        if (!hasNeededRoles) {
+            await interaction.editReply({
+                embeds: [{
+                    title: 'Failed to verify member',
+                    description: 'The member is missing roles.',
+                    color: Colors.Red,
+                }],
+            })
+            return;
+        }
 
         // Add roles
         await member.roles.add('965589467832401950');
