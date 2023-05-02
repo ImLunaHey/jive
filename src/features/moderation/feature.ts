@@ -1,6 +1,6 @@
 import { globalLogger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
-import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
@@ -14,6 +14,7 @@ export class Feature {
     @Slash({
         name: 'clear',
         description: 'Clears a specified amount of messages',
+        defaultMemberPermissions: ['Administrator', 'ManageMessages']
     })
     async clearMessages(
         @SlashOption({
@@ -30,18 +31,6 @@ export class Feature {
         }) keepPinned = true,
         interaction: CommandInteraction
     ) {
-        // Don't handle users with weird permissions
-        if (typeof interaction.member?.permissions === 'string') return;
-
-        // Check if the user has the MANAGE_MESSAGES permission
-        if (!interaction.member?.permissions.has(PermissionFlagsBits.ManageMessages)) {
-            await interaction.reply({
-                content: 'You do not have the `MANAGE_MESSAGES` permission.',
-                ephemeral: true,
-            });
-            return;
-        }
-
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
@@ -75,6 +64,7 @@ export class Feature {
     @Slash({
         name: 'warn',
         description: 'Warns a user',
+        defaultMemberPermissions: ['Administrator', 'BanMembers'],
     })
     async warnUser(
         @SlashOption({
@@ -92,21 +82,6 @@ export class Feature {
         interaction: CommandInteraction
     ) {
         if (!interaction.guild) return;
-
-        // Don't handle users with weird permissions
-        if (typeof interaction.member?.permissions === 'string') return;
-
-        // TODO: Add a way to check if the user is a moderator when warning a user
-        //        (e.g. a moderator role)
-        //        This should come from the database
-        // Check if the user has the KICK_MEMBERS permission
-        if (!interaction.member?.permissions.has(PermissionFlagsBits.KickMembers)) {
-            await interaction.reply({
-                content: 'You do not have the `KICK_MEMBERS` permission.',
-                ephemeral: true,
-            });
-            return;
-        }
 
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
@@ -144,6 +119,7 @@ export class Feature {
     @Slash({
         name: 'kick',
         description: 'Kicks a user from the server',
+        defaultMemberPermissions: ['KickMembers'],
     })
     async kickUser(
         @SlashOption({
@@ -160,21 +136,6 @@ export class Feature {
         }) reason: string,
         interaction: CommandInteraction
     ) {
-        // Don't handle users with weird permissions
-        if (typeof interaction.member?.permissions === 'string') return;
-
-        // TODO: Add a way to check if the user is a moderator when kicking a user
-        //        (e.g. a moderator role)
-        //        This should come from the database
-        // Check if the user has the KICK_MEMBERS permission
-        if (!interaction.member?.permissions.has(PermissionFlagsBits.KickMembers)) {
-            await interaction.reply({
-                content: 'You do not have the `KICK_MEMBERS` permission.',
-                ephemeral: true,
-            });
-            return;
-        }
-
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
@@ -211,6 +172,7 @@ export class Feature {
     @Slash({
         name: 'ban',
         description: 'Bans a user from the server',
+        defaultMemberPermissions: ['BanMembers'],
     })
     async banUser(
         @SlashOption({
@@ -233,21 +195,6 @@ export class Feature {
         }) deleteMessages: boolean,
         interaction: CommandInteraction
     ) {
-        // Don't handle users with weird permissions
-        if (typeof interaction.member?.permissions === 'string') return;
-
-        // TODO: Add a way to check if the user is a moderator when banning a user
-        //        (e.g. a moderator role)
-        //        This should come from the database
-        // Check if the user has the BAN_MEMBERS permission
-        if (!interaction.member?.permissions.has(PermissionFlagsBits.BanMembers)) {
-            await interaction.reply({
-                content: 'You do not have the `BAN_MEMBERS` permission.',
-                ephemeral: true,
-            });
-            return;
-        }
-
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
