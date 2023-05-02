@@ -68,7 +68,7 @@ export class Feature {
     async onMessageCreate([message]: ArgsOf<'messageCreate'>) {
         if (!message.guild?.id) return;
 
-        this.logger.info('New message', {
+        this.logger.debug('New message', {
             guildId: message.guild?.id,
             channelId: message.channel.id,
         });
