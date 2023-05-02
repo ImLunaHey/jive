@@ -428,8 +428,8 @@ export class Feature {
         // Check if the mfa level changed
         if (oldGuild.mfaLevel !== newGuild.mfaLevel) {
             fields.push({
-                name: 'MFA Level',
-                value: `${oldGuild.mfaLevel} ➔ ${newGuild.mfaLevel}`,
+                name: 'MFA required',
+                value: `${oldGuild.mfaLevel === 1 ? 'true' : 'false'} ➔ ${newGuild.mfaLevel === 1 ? 'true' : 'false'}`,
                 inline: true,
             });
         }
