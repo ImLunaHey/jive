@@ -373,6 +373,12 @@ export class Feature {
             required: false,
             type: ApplicationCommandOptionType.Boolean,
         }) ephemeral = false,
+        @SlashOption({
+            name: 'show-oldest-members',
+            description: 'Show oldest members?',
+            required: false,
+            type: ApplicationCommandOptionType.Boolean,
+        }) showOldestMembers = false,
         interaction: CommandInteraction,
     ) {
         // Only run in guilds
@@ -380,6 +386,9 @@ export class Feature {
 
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferReply({ ephemeral, });
+
+        // Create embeds array
+        const embeds = [];
 
         // Get the most active channels for today
         const mostActiveChannels = await db
@@ -399,6 +408,13 @@ export class Feature {
                 });
             });
 
+        embeds.push({
+            title: 'Most active channels today',
+            description: outdent`
+                    ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
+                `
+        });
+
         // Get the most active members for today
         const mostActiveMembers = await db
             .selectFrom('guild_member_stats')
@@ -409,42 +425,44 @@ export class Feature {
             .orderBy('totalCount', 'desc')
             .execute();
 
-        // Get the members who have been in this guild the longest
-        const oldestMembers = await db
-            .selectFrom('guild_members')
-            .select('id')
-            .select('joinedTimestamp')
-            .where('guildId', '=', interaction.guild.id)
-            .orderBy('joinedTimestamp', 'asc')
-            .limit(10)
-            .execute()
-            .then(members => {
-                // Only show members that resolve
-                return members.filter(member => {
-                    return interaction.guild?.members.resolve(member.id)?.displayName !== undefined;
+        embeds.push({
+            title: 'Most active members today',
+            description: outdent`
+                ${mostActiveMembers.map(member => `<@${member.memberId}> - ${member.totalCount} messages`).join('\n')}
+
+                Use \`/opt-in\` to opt into stats collection.
+            `
+        });
+
+        // Only show this if the user asks
+        if (showOldestMembers) {
+            // Get the members who have been in this guild the longest
+            const oldestMembers = await db
+                .selectFrom('guild_members')
+                .select('id')
+                .select('joinedTimestamp')
+                .where('guildId', '=', interaction.guild.id)
+                .orderBy('joinedTimestamp', 'asc')
+                .limit(10)
+                .execute()
+                .then(members => {
+                    // Only show members that resolve
+                    return members.filter(member => {
+                        return interaction.guild?.members.resolve(member.id)?.displayName !== undefined;
+                    });
                 });
-            });
 
-        // Reply with the stats
-        await interaction.editReply({
-            embeds: [{
-                title: 'Most active channels today',
-                description: outdent`
-                    ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
-                `
-            }, {
-                title: 'Most active members today',
-                description: outdent`
-                    ${mostActiveMembers.map(member => `<@${member.memberId}> - ${member.totalCount} messages`).join('\n')}
-
-                    Use \`/opt-in\` to opt into stats collection.
-                `
-            }, {
+            embeds.push({
                 title: 'Oldest members',
                 description: outdent`
                     ${oldestMembers.map(member => `<@${member.id}> - <t:${member.joinedTimestamp}:R>`).join('\n')}
                 `
-            }]
+            });
+        }
+
+        // Reply with the stats
+        await interaction.editReply({
+            embeds,
         });
     }
 }
