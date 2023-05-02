@@ -24,7 +24,7 @@ export class Feature {
             required: true
         }) amount: number,
         @SlashOption({
-            name: 'amount',
+            name: 'keep-pinned',
             description: 'Keep pinned messages?',
             type: ApplicationCommandOptionType.Boolean,
             required: false
