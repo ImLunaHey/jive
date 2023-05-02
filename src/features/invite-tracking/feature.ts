@@ -23,25 +23,16 @@ export class Feature {
         });
 
         // Update the invite uses for all guilds
-        for (const [guildId] of client.guilds.cache) {
+        for (const [guildId, guild] of client.guilds.cache) {
             if (!await isFeatureEnabled('INVITE_TRACKING', guildId)) continue;
 
-            // Get the guild
-            const guild = client.guilds.cache.get(guildId);
-            if (!guild) continue;
-
             // Fetch the invites
-            this.logger.debug('Fetching invites for guild', {
-                guildId,
-            });
+            this.logger.debug('Fetching invites for guild', { guildId });
             const invites = await guild.invites.fetch();
-            this.logger.debug('Fetched invites for guild', {
-                guildId,
-                inviteCount: invites?.size ?? 0,
-            });
+            this.logger.debug('Fetched invites for guild', { guildId, inviteCount: invites?.size ?? 0 });
 
             // Update the invite uses
-            for (const invite of invites?.values() ?? []) {
+            for (const [, invite] of invites) {
                 if (!invite.inviter?.id) continue;
 
                 // Update the invite uses
@@ -55,6 +46,7 @@ export class Feature {
                     })
                     .onDuplicateKeyUpdate({
                         uses: invite.uses ?? 0,
+                        memberId: invite.inviter?.id,
                     })
                     .execute();
             }
@@ -199,7 +191,7 @@ export class Feature {
         // Get the total count of invites for this user
         const totalInvites = await db
             .selectFrom('invites')
-            .select(db.fn.sum('uses').as('uses'))
+            .select(db.fn.sum<number>('uses').as('uses'))
             .where('memberId', '=', inviteUsed.inviter?.id)
             .executeTakeFirst();
 

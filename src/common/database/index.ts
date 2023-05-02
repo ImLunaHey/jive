@@ -150,7 +150,7 @@ export type Initiative = {
 export type Invite = {
     code: string;
     uses: number;
-    memberId: ColumnType<string, string, never>;
+    memberId: ColumnType<string, string, string>;
     guildId: ColumnType<string, string, never>;
 };
 export type InviteTracking = {
