@@ -58,9 +58,6 @@ export class Feature {
         // Remove roles
         await member.roles.remove('957080658461749378');
 
-        // Delete channel
-        await interaction.channel?.delete();
-
         // Get verified channel
         const verifiedChannel = (interaction.guild?.channels.cache.get('965594171438157834') ?? await interaction.guild?.channels.fetch('965594171438157834')) as TextChannel | undefined;
         if (!verifiedChannel) return;
