@@ -43,9 +43,9 @@ export class Feature {
             }
 
             // Discord only allows you to delete 100 at a time
-            const chunks = amount / 100;
+            const chunks = Math.max(1, amount / 100);
             for (let i = 0; i <= chunks; i++) {
-                const messages = await (interaction.channel as TextChannel).messages.fetch({ limit: amount });
+                const messages = await (interaction.channel as TextChannel).messages.fetch({ limit: Math.min(amount, 100) });
                 const filteredMessages = keepPinned ? messages.filter(message => !message.pinned) : messages;
                 await (interaction.channel as TextChannel).bulkDelete(filteredMessages, true);
                 await interaction.editReply({
