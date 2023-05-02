@@ -32,7 +32,7 @@ export const isFeatureEnabled = async (feature: Feature, guildId?: string) => {
     // Check if the feature is enabled
     const enabled = await check(feature, guildId);
 
-    logger.info('Checked if feature is enabled', {
+    logger.debug('Checked if feature is enabled', {
         feature,
         guildId,
         enabled,
