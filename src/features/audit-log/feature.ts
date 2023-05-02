@@ -976,14 +976,14 @@ export class Feature {
             }
         }
 
-        // Check if the channel position changed
-        if (oldChannel.rawPosition !== newChannel.rawPosition) {
-            fields.push({
-                name: 'Position',
-                value: `**Old:** ${oldChannel.rawPosition}\n**New:** ${newChannel.rawPosition}`,
-                inline: true,
-            });
-        }
+        // // Check if the channel position changed
+        // if (oldChannel.rawPosition !== newChannel.rawPosition) {
+        //     fields.push({
+        //         name: 'Position',
+        //         value: `**Old:** ${oldChannel.rawPosition}\n**New:** ${newChannel.rawPosition}`,
+        //         inline: true,
+        //     });
+        // }
 
         // Check if the channel parent changed
         if (oldChannel.parentId !== newChannel.parentId) {
