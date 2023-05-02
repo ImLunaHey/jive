@@ -1,6 +1,7 @@
 import { ContextMenu, Discord, Guild } from 'discordx';
 import { globalLogger } from '@app/logger';
-import { Colors, TextChannel } from 'discord.js';
+import type { TextChannel } from 'discord.js';
+import { Colors } from 'discord.js';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
 import { outdent } from 'outdent';
 
@@ -14,9 +15,9 @@ export class Feature {
     }
 
     @ContextMenu({
-        name: 'verify',
+        name: 'Mark member as verified',
         defaultMemberPermissions: 'Administrator',
-        type: ApplicationCommandType.Message,
+        type: ApplicationCommandType.User,
     })
     async verify(interaction: MessageContextMenuCommandInteraction) {
         // Show bot thinking
