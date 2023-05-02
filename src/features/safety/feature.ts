@@ -1,6 +1,6 @@
-import { Discord, Slash } from 'discordx';
+import { Discord, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
-import { CommandInteraction } from 'discord.js';
+import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { outdent } from 'outdent';
 
 @Discord()
@@ -25,6 +25,18 @@ export class Feature {
         description: 'Audit the server',
     })
     async audit(
+        @SlashOption({
+            name: 'warn',
+            description: 'If the members should be warned',
+            type: ApplicationCommandOptionType.Boolean,
+            required: false,
+        }) warn = false,
+        @SlashOption({
+            name: 'kick',
+            description: 'If the members should be kicked',
+            type: ApplicationCommandOptionType.Boolean,
+            required: false,
+        }) kick = false,
         interaction: CommandInteraction
     ) {
         // Only run in guilds
@@ -42,15 +54,49 @@ export class Feature {
         // Get emoji
         const emoji = this.getEmoji(membersWithDefaultProfileImage.size, members.size);
 
+        // Warn members they need to update their profile image
+        if (warn) {
+            // Send warning
+            await interaction.editReply({
+                embeds: [{
+                    title: '⚠️ IMPORTANT MESSAGE ⚠️',
+                    description: 'Please set your profile image to anything other than the default or you will be kicked.',
+                }],
+                content: `${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}>`).join(' ')}`,
+            });
+            return;
+        }
+
+        // Kick members who have a default profile image
+        if (kick) {
+            const membersToKick = [...membersWithDefaultProfileImage.values()].slice(0, 20);
+
+            // Send kick message
+            await interaction.editReply({
+                embeds: [{
+                    title: '⚠️ IMPORTANT MESSAGE ⚠️',
+                    description: 'Kicking members who have a default profile image.',
+                }],
+                content: `${membersToKick.map(member => `<@${member.id}>`).join(' ')}`,
+            });
+
+            // Kick each of the members
+            await Promise.all(membersToKick.map(async member => {
+                try {
+                    await member.kick();
+                } catch { }
+            }));
+            return;
+        }
+
         // Send audit message
         await interaction.editReply({
             embeds: [{
                 description: outdent`
                     ${emoji} \`${membersWithDefaultProfileImage.size}/${members.size}\` **(\`${Math.floor(members.size / membersWithDefaultProfileImage.size)}%\`)** members have a default profile image.
-
-                    ${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}> ${member.displayName} - ${member.roles.cache.size} roles`).join('\n')}
                 `
-            }]
+            }],
+            content: warn ? `${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}>`).join(' ')}` : undefined,
         });
     }
 }
