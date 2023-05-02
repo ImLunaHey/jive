@@ -28,6 +28,7 @@ export const start = async () => {
     await import('./features/moderation');
     await import('./features/purge');
     await import('./features/reddit');
+    await import('./features/safety');
     await import('./features/setup');
     await import('./features/starboard');
     await import('./features/stats');
