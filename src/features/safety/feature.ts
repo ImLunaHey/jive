@@ -48,7 +48,7 @@ export class Feature {
                 description: outdent`
                     ${emoji} \`${membersWithDefaultProfileImage.size}/${members.size}\` **(\`${Math.floor(members.size / membersWithDefaultProfileImage.size)}%\`)** members have a default profile image.
 
-                    ${membersWithDefaultProfileImage.map(member => `<@${member.id}>`)}
+                    ${[...membersWithDefaultProfileImage.values()].slice(0, 20).map(member => `<@${member.id}>`)}
                 `
             }]
         });
