@@ -3,7 +3,7 @@ import { client } from '@app/client';
 import type { Feature as FeatureId } from '@app/common/database/enums';
 import { globalLogger } from '@app/logger';
 import type { ButtonComponent, CacheType, ChatInputCommandInteraction } from 'discord.js';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, PermissionFlagsBits, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
@@ -86,6 +86,7 @@ export class Feature {
     @Slash({
         name: 'setup',
         description: 'Setup the bot',
+        defaultMemberPermissions: ['Administrator'],
     })
     async setup(
         interaction: CommandInteraction
@@ -99,18 +100,6 @@ export class Feature {
         if (!interaction.guild?.id) return;
         const guild = client.guilds.cache.get(interaction.guild?.id);
         if (!guild) return;
-
-        // Don't handle users with weird permissions
-        if (typeof interaction.member?.permissions === 'string') return;
-
-        // Only allow admins to use this command
-        if (!interaction.member?.permissions.has(PermissionFlagsBits.Administrator)) {
-            await interaction.reply({
-                content: 'You do not have the `ADMINISTRATOR` permission.',
-                ephemeral: true,
-            });
-            return;
-        }
 
         // Don't handle non-commands
         if (!interaction.isCommand()) return;
