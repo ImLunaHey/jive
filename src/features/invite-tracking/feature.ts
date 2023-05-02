@@ -210,16 +210,16 @@ export class Feature {
                 title: 'Invite used',
                 fields: [
                     {
+                        name: 'Inviter',
+                        value: inviter,
+                        inline: true,
+                    }, {
                         name: 'Code',
                         value: '`' + inviteUsed.code + '`',
                         inline: true,
                     }, {
                         name: 'Uses',
-                        value: `${inviteUsed.uses ?? 1}`,
-                        inline: true,
-                    }, {
-                        name: 'Inviter',
-                        value: inviter,
+                        value: '`' + `${inviteUsed.uses ?? 1}` + '`',
                         inline: true,
                     }, {
                         name: 'Invitee',
@@ -227,7 +227,7 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Total invites',
-                        value: `${totalInvites?.uses ?? 1}`,
+                        value: '`' + `${totalInvites?.uses ?? 1}` + '`',
                         inline: true,
                     },
                 ],
