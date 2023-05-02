@@ -214,20 +214,24 @@ export class Feature {
                         value: inviter,
                         inline: true,
                     }, {
+                        name: 'Total invites',
+                        value: '`' + `${totalInvites?.uses ?? 1}` + '`',
+                        inline: true,
+                    }, {
+                        name: '\u200B',
+                        value: '\u200B',
+                        inline: false,
+                    }, {
+                        name: 'Invitee',
+                        value: `<@${member.id}>`,
+                        inline: true,
+                    }, {
                         name: 'Code',
                         value: '`' + inviteUsed.code + '`',
                         inline: true,
                     }, {
                         name: 'Uses',
                         value: '`' + `${inviteUsed.uses ?? 1}` + '`',
-                        inline: true,
-                    }, {
-                        name: 'Invitee',
-                        value: `<@${member.id}>`,
-                        inline: true,
-                    }, {
-                        name: 'Total invites',
-                        value: '`' + `${totalInvites?.uses ?? 1}` + '`',
                         inline: true,
                     },
                 ],
