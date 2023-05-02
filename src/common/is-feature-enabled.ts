@@ -4,7 +4,7 @@ import { globalLogger } from '@app/logger';
 
 const globallyEnabled: Feature[] = [];
 
-const logger = globalLogger.child('common:is-feature-enabled');
+const logger = globalLogger.child({ service: 'common:is-feature-enabled' });
 
 const check = async (feature: Feature, guildId?: string) => {
     if (!guildId) return false;
