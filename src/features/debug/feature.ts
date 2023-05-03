@@ -99,6 +99,7 @@ export class Feature {
     @Slash({
         name: 'reload',
         description: 'Reload the bot',
+        defaultMemberPermissions: 'Administrator',
     })
     async reload(interaction: CommandInteraction) {
         // Check if the user is the owner
