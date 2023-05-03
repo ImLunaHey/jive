@@ -459,6 +459,7 @@ export class Feature {
                         .set({
                             waitUntilGate: !welcome?.waitUntilGate,
                         })
+                        .where('guildId', '=', guild.id)
                         .execute();
 
                     await interaction.followUp({

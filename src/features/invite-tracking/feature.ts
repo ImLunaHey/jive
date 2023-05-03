@@ -185,7 +185,7 @@ export class Feature {
             .execute();
 
         // Get the person who made this invite
-        const inviter = inviteUsed.inviter?.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown';
+        const inviter = inviteUsed.inviter.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown';
 
         // Get the total count of invites for this user
         const totalInvites = await db
@@ -201,6 +201,7 @@ export class Feature {
                 .set({
                     invitedBy: inviteUsed.inviter.id,
                 })
+                .where('id', '=', member.id)
                 .execute();
         }
 
@@ -334,7 +335,7 @@ export class Feature {
                     inline: true,
                 }, {
                     name: 'Position (last 30d)',
-                    value: String(memberPosition),
+                    value: memberPosition === 0 ? 'Not ranked' : String(memberPosition),
                     inline: true,
                 }]
             }],
