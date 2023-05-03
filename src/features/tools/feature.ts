@@ -11,7 +11,7 @@ const parseTime = (input?: string) => {
         const time = sd.parse(input);
         return {
             name: sd.stringify(time),
-            value: time,
+            value: String(time),
         };
     } catch { }
 
