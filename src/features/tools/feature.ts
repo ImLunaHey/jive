@@ -33,13 +33,6 @@ export class Feature {
     })
     async stats(
         @SlashOption({
-            name: 'reason',
-            description: 'Whats the reason for the reminder?',
-            required: false,
-            maxLength: 255,
-            type: ApplicationCommandOptionType.String,
-        }) reason: string | undefined,
-        @SlashOption({
             name: 'time',
             description: 'When should the reminder go off? (format 1d 5h 10m 30s)',
             required: true,
@@ -50,6 +43,13 @@ export class Feature {
                 await interaction.respond([parsed]);
             },
         }) timestamp: number,
+        @SlashOption({
+            name: 'reason',
+            description: 'Whats the reason for the reminder?',
+            required: false,
+            maxLength: 255,
+            type: ApplicationCommandOptionType.String,
+        }) reason: string | undefined,
         interaction: CommandInteraction,
     ) {
         // Only run in guilds
