@@ -17,6 +17,7 @@ export class Feature {
     @Slash({
         name: 'looking-for',
         description: 'Looking for someone?',
+        guilds: ['927461441051701280']
     })
     async lookingFor(
         interaction: CommandInteraction,

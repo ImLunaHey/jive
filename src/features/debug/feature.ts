@@ -120,54 +120,54 @@ export class Feature {
         process.exit(0);
     }
 
-    @Slash({
-        name: 'test',
-        description: 'Test the bot',
-    })
-    async test(interaction: CommandInteraction) {
-        const userUsername = interaction.member?.user.username;
-        if (!userUsername) return;
+    // @Slash({
+    //     name: 'test',
+    //     description: 'Test the bot',
+    // })
+    // async test(interaction: CommandInteraction) {
+    //     const userUsername = interaction.member?.user.username;
+    //     if (!userUsername) return;
 
-        const canvas = createCanvas(700, 250);
-        const context = canvas.getContext('2d');
+    //     const canvas = createCanvas(700, 250);
+    //     const context = canvas.getContext('2d');
 
-        context.fillStyle = 'black';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+    //     context.fillStyle = 'black';
+    //     context.fillRect(0, 0, canvas.width, canvas.height);
 
-        context.fillStyle = 'white';
-        for (let i = 0; i < 200; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            context.fillRect(x, y, 2, 2);
-        }
+    //     context.fillStyle = 'white';
+    //     for (let i = 0; i < 200; i++) {
+    //         const x = Math.random() * canvas.width;
+    //         const y = Math.random() * canvas.height;
+    //         context.fillRect(x, y, 2, 2);
+    //     }
 
-        context.strokeStyle = '#0099ff';
-        context.strokeRect(0, 0, canvas.width, canvas.height);
+    //     context.strokeStyle = '#0099ff';
+    //     context.strokeRect(0, 0, canvas.width, canvas.height);
 
-        context.font = '28px sans-serif';
-        context.fillStyle = '#ffffff';
-        context.fillText('Profile', canvas.width / 2.5, canvas.height / 3.5);
+    //     context.font = '28px sans-serif';
+    //     context.fillStyle = '#ffffff';
+    //     context.fillText('Profile', canvas.width / 2.5, canvas.height / 3.5);
 
-        context.font = applyText(canvas, `${userUsername}!`);
-        context.fillStyle = '#ffffff';
-        context.fillText(`${userUsername}!`, canvas.width / 2.5, canvas.height / 1.8);
+    //     context.font = applyText(canvas, `${userUsername}!`);
+    //     context.fillStyle = '#ffffff';
+    //     context.fillText(`${userUsername}!`, canvas.width / 2.5, canvas.height / 1.8);
 
-        context.beginPath();
-        context.arc(125, 125, 100, 0, Math.PI * 2, true);
-        context.closePath();
-        context.clip();
+    //     context.beginPath();
+    //     context.arc(125, 125, 100, 0, Math.PI * 2, true);
+    //     context.closePath();
+    //     context.clip();
 
-        const buffer = await fetch(interaction.user.displayAvatarURL({ extension: 'jpg' })).then(response => response.arrayBuffer());
-        const avatar = await loadImage(buffer);
+    //     const buffer = await fetch(interaction.user.displayAvatarURL({ extension: 'jpg' })).then(response => response.arrayBuffer());
+    //     const avatar = await loadImage(buffer);
 
-        context.drawImage(avatar, 25, 25, 200, 200);
+    //     context.drawImage(avatar, 25, 25, 200, 200);
 
-        // Create the attachment
-        const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'profile-image.png' });
+    //     // Create the attachment
+    //     const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'profile-image.png' });
 
-        // Send the attachment
-        await interaction.reply({ files: [attachment] });
-    }
+    //     // Send the attachment
+    //     await interaction.reply({ files: [attachment] });
+    // }
 
     @Slash({
         name: 'ping',

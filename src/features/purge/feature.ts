@@ -46,6 +46,7 @@ export class Feature {
     @Slash({
         name: 'purge',
         description: 'Purge members',
+        defaultMemberPermissions: 'Administrator',
     })
     async purge(
         @SlashChoice({ name: 'Members with no roles', value: 'NO_ROLES' })
