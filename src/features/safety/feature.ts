@@ -50,7 +50,18 @@ export class Feature {
         const members = await interaction.guild.members.fetch();
 
         // Gather stats
-        const membersWithDefaultProfileImage = members.filter(member => member.displayAvatarURL() === `https://cdn.discordapp.com/embed/avatars/${Number(member.user.discriminator) % 5}.png`);
+        const membersWithDefaultProfileImage = members.filter(member => {
+            const basicDefault = member.displayAvatarURL() === `https://cdn.discordapp.com/embed/avatars/${Number(member.user.discriminator) % 5}.png`;
+            const mobileDefault = [
+                '157e517cdbf371a47aaead44675714a3',
+                '1628fc11e7961d85181295493426b775',
+                '5445ffd7ffb201a98393cbdf684ea4b1',
+                '79ee349b6511e2000af8a32fb8a6974e',
+                '8569adcbd36c70a7578c017bf5604ea5',
+                'f7f2e9361e8a54ce6e72580ac7b967af',
+            ].find(item => member.displayAvatarURL().includes(item)) !== undefined;
+            return basicDefault || mobileDefault;
+        });
 
         // Get emoji
         const emoji = this.getEmoji(membersWithDefaultProfileImage.size, members.size);
