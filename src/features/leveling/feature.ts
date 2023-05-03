@@ -173,7 +173,7 @@ export class Feature {
                     value: outdent`
                         **Level:** ${levelService.convertXpToLevel(user.xp)}
                         **XP:** ${user.xp - currentLevelXp}/${currentLevelXp} (${levelProgress}%)
-                        ${externalEmojiSupport ? emojiBar(levelProgress) : `**Progress**: ${levelProgress}/100`}
+                        ${externalEmojiSupport ? emojiBar(levelProgress) : `${levelProgress}/100`}
                     `,
                     inline: false,
                 }]
