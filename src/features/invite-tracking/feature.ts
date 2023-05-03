@@ -1,7 +1,8 @@
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
 import { globalLogger } from '@app/logger';
 import { client } from '@app/client';
-import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction, GuildMember, User } from 'discord.js';
+import type { GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction } from 'discord.js';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { db } from '@app/common/database';
 
@@ -201,6 +202,7 @@ export class Feature {
                 .values({
                     id: member.user.id,
                     guildId: member.guild.id,
+                    invitedBy: inviteUsed.inviter.id,
                     joinedTimestamp: Math.floor(new Date().getTime() / 1_000),
                 })
                 .onDuplicateKeyUpdate({
