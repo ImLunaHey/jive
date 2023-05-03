@@ -161,8 +161,8 @@ export class Feature {
     }
 
     @Slash({
-        name: 'setup',
-        description: 'Setup the bot',
+        name: 'config',
+        description: 'Change the bot config',
         defaultMemberPermissions: ['Administrator'],
     })
     async setup(
@@ -184,6 +184,7 @@ export class Feature {
         const getSettings = () => db
             .selectFrom('settings')
             .select('featuresEnabled')
+            .where('guildId', '=', guild.id)
             .executeTakeFirst();
 
         // Create the pages
