@@ -251,20 +251,23 @@ export class Feature {
             type: ApplicationCommandOptionType.User,
             required: false,
         })
-        memberToCheck?: GuildMember,
+        memberToCheck: GuildMember | undefined,
         interaction: CommandInteraction,
     ) {
+        if (!interaction.guild?.id) return;
+
         // Show bot thinking
         if (!interaction.deferred) await interaction.deferReply();
 
         // Get the member to check or fall back to the member who used the command
-        const member = memberToCheck ?? interaction.member;
+        const memberId = memberToCheck?.id ?? interaction.user.id;
+        if (!memberId) return;
 
         // Get invite count for member
         const totalInviteCount = await db
             .selectFrom('invites')
             .select(db.fn.sum<number>('uses').as('uses'))
-            .where('memberId', '=', member.id)
+            .where('memberId', '=', memberId)
             .executeTakeFirst()
             .then(invites => invites?.uses ?? 0);
 
@@ -275,8 +278,8 @@ export class Feature {
         const invitesInLast30Days = await db
             .selectFrom('guild_members')
             .select(db.fn.count<number>('id').as('count'))
-            .where('invitedBy', '=', member.id)
-            .where('joinedTimestamp', '>=', now - (oneDay * 30))
+            .where('invitedBy', '=', memberId)
+            .where('joinedTimestamp', '>=', Math.floor((now - (oneDay * 30)) / 1_000))
             .executeTakeFirst()
             .then(members => members?.count ?? 0);
 
@@ -285,8 +288,8 @@ export class Feature {
         const invitesInLast24Hours = invitesInLast30Days >= 1 ? await db
             .selectFrom('guild_members')
             .select(db.fn.count<number>('id').as('count'))
-            .where('invitedBy', '=', member.id)
-            .where('joinedTimestamp', '>=', now - oneDay)
+            .where('invitedBy', '=', memberId)
+            .where('joinedTimestamp', '>=', Math.floor((now - oneDay) / 1_000))
             .executeTakeFirst()
             .then(members => members?.count ?? 0) : 0;
 
@@ -295,8 +298,8 @@ export class Feature {
             .selectFrom('guild_members')
             .select('invitedBy')
             .select(db.fn.count<number>('id').as('count'))
-            .where('joinedTimestamp', '>=', now - oneDay)
-            .where('guildId', '=', member.guild.id)
+            .where('joinedTimestamp', '>=', Math.floor((now - oneDay) / 1_000))
+            .where('guildId', '=', interaction.guild.id)
             .groupBy('invitedBy')
             .execute();
 
@@ -304,7 +307,7 @@ export class Feature {
         inviteCounts.sort((a, b) => b.count - a.count);
 
         // Find the index of the member whose position you want to determine in the sorted list.
-        const memberIndex = inviteCounts.findIndex(inviteMember => inviteMember.invitedBy === member.id);
+        const memberIndex = inviteCounts.findIndex(inviteMember => inviteMember.invitedBy === memberId);
 
         // The index of the member in the sorted list plus one is their position.
         const memberPosition = memberIndex + 1;
@@ -315,7 +318,7 @@ export class Feature {
                 title: 'Invite stats',
                 fields: [{
                     name: 'Member',
-                    value: `<@${member.id}>`,
+                    value: `<@${memberId}>`,
                     inline: true,
                 }, {
                     name: 'Invites (total)',
