@@ -5,7 +5,7 @@ import { Discord, Slash, SlashOption } from 'discordx';
 import * as sd from 'simple-duration';
 
 const parseTime = (input?: string) => {
-    if (!input) return { name: '5m', value: new Date().getTime() + ((60 * 1_000) * 5) };
+    if (!input) return { name: '5m', value: String(new Date().getTime() + ((60 * 1_000) * 5)) };
 
     try {
         const time = sd.parse(input);
@@ -15,7 +15,7 @@ const parseTime = (input?: string) => {
         };
     } catch { }
 
-    return { name: '5m', value: new Date().getTime() + ((60 * 1_000) * 5) };
+    return { name: '5m', value: String(new Date().getTime() + ((60 * 1_000) * 5)) };
 }
 
 @Discord()
