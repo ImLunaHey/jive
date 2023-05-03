@@ -181,11 +181,31 @@ export class Feature {
         // Don't handle non-commands
         if (!interaction.isCommand()) return;
 
-        const getSettings = () => db
-            .selectFrom('settings')
-            .select('featuresEnabled')
-            .where('guildId', '=', guild.id)
-            .executeTakeFirst();
+        const getSettings = async () => db.transaction().execute(async trx => {
+            const settings = await trx
+                .selectFrom('settings')
+                .select('featuresEnabled')
+                .where('guildId', '=', guild.id)
+                .executeTakeFirst();
+
+            // If we found settings return them
+            if (settings) return settings;
+
+            // If we didn't find settings make them
+            await trx
+                .insertInto('settings')
+                .values({
+                    guildId: guild.id,
+                    featuresEnabled: json([]),
+                })
+                .execute();
+
+            return trx
+                .selectFrom('settings')
+                .select('featuresEnabled')
+                .where('guildId', '=', guild.id)
+                .executeTakeFirst();
+        });
 
         // Create the pages
         const builder = new PagesBuilder(interaction as ChatInputCommandInteraction<CacheType>)

@@ -232,7 +232,7 @@ export type Reminder = {
     timestamp: Timestamp;
 }
 export type Settings = {
-    id: string;
+    id: ColumnType<string, never, never>;
     featuresEnabled: ColumnType<Feature[], RawBuilder<Feature[]>, RawBuilder<Feature[]>>;
     guildId: string;
 };
