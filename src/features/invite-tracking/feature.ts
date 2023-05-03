@@ -249,12 +249,16 @@ export class Feature {
             name: 'member',
             description: 'Who to check',
             type: ApplicationCommandOptionType.User,
+            required: false,
         })
-        member: GuildMember,
+        memberToCheck?: GuildMember,
         interaction: CommandInteraction,
     ) {
         // Show bot thinking
         if (!interaction.deferred) await interaction.deferReply();
+
+        // Get the member to check or fall back to the member who used the command
+        const member = memberToCheck ?? interaction.member;
 
         // Get invite count for member
         const totalInviteCount = await db
