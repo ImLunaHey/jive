@@ -224,6 +224,13 @@ export type RateLimit = {
     memberId: string;
     guildId: string;
 };
+export type Reminder = {
+    id: ColumnType<string, never, never>;
+    memberId: string;
+    guildId: string;
+    reason?: string;
+    timestamp: Timestamp;
+}
 export type Settings = {
     id: string;
     featuresEnabled: ColumnType<Feature[], RawBuilder<Feature[]>, RawBuilder<Feature[]>>;
@@ -301,6 +308,7 @@ export type Database = {
     leveling: Leveling;
     purchases: Purchase;
     rate_limits: RateLimit;
+    reminders: Reminder;
     settings: Settings;
     shops: Shop;
     starboards: Starboard;
