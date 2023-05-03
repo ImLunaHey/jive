@@ -264,11 +264,72 @@ export class Feature {
             .executeTakeFirst()
             .then(invites => invites?.uses ?? 0);
 
+        const now = new Date().getTime() / 1_000;
+        const oneDay = 24 * 60 * 60 * 1_000;
+
+        // Get last 30d of invites for member
+        const invitesInLast30Days = await db
+            .selectFrom('guild_members')
+            .select(db.fn.count<number>('id').as('count'))
+            .where('invitedBy', '=', member.id)
+            .where('joinedTimestamp', '>=', now - (oneDay * 30))
+            .executeTakeFirst()
+            .then(members => members?.count ?? 0);
+
+        // Get last 24h of invites for member
+        // If invitesInLast30Days is 0 then we skip this query
+        const invitesInLast24Hours = invitesInLast30Days >= 1 ? await db
+            .selectFrom('guild_members')
+            .select(db.fn.count<number>('id').as('count'))
+            .where('invitedBy', '=', member.id)
+            .where('joinedTimestamp', '>=', now - oneDay)
+            .executeTakeFirst()
+            .then(members => members?.count ?? 0) : 0;
+
+        // Get the invite count for each member in the last 24 hours.
+        const inviteCounts = await db
+            .selectFrom('guild_members')
+            .select('invitedBy')
+            .select(db.fn.count<number>('id').as('count'))
+            .where('joinedTimestamp', '>=', now - oneDay)
+            .where('guildId', '=', member.guild.id)
+            .groupBy('invitedBy')
+            .execute();
+
+        // Sort the members by their invite count in descending order.
+        inviteCounts.sort((a, b) => b.count - a.count);
+
+        // Find the index of the member whose position you want to determine in the sorted list.
+        const memberIndex = inviteCounts.findIndex(inviteMember => inviteMember.invitedBy === member.id);
+
+        // The index of the member in the sorted list plus one is their position.
+        const memberPosition = memberIndex + 1;
+
         // Reply with invite count
         await interaction.editReply({
             embeds: [{
                 title: 'Invite stats',
-                description: `<@${member.id}> has invited a total of ${totalInviteCount} members`,
+                fields: [{
+                    name: 'Member',
+                    value: `<@${member.id}>`,
+                    inline: true,
+                }, {
+                    name: 'Invites (total)',
+                    value: String(totalInviteCount),
+                    inline: true,
+                }, {
+                    name: 'Invites (last 24h)',
+                    value: String(invitesInLast24Hours),
+                    inline: true,
+                }, {
+                    name: 'Invites (last 30d)',
+                    value: String(invitesInLast30Days),
+                    inline: true,
+                }, {
+                    name: 'Position (last 30d)',
+                    value: String(memberPosition),
+                    inline: true,
+                }]
             }],
         });
     }

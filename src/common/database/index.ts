@@ -139,7 +139,7 @@ export type GuildMember = {
     joinedTimestamp: number;
 
     // Who invited them
-    invitedBy: string;
+    invitedBy?: string;
 };
 export type Initiative = {
     id: string;
