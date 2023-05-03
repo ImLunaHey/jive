@@ -271,7 +271,7 @@ export class Feature {
             .executeTakeFirst()
             .then(invites => invites?.uses ?? 0);
 
-        const now = new Date().getTime() / 1_000;
+        const now = new Date().getTime();
         const oneDay = 24 * 60 * 60 * 1_000;
 
         // Get last 30d of invites for member
