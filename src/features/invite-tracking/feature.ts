@@ -197,11 +197,15 @@ export class Feature {
         // Record who invited this member
         if (inviteUsed.inviter?.id) {
             await db
-                .updateTable('guild_members')
-                .set({
+                .insertInto('guild_members')
+                .values({
+                    id: member.user.id,
+                    guildId: member.guild.id,
+                    joinedTimestamp: Math.floor(new Date().getTime() / 1_000),
+                })
+                .onDuplicateKeyUpdate({
                     invitedBy: inviteUsed.inviter.id,
                 })
-                .where('id', '=', member.id)
                 .execute();
         }
 
