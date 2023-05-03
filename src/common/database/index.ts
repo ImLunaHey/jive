@@ -101,7 +101,6 @@ export type Guild = {
     id: string;
     enabled: boolean;
     coins: number;
-    ticketNumber: number;
 };
 export type GuildMember = {
     id: ColumnType<string, string, never>;

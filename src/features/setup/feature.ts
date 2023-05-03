@@ -2,7 +2,7 @@ import '@total-typescript/ts-reset';
 import { client } from '@app/client';
 import type { Feature as FeatureId } from '@app/common/database/enums';
 import { globalLogger } from '@app/logger';
-import type { ButtonComponent, CacheType, ChatInputCommandInteraction } from 'discord.js';
+import type { ButtonComponent, CacheType, ChatInputCommandInteraction, Guild, TextChannel } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
 import type { Trigger } from 'discord.js-pages/lib/types';
@@ -12,10 +12,87 @@ import { json } from '@app/common/json';
 
 @Discord()
 export class Feature {
+    private client = client;
     private logger = globalLogger.child({ service: 'Setup' });
 
     constructor() {
         this.logger.info('Initialised');
+    }
+
+    @On({
+        event: 'guildCreate'
+    })
+    async guildCreate([guild]: [Guild]) {
+        this.logger.info('Added to server', {
+            guildId: guild.id,
+        });
+
+        try {
+            // Message owner
+            const owner = await this.client.users.fetch('784365843810222080');
+            if (!owner.dmChannel) await owner.createDM();
+            await owner.dmChannel?.send({
+                embeds: [{
+                    title: 'Added to server',
+                    fields: [{
+                        name: 'Server ID',
+                        value: String(guild.id),
+                    }]
+                }]
+            });
+        } catch (error: unknown) {
+            this.logger.error('Failed to message owner', { error });
+        }
+
+        try {
+            // If we don't have any of the channels cached fetch them
+            if (guild.channels.cache.size === 0) await guild.channels.fetch();
+
+            // Sending setup message
+            const channel = [...guild.channels.cache.values()].filter(channel => channel.type === ChannelType.GuildText)[0] as TextChannel;
+            await channel.send({
+                content: 'Hi, please message <@784365843810222080> to help me get setup.',
+            });
+        } catch (error: unknown) {
+            this.logger.error('Failed to send setup message', { error });
+        }
+
+        try {
+            // Add basic info about guild to database
+            await db
+                .insertInto('guilds')
+                .ignore()
+                .values({
+                    id: guild.id,
+                    coins: 0,
+                    enabled: false,
+                })
+                .execute();
+        } catch (error: unknown) {
+            this.logger.error('Failed to add basic guild info to database', { error });
+        }
+    }
+
+    @On({
+        event: 'guildDelete'
+    })
+    async guildDelete([guild]: [Guild]) {
+        this.logger.info('Removed from server', {
+            guildId: String(guild.id),
+        });
+
+        // Message owner
+        const owner = await this.client.users.fetch('784365843810222080');
+        if (!owner.dmChannel) await owner.createDM();
+        await owner.dmChannel?.send({
+            embeds: [{
+                title: 'Removed from server',
+                fields: [{
+                    name: 'Server ID',
+                    value: String(guild.id),
+                }]
+            }]
+        });
     }
 
     @Slash({
