@@ -396,6 +396,7 @@ export class Feature {
             .select('channelId')
             .select(db.fn.sum<number>('count').as('totalCount'))
             .where('date', '=', getDate())
+            .where('guildId', '=', interaction.guild.id)
             .groupBy('channelId')
             .orderBy('totalCount', 'desc')
             .execute()
@@ -421,6 +422,7 @@ export class Feature {
             .select('memberId')
             .select(db.fn.sum<number>('count').as('totalCount'))
             .where('date', '=', getDate())
+            .where('guildId', '=', interaction.guild.id)
             .groupBy('memberId')
             .orderBy('totalCount', 'desc')
             .execute();
