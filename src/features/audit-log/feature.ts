@@ -288,6 +288,9 @@ export class Feature {
             });
         }
 
+        // Bail if we haven't detected any changes
+        if (fields.length === 0) return;
+
         // Create the embed
         const embed = new EmbedBuilder({
             author: {
