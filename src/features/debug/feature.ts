@@ -101,6 +101,10 @@ export class Feature {
         description: 'Reload the bot',
         defaultMemberPermissions: 'Administrator',
     })
+    @Guard(async (interaction: CommandInteraction, _client, next) => {
+        if (interaction.user?.id === env.OWNER_ID) await next();
+    })
+    @Guild(env.OWNER_GUILD_ID)
     async reload(interaction: CommandInteraction) {
         // Check if the user is the owner
         if (interaction.user.id !== env.OWNER_ID) {
@@ -198,6 +202,7 @@ export class Feature {
     @Slash({
         name: 'eval',
         description: 'Evaluate code',
+        defaultMemberPermissions: 'Administrator',
     })
     @Guard(async (interaction: CommandInteraction, _client, next) => {
         if (interaction.user?.id === env.OWNER_ID) await next();

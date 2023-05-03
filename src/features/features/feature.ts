@@ -14,6 +14,7 @@ export class Feature {
     @Slash({
         name: 'features',
         description: 'Configure the bot\'s features',
+        defaultMemberPermissions: 'Administrator',
     })
     async features(
         interaction: CommandInteraction
