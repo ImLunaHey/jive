@@ -204,13 +204,13 @@ export class Feature {
         description: 'Evaluate code',
         defaultMemberPermissions: 'Administrator',
     })
-    @Guard(async (interaction: CommandInteraction, _client, next) => {
-        if (interaction.user?.id === env.OWNER_ID) await next();
-    })
     @Guild(env.OWNER_GUILD_ID)
     async eval(
         interaction: CommandInteraction,
     ) {
+        // Only let this run for the bot owner
+        if (interaction.user?.id !== env.OWNER_ID) return;
+
         // Create the modal
         const modal = new ModalBuilder()
             .setCustomId('eval-modal')
