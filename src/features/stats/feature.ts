@@ -368,7 +368,7 @@ export class Feature {
     })
     async stats(
         @SlashOption({
-            name: 'private',
+            name: 'ephemeral',
             description: 'Reply with a private message?',
             required: false,
             type: ApplicationCommandOptionType.Boolean,
@@ -379,6 +379,12 @@ export class Feature {
             required: false,
             type: ApplicationCommandOptionType.Boolean,
         }) showOldestMembers = false,
+        @SlashOption({
+            name: 'private-channels',
+            description: 'Show non-public channels?',
+            required: false,
+            type: ApplicationCommandOptionType.Boolean,
+        }) privateChannels = false,
         interaction: CommandInteraction,
     ) {
         // Only run in guilds
@@ -399,8 +405,15 @@ export class Feature {
             .where('guildId', '=', interaction.guild.id)
             .groupBy('channelId')
             .orderBy('totalCount', 'desc')
+            .limit(10)
             .execute()
             .then(channels => {
+                // Show all channels
+                // Official client: Users will only see the names of channels they have access to
+                // Unofficial client: Anyone will see the names of the channels 👀
+                // NOTE: Because of this, we do not consider these IDs to be private information
+                if (privateChannels) return channels;
+
                 // Only show public channels
                 return channels.filter(channel => {
                     const isPublic = interaction.guild?.channels.resolve(channel.channelId)?.permissionsFor(interaction.guild.id)?.has('ViewChannel');
@@ -425,6 +438,7 @@ export class Feature {
             .where('guildId', '=', interaction.guild.id)
             .groupBy('memberId')
             .orderBy('totalCount', 'desc')
+            .limit(10)
             .execute();
 
         embeds.push({
