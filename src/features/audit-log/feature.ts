@@ -254,11 +254,23 @@ export class Feature {
 
         // Check if the roles changed
         if (oldMember.roles.cache.filter(filterOutEveryoneRole).size !== newMember.roles.cache.filter(filterOutEveryoneRole).size) {
-            fields.push({
-                name: 'Roles',
-                value: `${oldMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@&${r.id}>`).join(', ') ?? 'None'} ➔ ${newMember.roles.cache.filter(filterOutEveryoneRole).map(r => `<@&${r.id}>`).join(', ') ?? 'None'}`,
-                inline: true,
-            });
+            const addedRoles = newMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !oldMember.roles.cache.has(role.id));
+            if (addedRoles.size >= 1) {
+                fields.push({
+                    name: 'Added Roles',
+                    value: `${addedRoles.map(r => `<@&${r.id}>`).join(', ')}`,
+                    inline: true,
+                });
+            }
+
+            const removedRoles = oldMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !newMember.roles.cache.has(role.id));
+            if (removedRoles.size >= 1) {
+                fields.push({
+                    name: 'Removed Roles',
+                    value: `${removedRoles.map(r => `<@&${r.id}>`).join(', ')}`,
+                    inline: true,
+                });
+            }
         }
 
         // Check if the avatar changed
