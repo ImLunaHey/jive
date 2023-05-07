@@ -269,6 +269,13 @@ export class Feature {
             const member = guild.members.cache.get(memberId);
             if (!member) return;
 
+            // Get the queue
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const queue = this.queuedRolesChanged.get(`${guildId}-${memberId}`) ?? (this.queuedRolesChanged.set(`${guildId}-${memberId}`, { added: new Set(), removed: new Set() }).get(`${guildId}-${memberId}`))!;
+
+            // Clear the queue
+            this.queuedRolesChanged.set(`${guildId}-${memberId}`, { added: new Set(), removed: new Set() });
+
             // Get the audit logs
             const auditLogs = await this.getAuditLogs(guild);
 
