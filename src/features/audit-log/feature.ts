@@ -16,12 +16,16 @@ const filterOutEveryoneRole = (r: Role) => r.name !== '@everyone';
 @Discord()
 export class Feature {
     private logger = globalLogger.child({ service: 'AuditLog' });
+    private queuedRolesChanged = new Map<string, { added: Set<string>; removed: Set<string>; timeout?: NodeJS.Timeout }>();
 
     constructor() {
         this.logger.info('Initialised');
     }
 
-    isValid(auditLog: {
+    /**
+     * Should we process this action
+     */
+    shouldProcess(auditLog: {
         ignoreBots: boolean;
         ignoredUsers: string[];
         ignoredRoles: string[];
@@ -30,7 +34,7 @@ export class Feature {
         member?: GuildMember | PartialGuildMember;
         user?: User;
         channel?: Channel;
-    }) {
+    }): boolean {
         // If there's no user or member bail
         const id = member?.id ?? user?.id;
         if (!id) return false;
@@ -122,7 +126,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, { member })) continue;
+            if (!this.shouldProcess(auditLog, { member })) continue;
 
             // Send the message
             await auditLogChannel.send({
@@ -170,7 +174,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, {
+            if (!this.shouldProcess(auditLog, {
                 member
             })) continue;
 
@@ -216,7 +220,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, {
+            if (!this.shouldProcess(auditLog, {
                 user: ban.user,
             })) continue;
 
@@ -231,6 +235,101 @@ export class Feature {
     @On({ event: 'guildBanRemove' })
     async guildBanRemove([]: ArgsOf<'guildBanRemove'>) {
         // TODO: Audit log - Unban
+    }
+
+    queueRolesChangeMessage(guildId: string, memberId: string, addedRoles: string[], removedRoles: string[]) {
+        // Get the queue for the member in this guild
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const queue = this.queuedRolesChanged.get(`${guildId}-${memberId}`) ?? (this.queuedRolesChanged.set(`${guildId}-${memberId}`, { added: new Set(), removed: new Set() }).get(`${guildId}-${memberId}`))!;
+
+        // Clear the timeout so we can merge the new changes
+        clearTimeout(queue.timeout);
+
+        // Merge all the new changes
+        addedRoles.forEach(roleId => {
+            // Mark this role as added
+            queue.added.add(roleId);
+            // If it was previously removed clear that
+            queue.removed.delete(roleId);
+        });
+        removedRoles.forEach(roleId => {
+            // Mark this role as removed
+            queue.removed.add(roleId);
+            // If it was previously added clear that
+            queue.added.delete(roleId);
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        queue.timeout = setTimeout(async () => {
+            // Get the guild
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) return;
+
+            // Get the member
+            const member = guild.members.cache.get(memberId);
+            if (!member) return;
+
+            // Get the audit logs
+            const auditLogs = await this.getAuditLogs(guild);
+
+            // Create the fields
+            const fields: EmbedField[] = [];
+
+            // Check if roles were added
+            if (queue.added.size >= 1) {
+                fields.push({
+                    name: 'Added Roles',
+                    value: `${[...queue.added.values()].map(id => `<@&${id}>`).join(', ')}`,
+                    inline: true,
+                });
+            }
+
+            // Check if roles were removed
+            if (queue.removed.size >= 1) {
+                fields.push({
+                    name: 'Removed Roles',
+                    value: `${[...queue.removed.values()].map(id => `<@&${id}>`).join(', ')}`,
+                    inline: true,
+                });
+            }
+
+            // Create the embed
+            const embed = new EmbedBuilder({
+                author: {
+                    name: member.user.tag,
+                    icon_url: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+                },
+                description: `📥 <@${member.user.id}> **updated**`,
+                fields,
+                thumbnail: {
+                    url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
+                },
+                color: Colors.Green,
+                footer: {
+                    text: `Member ID: ${member.id}`,
+                },
+            });
+
+            // Send the message to the audit log channels
+            for (const auditLog of auditLogs) {
+                // Check if this action is ignored
+                if (auditLog.ignoredActions?.includes('MEMBER_UPDATE')) continue;
+
+                // Get the audit log channel
+                const auditLogChannel = this.getAuditLogChannel(guild, auditLog.channelId);
+                if (!auditLogChannel) continue;
+
+                // Check if this is valid
+                if (!this.shouldProcess(auditLog, {
+                    member,
+                })) continue;
+
+                // Send the message
+                await auditLogChannel.send({
+                    embeds: [embed]
+                });
+            }
+        }, 5_000);
     }
 
     @On({ event: 'guildMemberUpdate' })
@@ -253,24 +352,12 @@ export class Feature {
         }
 
         // Check if the roles changed
+        // Since multiple roles can be added/removed quickly we queue this message
+        // If a new event comes in before 5s is up we will cancel the old message and queue a new one with the merges results of all the updates
         if (oldMember.roles.cache.filter(filterOutEveryoneRole).size !== newMember.roles.cache.filter(filterOutEveryoneRole).size) {
-            const addedRoles = newMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !oldMember.roles.cache.has(role.id));
-            if (addedRoles.size >= 1) {
-                fields.push({
-                    name: 'Added Roles',
-                    value: `${addedRoles.map(r => `<@&${r.id}>`).join(', ')}`,
-                    inline: true,
-                });
-            }
-
-            const removedRoles = oldMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !newMember.roles.cache.has(role.id));
-            if (removedRoles.size >= 1) {
-                fields.push({
-                    name: 'Removed Roles',
-                    value: `${removedRoles.map(r => `<@&${r.id}>`).join(', ')}`,
-                    inline: true,
-                });
-            }
+            const addedRoleIds = newMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !oldMember.roles.cache.has(role.id)).map(role => role.id);
+            const removedRoleIds = oldMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !newMember.roles.cache.has(role.id)).map(role => role.id);
+            this.queueRolesChangeMessage(newMember.guild.id, newMember.user.id, addedRoleIds, removedRoleIds);
         }
 
         // Check if the avatar changed
@@ -330,7 +417,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, {
+            if (!this.shouldProcess(auditLog, {
                 member: newMember,
             })) continue;
 
@@ -1247,7 +1334,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, {
+            if (!this.shouldProcess(auditLog, {
                 user: message.author,
                 channel: message.channel,
             })) continue;
@@ -1301,7 +1388,7 @@ export class Feature {
             if (!auditLogChannel) continue;
 
             // Check if this is valid
-            if (!this.isValid(auditLog, {
+            if (!this.shouldProcess(auditLog, {
                 channel: firstMessage.channel,
             })) continue;
 
