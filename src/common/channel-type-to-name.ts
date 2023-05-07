@@ -3,17 +3,17 @@ import { ChannelType } from 'discord.js';
 export const channelTypeToName = (type: ChannelType) => {
     switch (type) {
         case ChannelType.GuildText:
-            return 'Guild Text';
+            return 'Text';
         case ChannelType.DM:
             return 'DM';
         case ChannelType.GuildVoice:
-            return 'Guild Voice';
+            return 'Voice';
         case ChannelType.GroupDM:
             return 'Group DM';
         case ChannelType.GuildCategory:
-            return 'Guild Category';
+            return 'Category';
         case ChannelType.GuildAnnouncement:
-            return 'Guild Announcement';
+            return 'Announcement';
         case ChannelType.AnnouncementThread:
             return 'Announcement Thread';
         case ChannelType.PublicThread:
@@ -21,11 +21,11 @@ export const channelTypeToName = (type: ChannelType) => {
         case ChannelType.PrivateThread:
             return 'Private Thread';
         case ChannelType.GuildStageVoice:
-            return 'Guild Stage Voice';
+            return 'Stage';
         case ChannelType.GuildDirectory:
-            return 'Guild Directory';
+            return 'Directory';
         case ChannelType.GuildForum:
-            return 'Guild Forum';
+            return 'Forum';
         default:
             return 'Unknown';
     }

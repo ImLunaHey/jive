@@ -1174,6 +1174,13 @@ export class Feature {
         // Create the embed fields
         const fields: EmbedField[] = [];
 
+        // Channel name
+        fields.push({
+            name: 'Name',
+            value: channel.name,
+            inline: true,
+        });
+
         // Channel type
         fields.push({
             name: 'Type',
@@ -1184,14 +1191,13 @@ export class Feature {
         // Category
         fields.push({
             name: 'Category',
-            value: channel.name,
+            value: channel.parent?.name ?? 'None',
             inline: true,
         });
 
         // Create the embed
         const embed = new EmbedBuilder({
             title: 'Channel Deleted',
-            description: `**${channel.name}**`,
             fields,
             color: Colors.Red,
             footer: {
