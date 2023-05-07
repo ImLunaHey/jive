@@ -282,20 +282,20 @@ export class Feature {
             // Create the fields
             const fields: EmbedField[] = [];
 
-            // Check if roles were added
-            if (queue.added.size >= 1) {
-                fields.push({
-                    name: 'Added Roles',
-                    value: `${[...queue.added.values()].map(id => `<@&${id}>`).join(', ')}`,
-                    inline: true,
-                });
-            }
-
             // Check if roles were removed
             if (queue.removed.size >= 1) {
                 fields.push({
                     name: 'Removed Roles',
                     value: `${[...queue.removed.values()].map(id => `<@&${id}>`).join(', ')}`,
+                    inline: true,
+                });
+            }
+
+            // Check if roles were added
+            if (queue.added.size >= 1) {
+                fields.push({
+                    name: 'Added Roles',
+                    value: `${[...queue.added.values()].map(id => `<@&${id}>`).join(', ')}`,
                     inline: true,
                 });
             }
