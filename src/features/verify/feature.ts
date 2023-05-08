@@ -27,6 +27,14 @@ export class Feature {
         const member = await interaction.guild?.members.fetch(interaction.targetId);
         if (!member) return;
 
+        // Tell staff we're verifying them
+        await interaction.editReply({
+            embeds: [{
+                description: `Verifying <@${member.id}> please wait...`,
+                color: Colors.Blue,
+            }]
+        });
+
         // Check if they have a default profile image
         if (member.displayAvatarURL() === `https://cdn.discordapp.com/embed/avatars/${Number(member.user.discriminator) % 5}.png`) {
             await interaction.editReply({
@@ -51,6 +59,14 @@ export class Feature {
             })
             return;
         }
+
+        // Tell staff they passed all the checks
+        await interaction.editReply({
+            embeds: [{
+                description: `Verified <@${member.id}>, adding/removing roles...`,
+                color: Colors.Blue,
+            }]
+        });
 
         // Add roles
         await member.roles.add('965589467832401950');
@@ -85,6 +101,14 @@ export class Feature {
                 `,
             }],
             content: `<@${member.id}>`,
+        });
+
+        // Tell staff it was successful
+        await interaction.editReply({
+            embeds: [{
+                description: `Verified <@${member.id}>`,
+                color: Colors.Green,
+            }]
         });
     }
 }
