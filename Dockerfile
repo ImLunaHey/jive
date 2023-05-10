@@ -10,6 +10,7 @@ RUN npm install
 COPY src /app/src
 COPY tsconfig.json squirrelly.js /app/
 COPY patches /app/patches
+COPY locales /app/locales
 
 # Build application
 RUN npm run build
