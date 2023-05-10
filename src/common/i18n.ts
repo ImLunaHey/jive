@@ -1,14 +1,11 @@
 import { resolve as resolvePath } from 'path';
 import { readFileSync } from 'fs';
 import baseLanguage from '@app/common/base-language';
+import { globalLogger } from '@app/logger';
 
 const defaultLanguage = 'en-GB' as const;
 
-const enableDebug = false;
-const debug = (message: string, ...args: unknown[]) => {
-    if (!enableDebug) return;
-    console.debug(message, ...args);
-};
+const logger = globalLogger.child({ service: 'i18n' });
 
 const knownLanguages = [
     'id', // Indonesian
@@ -52,7 +49,7 @@ const i18n = {
 
 const loadLanguage = (language: typeof knownLanguages[number] = defaultLanguage) => {
     const filePath = resolvePath('locales/', `${language}.json`);
-    debug(`Loading ${language} from ${filePath}`);
+    logger.info('Loading language from disk', { language, filePath });
     const file = readFileSync(filePath, 'utf-8');
     const loadedLanguage = JSON.parse(file) as Partial<typeof baseLanguage>;
     i18n[language] = loadedLanguage;
@@ -69,7 +66,7 @@ const getLanguage = (language: typeof knownLanguages[number] = defaultLanguage) 
         };
     } catch { }
 
-    debug(`Failed to load ${language} falling back to ${defaultLanguage}`);
+    logger.info('Failed to load language falling back to default', { language });
     return {
         loadedLanguage: defaultLanguage,
         values: i18n[defaultLanguage],
@@ -88,7 +85,7 @@ export const t = <K extends keyof typeof baseLanguage>(key: K, params: ToObj<Par
     // If not then load it
     const { loadedLanguage, values, source } = getLanguage(language);
 
-    debug(`Loaded ${loadedLanguage} from ${source}`, values);
+    logger.info('Loaded language', { loadedLanguage, source });
 
     // Check if the key is in the language
     let value = values[key];
@@ -96,7 +93,7 @@ export const t = <K extends keyof typeof baseLanguage>(key: K, params: ToObj<Par
     // If the key is missing try and load the fall back
     if (value === undefined) {
         value = i18n[defaultLanguage][key];
-        debug(`Missing key "${key}" for "${loadedLanguage}".`);
+        logger.info('Missing key', { loadedLanguage, key });
     }
 
     return typeof value === 'string' ? replacePlaceholders(value, params) : value;
