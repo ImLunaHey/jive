@@ -1,6 +1,6 @@
 import { resolve as resolvePath } from 'path';
 import { readFileSync } from 'fs';
-import baseLanguage from '@app/locales/en-GB';
+import baseLanguage from '@app/common/base-language';
 
 const defaultLanguage = 'en-GB' as const;
 
@@ -51,7 +51,7 @@ const i18n = {
 } as I18n;
 
 const loadLanguage = (language: typeof knownLanguages[number] = defaultLanguage) => {
-    const filePath = resolvePath('src/locales/', `${language}.json`);
+    const filePath = resolvePath('locales/', `${language}.json`);
     debug(`Loading ${language} from ${filePath}`);
     const file = readFileSync(filePath, 'utf-8');
     const loadedLanguage = JSON.parse(file) as Partial<typeof baseLanguage>;
