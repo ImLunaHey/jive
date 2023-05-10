@@ -2,22 +2,23 @@ import { inspect } from 'util';
 import { client } from '@app/client';
 import { env } from '@app/env';
 import { globalLogger } from '@app/logger';
-import { ActionRowBuilder, AttachmentBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
-import { createCanvas, loadImage } from '@napi-rs/canvas';
-import type { Canvas } from '@napi-rs/canvas';
+// import { createCanvas, loadImage } from '@napi-rs/canvas';
+// import type { Canvas } from '@napi-rs/canvas';
 import { db } from '@app/common/database';
+import { t } from '@app/common/i18n';
 
-const applyText = (canvas: Canvas, text: string) => {
-    const context = canvas.getContext('2d');
-    let fontSize = 70;
+// const applyText = (canvas: Canvas, text: string) => {
+//     const context = canvas.getContext('2d');
+//     let fontSize = 70;
 
-    do {
-        context.font = `${fontSize -= 10}px sans-serif`;
-    } while (context.measureText(text).width > canvas.width - 300);
+//     do {
+//         context.font = `${fontSize -= 10}px sans-serif`;
+//     } while (context.measureText(text).width > canvas.width - 300);
 
-    return context.font;
-};
+//     return context.font;
+// };
 
 const isPromiseLike = <T>(element: unknown): element is Promise<T> => {
     if (element === null) return false;
@@ -184,17 +185,25 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: false });
 
+        // Get the guild's locale
+        const locale = interaction.guild?.preferredLocale;
+
+        // Send a loading message
         const message = await interaction.editReply({
             embeds: [{
-                title: 'Pong!',
-                description: 'Checking the ping...'
+                title: t('debug.messages.ping.title', {}, locale),
+                description: t('debug.messages.ping.loading', {}, locale)
             }]
         });
 
+        // Send the computed message and discord API latency
         await message.edit({
             embeds: [{
                 title: 'Pong!',
-                description: `Message latency is ${message.createdTimestamp - interaction.createdTimestamp}ms. API Latency is ${Math.round(interaction.client.ws.ping)}ms`
+                description: t('debug.messages.ping.latency', {
+                    messageLatency: String(message.createdTimestamp - interaction.createdTimestamp),
+                    apiLatency: String(Math.round(interaction.client.ws.ping)),
+                }, locale),
             }]
         });
     }

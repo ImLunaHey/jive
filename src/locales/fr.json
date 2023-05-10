@@ -1,0 +1,13 @@
+{
+    "nom.bot": "Jive",
+    "verify.menus.verifyMember": "Vérifier le membre",
+    "verify.messages.loading": "Vérification de <@{memberId}> veuillez patienter...",
+    "verify.messages.failed.title": "Échec de la vérification du membre",
+    "verify.messages.failed.defaultProfileImage": "Le membre a une image de profil par défaut.",
+    "verify.messages.failed.missingRoles": "Il manque des rôles au membre.",
+    "verify.messages.success.configuringRoles": "<@{memberId}> vérifié, ajout/suppression de rôles...",
+    "verify.messages.success.verified": "Vérifié <@{memberId}>",
+    "debug.messages.ping.title": "Pong !",
+    "debug.messages.ping.loading": "Vérification du ping...",
+    "debug.messages.ping.latency": "La latence des messages est de {messageLatency}ms. La latence de l'API est de {apiLatency}ms"
+}
