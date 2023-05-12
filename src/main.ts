@@ -19,6 +19,11 @@ const logStats = () => {
 // Log stats on startup
 logStats();
 
+// Log stats every minute
+setInterval(() => {
+    logStats();
+}, 60_000);
+
 start().catch((error: unknown) => {
     if (!(error instanceof Error)) throw new Error(`Unknown error "${String(error)}"`);
     logger.error('Failed to load bot', {
