@@ -80,6 +80,11 @@ export class Feature {
 
         // Tag member in verified channel
         await verifiedChannel.send({
+            content: `<@${member.id}> you're now verified, please check your DMs for more info!`,
+        });
+
+        // Send the member the DM with follow up info
+        await member.send({
             embeds: [{
                 title: 'Welcome to the real Luna\'s Lobby! Glad you made it! 💖',
                 description: outdent`
@@ -100,7 +105,6 @@ export class Feature {
                     Please check the pins of the threads you are in for important information, and please feel free to ask if you have questions! Have fun and hope to see you around! 💖
                 `,
             }],
-            content: `<@${member.id}>`,
         });
 
         // Tell staff it was successful
