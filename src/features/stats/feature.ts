@@ -1,6 +1,5 @@
 import { client } from '@app/client';
 import { db } from '@app/common/database';
-import { getDate } from '@app/common/get-date';
 import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
 import { Logger } from '@app/logger';
@@ -406,7 +405,7 @@ export class Feature {
             .selectFrom('channel_stats')
             .select('channelId')
             .select(db.fn.sum<number>('count').as('totalCount'))
-            .where('date', '=', getDate())
+            .where('date', '>=', new Date(new Date().getTime() - ONE_DAY))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('channelId')
             .orderBy('totalCount', 'desc')
