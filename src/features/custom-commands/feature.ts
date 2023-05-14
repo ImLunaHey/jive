@@ -1,5 +1,5 @@
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { ChannelType } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
@@ -8,7 +8,7 @@ import { db } from '@app/common/database';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'CustomCommands' });
+    private logger = new Logger({ service: 'CustomCommands' });
 
     constructor() {
         this.logger.info('Initialised');

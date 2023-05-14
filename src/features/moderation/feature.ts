@@ -1,11 +1,11 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Moderation' });
+    private logger = new Logger({ service: 'Moderation' });
 
     constructor() {
         this.logger.info('Initialised');

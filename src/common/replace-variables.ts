@@ -1,5 +1,5 @@
 import { createTimer } from '@app/common/timer';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { Collection, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
 import { Colors } from 'discord.js';
 import { readFileSync } from 'fs';
@@ -64,7 +64,7 @@ const renderTemplate = (template: string, data: Record<string, unknown>): string
     `) as unknown;
 
     if (typeof result !== 'string') {
-        globalLogger.child({
+        new Logger({
             service: 'replaceVariables'
         }).error('Failed to render message, received non-string result.');
         return 'Failed to render message, please contact <@784365843810222080>.';

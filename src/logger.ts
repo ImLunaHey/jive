@@ -1,22 +1,8 @@
-import winston, { format } from 'winston';
+import winston, { format, type Logger as WinstonLogger, createLogger } from 'winston';
 import { WinstonTransport as AxiomTransport } from '@axiomhq/axiom-node';
 import chalk from 'chalk';
 import * as pkg from '@app/../package.json';
 import { getCommitHash } from '@app/common/get-commit-hash';
-
-export const globalLogger = winston.createLogger({
-    level: 'info',
-    format: format.combine(
-        format.errors({ stack: true }),
-        format.json()
-    ),
-    defaultMeta: {
-        botName: pkg.name,
-        pid: process.pid,
-        commitHash: getCommitHash(),
-    },
-    transports: [],
-});
 
 const logLevelColours = {
     error: 'red',
@@ -31,14 +17,6 @@ const colourLevel = (level: keyof typeof logLevelColours) => {
     return chalk[colour](level);
 };
 
-if (process.env.NODE_ENV === 'test') {
-    globalLogger.silent = true;
-}
-
-if (process.env.AXIOM_TOKEN) {
-    globalLogger.add(new AxiomTransport());
-}
-
 declare const splatSymbol: unique symbol;
 
 type Meta = {
@@ -51,16 +29,73 @@ const formatMeta = (meta: Meta) => {
     return '';
 };
 
-// Add the console logger if we're not running tests and there are no transports
-if (process.env.NODE_ENV !== 'test' && globalLogger.transports.length === 0) {
-    globalLogger.add(
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.printf(({ service, level, message, timestamp, ...meta }) => {
-                    return `${new Date(timestamp as string).toLocaleTimeString('en')} [${(service as string) ?? 'app'}] [${colourLevel(level as keyof typeof logLevelColours)}]: ${message as string} ${formatMeta(meta as Meta)}`;
-                }),
+type Options = {
+    service: string;
+}
+
+export class Logger {
+    private logger: WinstonLogger;
+
+    constructor(options: Options) {
+        this.logger = createLogger({
+            level: 'info',
+            format: format.combine(
+                format.errors({ stack: true }),
+                format.json()
             ),
-        }),
-    );
+            defaultMeta: {
+                botName: pkg.name,
+                pid: process.pid,
+                commitHash: getCommitHash(),
+                service: options.service,
+            },
+            transports: [],
+        });
+
+        // Don't log while running tests
+        // This allows the methods to still be hooked
+        // while not messing up the test output
+        if (process.env.NODE_ENV === 'test') {
+            this.logger.silent = true;
+        }
+
+        // Use Axiom for logging if a token is provided
+        if (process.env.AXIOM_TOKEN) {
+            this.logger.add(new AxiomTransport());
+        }
+
+        // Add the console logger if we're not running tests and there are no transports
+        if (process.env.NODE_ENV !== 'test' && this.logger.transports.length === 0) {
+            this.logger.add(
+                new winston.transports.Console({
+                    format: winston.format.combine(
+                        winston.format.timestamp(),
+                        winston.format.printf(({ service, level, message, timestamp, ...meta }) => {
+                            const formattedDate = new Date(timestamp as string).toLocaleTimeString('en');
+                            const serviceName = (service as string) ?? 'app';
+                            const formattedLevel = colourLevel(level as keyof typeof logLevelColours);
+                            const formattedMeta = formatMeta(meta as Meta);
+                            return `${formattedDate} [${serviceName}] [${formattedLevel}]: ${message as string} ${formattedMeta}`;
+                        }),
+                    ),
+                }),
+            );
+        }
+    }
+
+    debug(message: string, meta?: Record<string, unknown>) {
+        this.logger.debug(message, meta);
+    }
+
+    info(message: string, meta?: Record<string, unknown>) {
+        this.logger.info(message, meta);
+    }
+
+    warn(message: string, meta?: Record<string, unknown>) {
+        this.logger.warn(message, meta);
+    }
+
+    error(message: string, meta?: { error: Error, cause?: Error } & Record<string, unknown>) {
+        this.logger.error(message, meta);
+    }
 }

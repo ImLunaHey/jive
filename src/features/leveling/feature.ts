@@ -2,7 +2,7 @@ import type { GuildMember, TextChannel, VoiceChannel } from 'discord.js';
 import { Colors } from 'discord.js';
 import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, SlashOption } from 'discordx';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { levelService } from '@app/features/leveling/service';
 import { outdent } from 'outdent';
 import { client } from '@app/client';
@@ -14,7 +14,7 @@ import { emojiBar } from '@app/common/emoji-bar';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Leveling' });
+    private logger = new Logger({ service: 'Leveling' });
 
     constructor() {
         this.logger.info('Initialised');

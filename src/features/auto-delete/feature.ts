@@ -1,10 +1,10 @@
 import { db } from '@app/common/database';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'AutoDelete' });
+    private logger = new Logger({ service: 'AutoDelete' });
 
     constructor() {
         this.logger.info('Initialised');

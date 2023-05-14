@@ -1,7 +1,7 @@
 import { inspect } from 'util';
 import { client } from '@app/client';
 import { env } from '@app/env';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ActionRowBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 // import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -38,7 +38,7 @@ const replaceAll = (string: string, search: string, replace: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Debug' });
+    private logger = new Logger({ service: 'Debug' });
 
     constructor() {
         this.logger.info('Initialised');

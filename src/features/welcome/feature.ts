@@ -3,13 +3,13 @@ import { db } from '@app/common/database';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { GuildMember, TextChannel } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Welcome' });
+    private logger = new Logger({ service: 'Welcome' });
 
     constructor() {
         this.logger.info('Initialised');

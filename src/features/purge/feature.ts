@@ -1,4 +1,4 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { GuildMember } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle } from 'discord.js';
 import { ApplicationCommandOptionType, CommandInteraction, PermissionFlagsBits } from 'discord.js';
@@ -20,7 +20,7 @@ const filters = {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Purge' });
+    private logger = new Logger({ service: 'Purge' });
 
     constructor() {
         this.logger.info('Initialised');

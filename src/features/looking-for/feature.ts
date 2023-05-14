@@ -1,4 +1,4 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { Discord, Slash, ModalComponent, ButtonComponent, Guard } from 'discordx';
 import { RateLimit, TIME_UNIT } from '@discordx/utilities';
@@ -6,7 +6,7 @@ import { RateLimit, TIME_UNIT } from '@discordx/utilities';
 @Discord()
 export class Feature {
     private embedCache = new Map<string, EmbedBuilder>();
-    private logger = globalLogger.child({ service: 'LookingFor' });
+    private logger = new Logger({ service: 'LookingFor' });
 
     private channelId = '1083557897813901404';
 

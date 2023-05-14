@@ -1,11 +1,11 @@
 import { resolve as resolvePath } from 'path';
 import { readFileSync } from 'fs';
 import baseLanguage from '@app/common/base-language';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 
 const defaultLanguage = 'en-GB' as const;
 
-const logger = globalLogger.child({ service: 'i18n' });
+const logger = new Logger({ service: 'i18n' });
 
 const knownLanguages = [
     'id', // Indonesian

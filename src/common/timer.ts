@@ -1,4 +1,4 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 
 const parseHrtimeToSeconds = (hrtime: [number, number]) => {
     const seconds = (hrtime[0] + (hrtime[1] / 1e9)).toFixed(3);
@@ -9,6 +9,6 @@ export const createTimer = (scope: string) => {
     const startTime = process.hrtime();
     return () => {
         const seconds = parseHrtimeToSeconds(process.hrtime(startTime));
-        globalLogger.child({ service: 'Timer' }).info(`[${scope}] Took ${seconds} seconds.`);
+        new Logger({ service: 'Timer' }).info(`[${scope}] Took ${seconds} seconds.`);
     };
 };

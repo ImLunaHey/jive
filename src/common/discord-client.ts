@@ -1,6 +1,6 @@
 import type { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { env } from '@app/env';
 import { DatabaseError } from '@planetscale/database';
 import { serializeError } from 'serialize-error';
@@ -40,7 +40,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     if (clients.has(name)) return clients.get(name)!;
 
     // Create logger instance
-    const logger = globalLogger.child({ service: 'discord-client' });
+    const logger = new Logger({ service: 'discord-client' });
 
     // Create a discord.js client instance
     const client = new Client({

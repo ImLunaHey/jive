@@ -1,10 +1,10 @@
 import { db } from '@app/common/database';
 import { getDate } from '@app/common/get-date';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { Message } from 'discord.js';
 
 class Service {
-    private logger = globalLogger.child({ service: 'Stats' });
+    private logger = new Logger({ service: 'Stats' });
 
     public channelStats: {
         guildId: string;

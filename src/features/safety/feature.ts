@@ -1,11 +1,11 @@
 import { Discord, Slash, SlashOption } from 'discordx';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Safety' });
+    private logger = new Logger({ service: 'Safety' });
 
     constructor() {
         this.logger.info('Initialised');

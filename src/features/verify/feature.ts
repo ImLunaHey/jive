@@ -1,5 +1,5 @@
 import { ContextMenu, Discord, Guild } from 'discordx';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { Colors } from 'discord.js';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
@@ -8,7 +8,7 @@ import { outdent } from 'outdent';
 @Discord()
 @Guild('927461441051701280')
 export class Feature {
-    private logger = globalLogger.child({ service: 'Verify' });
+    private logger = new Logger({ service: 'Verify' });
 
     constructor() {
         this.logger.info('Initialised');

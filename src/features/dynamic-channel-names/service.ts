@@ -2,7 +2,7 @@ import { client } from '@app/client';
 import { db } from '@app/common/database';
 import { replaceVariablesForGuild } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ChannelType } from 'discord.js';
 
 // NOTE: Add these to the database for luna's lobby
@@ -10,7 +10,7 @@ import { ChannelType } from 'discord.js';
 // `💳 {{ guild.roles['927469767680487474'].size }} sellers`
 
 class DynamicChannelNamesService {
-    private logger = globalLogger.child({ service: 'DynamicChannelNames' });
+    private logger = new Logger({ service: 'DynamicChannelNames' });
 
     async setChannelNames() {
         // Wait until the client is ready

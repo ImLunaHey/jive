@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { env } from '@app/env';
 import pkg from '../package.json';
 import { client } from '@app/client';
@@ -7,7 +7,7 @@ import { client } from '@app/client';
 const { name } = pkg;
 
 export const start = async () => {
-    const logger = globalLogger.child({ service: 'bot' });
+    const logger = new Logger({ service: 'bot' });
     logger.info('Starting bot', {
         name,
         env: env.NODE_ENV,

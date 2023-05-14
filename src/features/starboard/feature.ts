@@ -1,6 +1,6 @@
 import { client } from '@app/client';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { MessageReaction, PartialMessageReaction, PartialUser, TextChannel, User } from 'discord.js';
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
@@ -18,7 +18,7 @@ const extension = (attachment: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Starboard' });
+    private logger = new Logger({ service: 'Starboard' });
 
     constructor() {
         this.logger.info('Initialised');

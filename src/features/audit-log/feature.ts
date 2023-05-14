@@ -4,7 +4,7 @@ import { db } from '@app/common/database';
 import { hexToColour } from '@app/common/hex-to-colour';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { timeLength } from '@app/common/time';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { EmbedBuilder } from '@discordjs/builders';
 import type { Channel, EmbedField, Guild, GuildMember, InviteGuild, PartialGuildMember, Role, TextChannel, User } from 'discord.js';
 import { ChannelType, Colors } from 'discord.js';
@@ -15,7 +15,7 @@ const filterOutEveryoneRole = (r: Role) => r.name !== '@everyone';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'AuditLog' });
+    private logger = new Logger({ service: 'AuditLog' });
     private queuedRolesChanged = new Map<string, { added: Set<string>; removed: Set<string>; timeout?: NodeJS.Timeout }>();
 
     constructor() {

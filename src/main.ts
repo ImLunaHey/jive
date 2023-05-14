@@ -1,7 +1,7 @@
 import { start } from '@app/bot';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 
-const logger = globalLogger.child({ service: 'bot' });
+const logger = new Logger({ service: 'bot' });
 
 const logStats = () => {
     try {

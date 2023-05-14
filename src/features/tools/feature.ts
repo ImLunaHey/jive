@@ -1,5 +1,5 @@
 import { db } from '@app/common/database';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import * as sd from 'simple-duration';
@@ -20,7 +20,7 @@ const parseTime = (input?: string) => {
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Stats' });
+    private logger = new Logger({ service: 'Stats' });
 
     constructor() {
         this.logger.info('Initialised');

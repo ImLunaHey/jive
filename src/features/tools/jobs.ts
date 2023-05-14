@@ -1,11 +1,11 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { Cron, Expression } from '@reflet/cron';
 import { db } from '@app/common/database';
 import { sql } from 'kysely';
 import { client } from '@app/client';
 
 export class Jobs {
-    private logger = globalLogger.child({ service: 'Tools:Jobs' });
+    private logger = new Logger({ service: 'Tools:Jobs' });
 
     constructor() {
         this.logger.info('Initialised');

@@ -1,13 +1,13 @@
 import { client } from '@app/client';
 import { sleep } from '@app/common/sleep';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { Colors } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Void' });
+    private logger = new Logger({ service: 'Void' });
 
     constructor() {
         this.logger.info('Initialised');

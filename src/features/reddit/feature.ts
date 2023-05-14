@@ -1,5 +1,5 @@
 import type { RedditListResponse, RedditRandomResponse, T3 } from '@app/features/reddit/types';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ const SubredditName = z.string().regex(/^[a-zA-Z0-9_]+$/).min(3).max(21);
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Reddit' });
+    private logger = new Logger({ service: 'Reddit' });
 
     constructor() {
         this.logger.info('Initialised');

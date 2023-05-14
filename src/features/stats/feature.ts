@@ -3,7 +3,7 @@ import { db } from '@app/common/database';
 import { getDate } from '@app/common/get-date';
 import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, Colors } from 'discord.js';
 import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
@@ -11,7 +11,7 @@ import { outdent } from 'outdent';
 
 @Discord()
 export class Feature {
-    private logger = globalLogger.child({ service: 'Stats' });
+    private logger = new Logger({ service: 'Stats' });
 
     constructor() {
         this.logger.info('Initialised');

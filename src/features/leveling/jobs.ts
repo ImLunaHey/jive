@@ -1,11 +1,11 @@
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import { levelService } from '@app/features/leveling/service';
 import { client } from '@app/client';
 import { store } from '@app/store';
 import { Cron, Expression } from '@reflet/cron';
 
 export class Jobs {
-    private logger = globalLogger.child({ service: 'Leveling:Jobs' });
+    private logger = new Logger({ service: 'Leveling:Jobs' });
 
     constructor() {
         this.logger.info('Initialised');

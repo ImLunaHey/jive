@@ -1,7 +1,7 @@
 import '@total-typescript/ts-reset';
 import { client } from '@app/client';
 import type { Feature as FeatureId } from '@app/common/database/enums';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 import type { ButtonComponent, CacheType, ChatInputCommandInteraction, Guild, TextChannel } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PagesBuilder } from 'discord.js-pages';
@@ -13,7 +13,7 @@ import { json } from '@app/common/json';
 @Discord()
 export class Feature {
     private client = client;
-    private logger = globalLogger.child({ service: 'Setup' });
+    private logger = new Logger({ service: 'Setup' });
 
     constructor() {
         this.logger.info('Initialised');

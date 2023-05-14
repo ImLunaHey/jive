@@ -1,10 +1,10 @@
 import { db } from '@app/common/database';
 import type { Feature } from '@app/common/database/enums';
-import { globalLogger } from '@app/logger';
+import { Logger } from '@app/logger';
 
 const globallyEnabled: Feature[] = [];
 
-const logger = globalLogger.child({ service: 'common:is-feature-enabled' });
+const logger = new Logger({ service: 'common:is-feature-enabled' });
 
 const check = async (feature: Feature, guildId?: string) => {
     if (!guildId) return false;
