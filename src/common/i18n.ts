@@ -75,7 +75,7 @@ const getLanguage = (language: typeof knownLanguages[number] = defaultLanguage) 
 };
 
 type ParserError<E extends string> = { error: true } & E
-type ParseParams<T extends string, Params extends string = never> = string extends T ? ParserError<'T must be a literal type'> : T extends `${infer Prefix}{${infer Param}}${infer Rest}` ? ParseParams<Rest, Params | Param> : Params
+type ParseParams<T extends string, Params extends string = never> = string extends T ? ParserError<'T must be a literal type'> : T extends `${string}{${infer Param}}${infer Rest}` ? ParseParams<Rest, Params | Param> : Params
 type ToObj<P extends string> = { [k in P]: string }
 type Placeholders = Record<string, string>;
 const replacePlaceholders = <const T extends string>(string: T, placeholders: Placeholders): T => string.replace(/{(.*?)}/g, (match: string, key: string) => placeholders[key.trim()] || match) as T;

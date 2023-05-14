@@ -21,8 +21,8 @@ const check = async (feature: Feature, guildId?: string) => {
 
     try {
         return settings?.featuresEnabled.includes(feature) ?? false;
-    } catch (error) {
-        logger.error(error);
+    } catch (error: unknown) {
+        logger.error('Failed checking if feature is enabled', { error });
 
         return false;
     }

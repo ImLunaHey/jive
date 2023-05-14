@@ -95,7 +95,7 @@ export class Logger {
         this.logger.warn(message, meta);
     }
 
-    error(message: string, meta?: { error: Error, cause?: Error } & Record<string, unknown>) {
+    error(message: string, meta?: { error: unknown, cause?: unknown } & Record<string, unknown>) {
         this.logger.error(message, meta);
     }
 }

@@ -64,8 +64,8 @@ export class Feature {
             // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
             try {
                 await reaction.fetch();
-            } catch (error) {
-                this.logger.error('Something went wrong when fetching the message:', error);
+            } catch (error: unknown) {
+                this.logger.error('Something went wrong when fetching the message', { error });
                 // Return as `reaction.message.author` may be undefined/null
                 return;
             }
@@ -92,7 +92,13 @@ export class Feature {
         // Check that at least one starboard has the reaction enabled
         if (starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
 
-        this.logger.info('%s added a %s reaction in %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
+        this.logger.info('Member added a new reaction to a message', {
+            guildId: reaction.message.guild.id,
+            memberId: user.id,
+            channelId: reaction.message.channel.id,
+            messageId: reaction.message.id,
+            emoji: reaction.emoji.id,
+        });
 
         // For each starboard
         for (const starboard of starboards) {
@@ -108,7 +114,13 @@ export class Feature {
             if (starChannel.type !== ChannelType.GuildText) return;
 
             // Log
-            this.logger.info('Adding a starboard message for %s with a reaction of %s', reaction.message.id, reaction.emoji.name);
+            this.logger.info('Adding a starboard message', {
+                guildId: reaction.message.guild.id,
+                memberId: user.id,
+                channelId: reaction.message.channel.id,
+                messageId: reaction.message.id,
+                emoji: reaction.emoji.id,
+            });
 
             // Fetch the messages in the starboard channel
             const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
@@ -178,14 +190,13 @@ export class Feature {
 
     @On({ event: 'messageReactionRemove' })
     async messageReactionRemove([reaction, user]: ArgsOf<'messageReactionAdd'>): Promise<void> {
-        // Check if the starboard feature is enabled
-        if (!await isFeatureEnabled('STARBOARD', reaction.message.guild?.id)) return;
+        const guild = reaction.message.guild;
 
         // Skip if the message is in a DM
-        if (!reaction.message.guild) {
-            this.logger.info('Message is in a DM');
-            return;
-        }
+        if (!guild) return;
+
+        // Check if the starboard feature is enabled
+        if (!await isFeatureEnabled('STARBOARD', guild.id)) return;
 
         // Fetch the client's details if it hasn't been cached
         const clientUser = client.user?.id ? client.user : await client.user?.fetch();
@@ -196,8 +207,8 @@ export class Feature {
             // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
             try {
                 await reaction.fetch();
-            } catch (error) {
-                this.logger.error('Something went wrong when fetching the message:', error);
+            } catch (error: unknown) {
+                this.logger.error('Something went wrong when fetching the message', { error });
                 // Return as `reaction.message.author` may be undefined/null
                 return;
             }
@@ -210,18 +221,14 @@ export class Feature {
         }
 
         // Check if the reaction is valid
-        if (!this.isReactionValid(reaction, user)) {
-            this.logger.info('Reaction is not valid', reaction.emoji.name);
-            this.logger.info(reaction.message.embeds[0]);
-            return;
-        }
+        if (!this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
         const starboards = await db
             .selectFrom('starboards')
             .select('allowedReactions')
             .select('starboardChannelId')
-            .where('guildId', '=', reaction.message.guild.id)
+            .where('guildId', '=', guild.id)
             .execute();
 
         // Check if this guild has any starboards
@@ -230,7 +237,14 @@ export class Feature {
         // Check that at least one starboard has the reaction enabled
         if (starboards.every(starboard => !starboard.allowedReactions.includes(reaction.emoji.name ?? ''))) return;
 
-        this.logger.info('%s removed a %s reaction from %s', user.tag, reaction.emoji.name, (reaction.message.channel as TextChannel).name);
+        // Log
+        this.logger.info('Removed a reaction', {
+            guildId: guild.id,
+            memberId: user.id,
+            channelId: reaction.message.channel.id,
+            messageId: reaction.message.id,
+            emoji: reaction.emoji.id,
+        });
 
         // For each starboard
         for (const starboard of starboards) {
@@ -239,12 +253,12 @@ export class Feature {
             if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
 
             // Get the starboard channel
-            const starChannel = reaction.message.guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
-            if (!starChannel) return;
-            if (starChannel.type !== ChannelType.GuildText) return;
+            const starboardChannel = guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
+            if (!starboardChannel) return;
+            if (starboardChannel.type !== ChannelType.GuildText) return;
 
             // Fetch the messages in the starboard channel
-            const fetchedMessages = await starChannel.messages.fetch({ limit: 100 });
+            const fetchedMessages = await starboardChannel.messages.fetch({ limit: 100 });
 
             // Find the starboard message
             const starboardMessage = fetchedMessages.find(message =>
@@ -272,9 +286,17 @@ export class Feature {
                 // If the starboard message has no stars, delete it
                 if (starCount === 0) {
                     await sleep(1_000);
-                    await starboardMessage.delete().catch(() => {
-                        this.logger.error('Failed to delete starboard message', starboardMessage.id);
-                    });
+                    try {
+                        await starboardMessage.delete();
+                    } catch (error: unknown) {
+                        this.logger.error('Failed to delete starboard message', {
+                            error,
+                            guildId: guild.id,
+                            channelId: starboardChannel.id,
+                            memberId: user.id,
+                            messageId: starboardMessage.id,
+                        });
+                    }
                 }
             }
         }

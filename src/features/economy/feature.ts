@@ -1,6 +1,5 @@
-import { GuildMemberGuard } from '@app/common/create-guild-member';
 import { Logger } from '@app/logger';
-import { Discord, Guard } from 'discordx';
+import { Discord } from 'discordx';
 
 // const coinEmoji = '<:coins:1083037299220152351>';
 
@@ -70,7 +69,7 @@ import { Discord, Guard } from 'discordx';
 // };
 
 @Discord()
-@Guard(GuildMemberGuard)
+// @Guard(GuildMemberGuard)
 export class Feature {
     private logger = new Logger({ service: 'Economy' });
 

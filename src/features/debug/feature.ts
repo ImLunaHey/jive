@@ -250,7 +250,9 @@ export class Feature {
                 const code = interaction.fields.getTextInputValue('code');
 
                 // Evaluate our input
-                const evaluated = eval(`(async () => { ${code} })()`) as unknown;
+                // Avoid esbuild direct-eval
+                // See: https://esbuild.github.io/content-types/#direct-eval
+                const evaluated = (0, eval)(`(async () => { ${code} })()`) as unknown;
 
                 // Cleanup result
                 let result = evaluated;
