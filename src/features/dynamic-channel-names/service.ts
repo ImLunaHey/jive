@@ -40,7 +40,10 @@ class DynamicChannelNamesService {
             if ((channel.type === ChannelType.GuildVoice ? channel.name : channel.name.replace(/\-/g, ' ')) === newName) continue;
 
             // Update the channel name
-            this.logger.info('Updating channel name from "%s" to "%s" in "%s"', channel.name, newName, guild.name);
+            this.logger.info('Updating channel name', {
+                guildId: guild.id,
+                channelId: channel.id,
+            });
             await channel.setName(newName);
         }
     }

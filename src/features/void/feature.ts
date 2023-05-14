@@ -39,7 +39,10 @@ export class Feature {
             // Wait 30 seconds and then delete the message
             void sleep(30_000).then(async () => {
                 await message.delete().catch(() => {
-                    this.logger.warn('Failed to delete message %s', message.id);
+                    this.logger.warn('Failed to delete message', {
+                        guildId: voidChannel.guild.id,
+                        messageId: message.id,
+                    });
                 });
             });
         }
@@ -81,8 +84,11 @@ export class Feature {
         });
 
         await sleep(60_000);
-        await message.delete().catch(() => {
-            this.logger.warn('Failed to delete message %s', message.id);
+        await message.delete().catch((error: unknown) => {
+            this.logger.warn('Failed to delete message', {
+                error,
+                messageId: message.id,
+            });
         });
     }
 }

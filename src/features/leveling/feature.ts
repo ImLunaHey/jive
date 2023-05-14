@@ -36,7 +36,10 @@ export class Feature {
                 .filter((channel) => channel.type === ChannelType.GuildVoice)
                 .forEach((channel) => {
                     (channel as VoiceChannel).members.forEach((member) => {
-                        this.logger.info('Adding "%s" to the usersInVC set', member.user.username);
+                        this.logger.info('Adding member to the usersInVC set', {
+                            guildId: member.guild.id,
+                            memberId: member.id,
+                        });
                         const usersInVC = store.getState().usersInVC.get(member.guild.id)
                         if (!usersInVC) store.setState({ usersInVC: new Map([[member.guild.id, new Set(member.id)]]) });
                         else usersInVC.delete(member.id);
@@ -300,13 +303,18 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         try {
-            this.logger.info('Fetching the leaderboard for guild "%s"', interaction.guild.name);
+            this.logger.info('Fetching guild leaderboard', {
+                guildId: interaction.guild.id,
+            });
 
             // Get the Mee6 leaderboard
             const leaderboard = await mee6LevelsApi.getLeaderboard(interaction.guild.id);
 
             // Import the leaderboard
-            this.logger.info('Importing the leaderboard for guild "%s", this consists of %s members', interaction.guild.name, leaderboard.length);
+            this.logger.info('Importing guild leaderboard', {
+                guildId: interaction.guild.id,
+                count: leaderboard.length,
+            });
             await interaction.editReply({
                 content: 'Importing the leaderboard, this may take a while...'
             });

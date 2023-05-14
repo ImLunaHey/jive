@@ -2,29 +2,8 @@ import type { Interaction, Message, Partials } from 'discord.js';
 import { Client } from 'discordx';
 import { Logger } from '@app/logger';
 import { env } from '@app/env';
-import { DatabaseError } from '@planetscale/database';
-import { serializeError } from 'serialize-error';
 
 const clients = new Map<string, Client>();
-
-const parseDatabaseError = (error: DatabaseError) => {
-    try {
-        const targetArray = error.body.message.split(': ');
-
-        return {
-            type: targetArray[2].split(': ')[0],
-            code: targetArray[2].match(/code = (\w+)/)?.[1],
-            description: targetArray[2].match(/desc = (.+?) \(errno/)?.[1],
-            errno: targetArray[2].match(/\(errno (\d+)\)/)?.[1],
-            sqlstate: targetArray[2].match(/\(sqlstate (\w+)\)/)?.[1],
-            callerID: targetArray[2].match(/\(CallerID: (.+)\):/)?.[1],
-            sql: targetArray[2].match(/Sql: "(.+?)"/)?.[1].replace(/\`/g, "'"),
-            bindVars: targetArray[2].match(/BindVars: {(.+?)}/)?.[1],
-        };
-    } catch { }
-
-    return null;
-};
 
 /**
  * Creates or returns a named discord.js client

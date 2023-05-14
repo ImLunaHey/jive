@@ -3,7 +3,6 @@ import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { Colors } from 'discord.js';
 import { ApplicationCommandType, MessageContextMenuCommandInteraction } from 'discord.js';
-import { outdent } from 'outdent';
 
 @Discord()
 @Guild('927461441051701280')
