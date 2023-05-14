@@ -94,4 +94,3 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     // Give them the newly created client
     return discordXClient;
 };
-
