@@ -28,12 +28,28 @@ export class Feature {
         if (!client.user || !message.mentions.has(client.user.id)) return;
 
         // Get random meme from reddit.com/r/meme/hot
-        const randomPost = await redditService.getRandomRedditPost(2, 'random', 'meme', 100);
-        const hasUrl = randomPost?.url !== undefined;
-        const isImage = randomPost?.url.endsWith('jpg') || randomPost?.url.endsWith('png') || randomPost?.url.endsWith('gif');
+        const post = await redditService.getRandomRedditPost(2, 'random', 'meme', 100);
+        const hasUrl = post?.url !== undefined;
+        const isImage = post?.url.endsWith('jpg') || post?.url.endsWith('png') || post?.url.endsWith('gif');
 
         // Reply with the meme
-        await message.reply((hasUrl && isImage) ? randomPost.url : '👋 hi there');
+        await message.reply((hasUrl && isImage) ? {
+            embeds: [{
+                title: post.title,
+                author: {
+                    name: `u/${post.author}`,
+                    url: `https://reddit.com/u/${post.author}`,
+                    icon_url: post.thumbnail,
+                },
+                image: {
+                    url: post.url,
+                },
+                footer: {
+                    text: `👍 ${Intl.NumberFormat('en').format(post.ups)} 💬 ${Intl.NumberFormat('en').format(post.num_comments)} 🚇 ${post.subreddit_name_prefixed}`,
+                },
+                description: `[View on Reddit](https://reddit.com${post.permalink})`,
+            }]
+        } : '👋 hi there');
     }
 
     @On({
