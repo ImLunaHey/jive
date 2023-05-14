@@ -33,39 +33,43 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     discordXClient.once('ready', async (client: DiscordClient<true>) => {
-        logger.info('Connected to discord', {
-            username: client.user?.username,
-        });
+        try {
+            logger.info('Connected to discord', {
+                username: client.user?.username,
+            });
 
-        // Make sure all guilds are in cache
-        logger.info('Fetching all guilds');
-        await client.guilds.fetch();
+            // Make sure all guilds are in cache
+            logger.info('Fetching all guilds');
+            await client.guilds.fetch();
 
-        // init all application commands
-        logger.info('Initializing all application commands');
-        await discordXClient.initApplicationCommands();
+            // init all application commands
+            logger.info('Initializing all application commands');
+            await discordXClient.initApplicationCommands();
 
-        const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
-        const totalGuildCount = client.guilds.cache.size;
-        const botVerified = client.user.verified;
-        const botPresence = client.user.presence.status;
-        const botStatus = client.user.presence.activities[0].name;
+            const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
+            const totalGuildCount = client.guilds.cache.size;
+            const botVerified = client.user.verified;
+            const botPresence = client.user.presence.status;
+            const botStatus = client.user.presence.activities[0].name;
 
-        // Log bot info
-        console.info(outdent`
-            > Total members: ${totalMemberCount.toLocaleString()}
-            > Total guilds: ${totalGuildCount.toLocaleString()}
-            > Discord Verified: ${botVerified ? 'Yes' : 'No'}
-            > Presence: ${botPresence}
-            > Status: ${botStatus}`
-        );
-        logger.info('Bot is ready', {
-            totalMemberCount,
-            totalGuildCount,
-            botVerified,
-            botPresence,
-            botStatus,
-        });
+            // Log bot info
+            console.info(outdent`
+                > Total members: ${totalMemberCount.toLocaleString()}
+                > Total guilds: ${totalGuildCount.toLocaleString()}
+                > Discord Verified: ${botVerified ? 'Yes' : 'No'}
+                > Presence: ${botPresence}
+                > Status: ${botStatus}`
+            );
+            logger.info('Bot is ready', {
+                totalMemberCount,
+                totalGuildCount,
+                botVerified,
+                botPresence,
+                botStatus,
+            });
+        } catch (error: unknown) {
+            logger.error('Failed handling "ready" event.', { error });
+        }
     });
 
     discordXClient.on('interactionCreate', (interaction: Interaction) => {

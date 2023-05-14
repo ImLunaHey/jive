@@ -101,5 +101,9 @@ export class Logger {
         // When passing this to transports like Axiom it really needs to be a real Error class
         if (meta?.error && !(meta?.error instanceof Error)) meta.error = new Error(`Unknown Error: ${String(meta.error)}`);
         this.logger.error(message, meta);
+
+        // Also log errors to stderr for now
+        // This needs to remain until the issue with winston not serialising errors is fixed
+        console.log(message, meta);
     }
 }
