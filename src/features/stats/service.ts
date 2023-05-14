@@ -1,5 +1,4 @@
 import { db } from '@app/common/database';
-import { getDate } from '@app/common/get-date';
 import { Logger } from '@app/logger';
 import type { Message } from 'discord.js';
 
@@ -9,7 +8,7 @@ class Service {
     public channelStats: {
         guildId: string;
         channelId: string;
-        date: `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+        date: Date;
         hour: number;
         count: number;
     }[] = [];
@@ -17,7 +16,7 @@ class Service {
     public memberStats: {
         guildId: string;
         memberId: string;
-        date: `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+        date: Date;
         hour: number;
         count: number;
     }[] = [];
@@ -45,10 +44,14 @@ class Service {
             const hour = new Date().getHours();
             const existingStatIndex = this.channelStats.findIndex(stat => stat.guildId === guildId && stat.channelId === channelId && stat.hour === hour);
             if (existingStatIndex === -1) {
+                const date = new Date();
+                date.setUTCMinutes(0);
+                date.setUTCSeconds(0);
+                date.setUTCMilliseconds(0);
                 this.channelStats.push({
                     guildId,
                     channelId,
-                    date: getDate(),
+                    date,
                     hour,
                     count: 1,
                 });
@@ -81,10 +84,14 @@ class Service {
 
             // Record a new stat row
             if (existingStatIndex === -1) {
+                const date = new Date();
+                date.setUTCMinutes(0);
+                date.setUTCSeconds(0);
+                date.setUTCMilliseconds(0);
                 this.memberStats.push({
                     guildId,
                     memberId,
-                    date: getDate(),
+                    date,
                     hour,
                     count: 1,
                 });
@@ -122,7 +129,6 @@ class Service {
                         guildId: data.guildId,
                         channelId: data.channelId,
                         date: data.date,
-                        hour: data.hour,
                         count: data.count,
                     })
                     .onDuplicateKeyUpdate(eb => ({
@@ -154,7 +160,6 @@ class Service {
                         guildId: data.guildId,
                         memberId: data.memberId,
                         date: data.date,
-                        hour: data.hour,
                         count: data.count,
                     })
                     .onDuplicateKeyUpdate(eb => ({

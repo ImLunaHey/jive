@@ -9,6 +9,11 @@ import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonIn
 import { type ArgsOf, Discord, On, Slash, ButtonComponent, SlashOption } from 'discordx';
 import { outdent } from 'outdent';
 
+// Time in ms
+const ONE_MINUTE = 1_000 * 60;
+const ONE_HOUR = ONE_MINUTE * 60;
+const ONE_DAY = ONE_HOUR * 24;
+
 @Discord()
 export class Feature {
     private logger = new Logger({ service: 'Stats' });
@@ -434,7 +439,7 @@ export class Feature {
             .selectFrom('guild_member_stats')
             .select('memberId')
             .select(db.fn.sum<number>('count').as('totalCount'))
-            .where('date', '=', getDate())
+            .where('date', '>=', new Date(new Date().getTime() - ONE_DAY))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('memberId')
             .orderBy('totalCount', 'desc')

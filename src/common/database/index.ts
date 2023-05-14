@@ -254,15 +254,13 @@ export type Starboard = {
 export type ChannelStat = {
     guildId: ColumnType<string, string, never>;
     channelId: ColumnType<string, string, never>;
-    hour: ColumnType<number, number, never>;
-    date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
+    date: Date;
     count: number;
 };
 export type GuildMemberStat = {
     memberId: ColumnType<string, string, never>;
     guildId: ColumnType<string, string, never>;
-    hour: ColumnType<number, number, never>;
-    date: ColumnType<string, `${number}${number}${number}${number}-${number}${number}-${number}${number}`, never>;
+    date: Date;
     count: number;
 };
 export type GuildStat = {
