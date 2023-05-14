@@ -7,7 +7,9 @@ import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 // import { createCanvas, loadImage } from '@napi-rs/canvas';
 // import type { Canvas } from '@napi-rs/canvas';
 import { db } from '@app/common/database';
+import { setTimeout } from 'timers/promises';
 import { t } from '@app/common/i18n';
+import { outdent } from 'outdent';
 
 // const applyText = (canvas: Canvas, text: string) => {
 //     const context = canvas.getContext('2d');
@@ -45,56 +47,20 @@ export class Feature {
     }
 
     @On({ event: 'ready' })
-    async ready(): Promise<void> {
-        // Get count of guilds
-        const guildCount = await db
-            .selectFrom('guilds')
-            .select(db.fn.count<number>('id').as('count'))
-            .executeTakeFirst().then(result => result?.count ?? 0);
-
-        this.logger.info('Fetched guild count', {
-            guildCount,
-        });
-
-        // Get the guild
-        const guild = client.guilds.cache.get('927461441051701280');
-        if (!guild) return;
-
-        // Get the channel
-        const channel = guild.channels.cache.get('1081533925337350166');
-        if (!channel) return;
-
-        // Check if the channel is a text channel
-        if (channel.type !== ChannelType.GuildText) return;
-
-        // Get the status
-        const status = env.MAINTENANCE_MODE ? 'in maintenance mode' : 'online';
-
-        // Create the embed
-        const embed = new EmbedBuilder({
-            title: 'Bot status',
-            description: `The bot is ${status} and ready to go!`,
-            // Orange or green
-            color: env.MAINTENANCE_MODE ? Colors.Orange : Colors.Green,
-        });
-
-        // Fetch the messages
-        const messages = await channel.messages.fetch();
-
-        // Check if the embed has already been sent
-        const message = messages.find((message) => message.embeds.some((embed) => embed.title === 'Bot status'));
-        if (message) {
-            // Edit the embed
-            await message.edit({
-                embeds: [embed]
-            });
-            return;
+    async ready() {
+        const totalUsers = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
+        while (!client.user) {
+            await setTimeout(100);
         }
 
-        // Send the embed to the channel
-        await channel.send({
-            embeds: [embed]
-        });
+        // Log bot info
+        console.info(outdent`
+            > Total members: ${totalUsers.toLocaleString()}
+            > Total guilds: ${client.guilds.cache.size.toLocaleString()}
+            > Discord Verified: ${client.user.verified ? 'Yes' : 'No'}
+            > Presence: ${client.user.presence.status}
+            > Status: ${client.user.presence.activities[0].name}`
+        );
     }
 
     @Slash({
