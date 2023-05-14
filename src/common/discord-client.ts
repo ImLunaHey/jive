@@ -72,9 +72,9 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         }
     });
 
-    discordXClient.on('interactionCreate', (interaction: Interaction) => {
+    discordXClient.on('interactionCreate', async (interaction: Interaction) => {
         try {
-            discordXClient.executeInteraction(interaction);
+            await discordXClient.executeInteraction(interaction);
         } catch (error: unknown) {
             logger.error('Interaction error', { error });
         }
