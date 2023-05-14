@@ -12,6 +12,16 @@ import { outdent } from 'outdent';
 const ONE_MINUTE = 1_000 * 60;
 const ONE_HOUR = ONE_MINUTE * 60;
 const ONE_DAY = ONE_HOUR * 24;
+const ONE_WEEK = ONE_DAY * 7;
+const ONE_MONTH = (ONE_DAY * 365) / 12;
+
+// Generate a date before the time period selected
+const timePeriod = (period: 'day' | 'week' | 'month' | 'total' = 'day') => ({
+    day: new Date(new Date().getTime() - ONE_DAY),
+    week: new Date(new Date().getTime() - ONE_WEEK),
+    month: new Date(new Date().getTime() - ONE_MONTH),
+    total: new Date(0),
+}[period]);
 
 @Discord()
 export class Feature {
@@ -378,6 +388,27 @@ export class Feature {
             type: ApplicationCommandOptionType.Boolean,
         }) ephemeral = false,
         @SlashOption({
+            name: 'period',
+            description: 'Time period',
+            required: false,
+            type: ApplicationCommandOptionType.String,
+            async autocomplete(interaction) {
+                await interaction.respond([{
+                    name: 'last 24 hours',
+                    value: 'day',
+                }, {
+                    name: 'last 7 days',
+                    value: 'week',
+                }, {
+                    name: 'last 30 days',
+                    value: 'month',
+                }, {
+                    name: 'total',
+                    value: 'total',
+                }])
+            },
+        }) period: 'day' | 'week' | 'month' | 'total' = 'day',
+        @SlashOption({
             name: 'show-oldest-members',
             description: 'Show oldest members?',
             required: false,
@@ -400,12 +431,12 @@ export class Feature {
         // Create embeds array
         const embeds = [];
 
-        // Get the most active channels for today
+        // Get the most active channels from the period selected
         const mostActiveChannels = await db
             .selectFrom('channel_stats')
             .select('channelId')
             .select(db.fn.sum<number>('count').as('totalCount'))
-            .where('date', '>=', new Date(new Date().getTime() - ONE_DAY))
+            .where('date', '>=', timePeriod(period))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('channelId')
             .orderBy('totalCount', 'desc')
@@ -433,12 +464,12 @@ export class Feature {
                 `
         });
 
-        // Get the most active members for today
+        // Get the most active members from the period selected
         const mostActiveMembers = await db
             .selectFrom('guild_member_stats')
             .select('memberId')
             .select(db.fn.sum<number>('count').as('totalCount'))
-            .where('date', '>=', new Date(new Date().getTime() - ONE_DAY))
+            .where('date', '>=', timePeriod(period))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('memberId')
             .orderBy('totalCount', 'desc')
