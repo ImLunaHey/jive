@@ -48,18 +48,31 @@ export class Feature {
 
     @On({ event: 'ready' })
     async ready() {
-        const totalUsers = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
+        // Wait for the bot the connect and get it's user object
         while (!client.user) {
             await setTimeout(100);
         }
 
+        const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
+        const totalGuildCount = client.guilds.cache.size;
+        const botVerified = client.user.verified;
+        const botPresence = client.user.presence.status;
+        const botStatus = client.user.presence.activities[0].name;
+
         // Log bot info
+        this.logger.info('Bot ready', {
+            totalMemberCount,
+            totalGuildCount,
+            botVerified,
+            botPresence,
+            botStatus,
+        });
         console.info(outdent`
-            > Total members: ${totalUsers.toLocaleString()}
-            > Total guilds: ${client.guilds.cache.size.toLocaleString()}
-            > Discord Verified: ${client.user.verified ? 'Yes' : 'No'}
-            > Presence: ${client.user.presence.status}
-            > Status: ${client.user.presence.activities[0].name}`
+            > Total members: ${totalMemberCount.toLocaleString()}
+            > Total guilds: ${totalGuildCount.toLocaleString()}
+            > Discord Verified: ${botVerified ? 'Yes' : 'No'}
+            > Presence: ${botPresence}
+            > Status: ${botStatus}`
         );
     }
 
