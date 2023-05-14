@@ -28,7 +28,7 @@ export class Feature {
         if (!client.user || !message.mentions.has(client.user.id)) return;
 
         // Get random meme from reddit.com/r/meme/hot
-        const randomPost = await redditService.getRandomRedditPost(2, 'hot', 'meme', 10);
+        const randomPost = await redditService.getRandomRedditPost(2, 'random', 'meme', 100);
         const hasUrl = randomPost?.url !== undefined;
         const isImage = randomPost?.url.endsWith('jpg') || randomPost?.url.endsWith('png') || randomPost?.url.endsWith('gif');
 
