@@ -460,8 +460,8 @@ export class Feature {
         embeds.push({
             title: `Most active channels [${period}]`,
             description: outdent`
-                    ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
-                `
+                ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
+            `
         });
 
         // Get the most active members from the period selected

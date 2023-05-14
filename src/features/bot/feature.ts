@@ -9,6 +9,7 @@ import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
 import { db } from '@app/common/database';
 import { json } from '@app/common/json';
+import { service as redditService } from '@app/features/reddit/service';
 
 @Discord()
 export class Feature {
@@ -17,6 +18,22 @@ export class Feature {
 
     constructor() {
         this.logger.info('Initialised');
+    }
+
+    @On({
+        event: 'messageCreate'
+    })
+    async messageCreate([message]: ArgsOf<'messageCreate'>) {
+        // Only respond to mentions
+        if (!client.user || !message.mentions.has(client.user.id)) return;
+
+        // Get random meme from reddit.com/r/meme/hot
+        const randomPost = await redditService.getRandomRedditPost(2, 'hot', 'meme', 10);
+        const hasUrl = randomPost?.url !== undefined;
+        const isImage = randomPost?.url.endsWith('jpg') || randomPost?.url.endsWith('png') || randomPost?.url.endsWith('gif');
+
+        // Reply with the meme
+        await message.reply((hasUrl && isImage) ? randomPost.url : '👋 hi there');
     }
 
     @On({
