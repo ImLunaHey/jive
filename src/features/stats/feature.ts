@@ -458,7 +458,7 @@ export class Feature {
             });
 
         embeds.push({
-            title: 'Most active channels today',
+            title: `Most active channels [${period}]`,
             description: outdent`
                     ${mostActiveChannels.map(channel => `<#${channel.channelId}> - ${channel.totalCount} messages`).join('\n')}
                 `
@@ -477,7 +477,7 @@ export class Feature {
             .execute();
 
         embeds.push({
-            title: 'Most active members today',
+            title: `Most active members [${period}]`,
             description: outdent`
                 ${mostActiveMembers.map(member => `<@${member.memberId}> - ${member.totalCount} messages`).join('\n')}
 
