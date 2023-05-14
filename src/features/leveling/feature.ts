@@ -221,8 +221,7 @@ export class Feature {
                 ]
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to get user\'s level + XP', error);
+            this.logger.error('Failed to get user\'s level + XP', { error });
             await interaction.reply({
                 content: 'Failed to get your levels + XP, please let a member of staff know.',
                 ephemeral: true,
@@ -266,8 +265,7 @@ export class Feature {
                 ]
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to get leaderboard', error);
+            this.logger.error('Failed to get leaderboard', { error });
             await interaction.reply({
                 content: 'Failed to get the leaderboard, please let a member of staff know.',
                 ephemeral: true,
@@ -338,8 +336,7 @@ export class Feature {
                 content: 'Successfully imported the leaderboard, please note that this will not import your roles.',
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to import the leaderboard', error);
+            this.logger.error('Failed to import the leaderboard', { error });
             await interaction.reply({
                 content: 'Failed to import the leaderboard, please let a member of staff know.',
                 ephemeral: true,

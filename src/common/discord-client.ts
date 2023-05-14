@@ -83,8 +83,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     });
 
     client.on('error', (error: Error) => {
-        logger.error('Client error', error instanceof DatabaseError ? parseDatabaseError(error) : { error });
-        console.error('Client error', error instanceof DatabaseError ? { error, parsedError: parseDatabaseError(error) } : serializeError(error));
+        logger.error('Client error', { error });
     });
 
     // Save the client for later

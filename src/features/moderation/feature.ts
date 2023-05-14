@@ -53,8 +53,7 @@ export class Feature {
                 });
             }
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to clear messages', error);
+            this.logger.error('Failed to clear messages', { error });
             await interaction.editReply({
                 content: 'Failed to clear messages, please let a member of staff know.'
             });
@@ -108,8 +107,7 @@ export class Feature {
                 content: `Warned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to warn user', error);
+            this.logger.error('Failed to warn user', { error });
             await interaction.editReply({
                 content: 'Failed to warn user, please let a member of staff know.'
             });
@@ -161,8 +159,7 @@ export class Feature {
                 content: `Successfully kicked <@${member.user.id}>.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to kick user', error);
+            this.logger.error('Failed to kick user', { error });
             await interaction.editReply({
                 content: 'Failed to kick user, please let a member of staff know.'
             });
@@ -217,8 +214,7 @@ export class Feature {
                 content: `Banned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            if (!(error instanceof Error)) throw new Error(`Unknown Error: ${String(error)}`);
-            this.logger.error('Failed to ban user', error);
+            this.logger.error('Failed to ban user', { error });
             await interaction.editReply({
                 content: 'Failed to ban user, please let a member of staff know.'
             });

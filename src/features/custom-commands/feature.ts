@@ -60,8 +60,9 @@ export class Feature {
         if (customCommand.responseMessage) await message.reply(templateResultToMessage(await replaceVariablesForMember(customCommand.responseMessage, message.member)));
 
         // Delete the message
-        if (customCommand.deleteTrigger) await message.delete().catch(() => {
+        if (customCommand.deleteTrigger) await message.delete().catch((error: unknown) => {
             this.logger.error('Failed to delete message', {
+                error,
                 guildId: message.guild?.id,
                 userId: message.member?.id,
                 customCommandId: customCommand.id,

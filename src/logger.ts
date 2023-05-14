@@ -96,6 +96,10 @@ export class Logger {
     }
 
     error(message: string, meta?: { error: unknown, cause?: unknown } & Record<string, unknown>) {
+        // If the error isn't an error object make it so
+        // This is to prevent issues where something other than an Error is thrown
+        // When passing this to transports like Axiom it really needs to be a real Error class
+        if (meta?.error && !(meta?.error instanceof Error)) meta.error = new Error(`Unknown Error: ${String(meta.error)}`);
         this.logger.error(message, meta);
     }
 }

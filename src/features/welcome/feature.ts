@@ -38,8 +38,12 @@ export class Feature {
 
                 // If joinMessageTimeout is set delete the welcome message after the specified time
                 if (settings.joinMessageTimeout !== null) void sleep(settings.joinMessageTimeout).then(async () => {
-                    await joinMessage.delete().catch(() => {
-                        this.logger.error('Failed to delete welcome message', joinMessage.id);
+                    await joinMessage.delete().catch((error: unknown) => {
+                        this.logger.error('Failed to delete welcome message', {
+                            error,
+                            guildId: joinMessage.guild.id,
+                            messageId: joinMessage.id,
+                        });
                     });
                 });
             }
