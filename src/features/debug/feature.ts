@@ -1,26 +1,12 @@
 import { inspect } from 'util';
-import { client } from '@app/client';
 import { env } from '@app/env';
 import { Logger } from '@app/logger';
-import { ActionRowBuilder, ChannelType, Colors, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 // import { createCanvas, loadImage } from '@napi-rs/canvas';
 // import type { Canvas } from '@napi-rs/canvas';
-import { db } from '@app/common/database';
-import { setTimeout } from 'timers/promises';
 import { t } from '@app/common/i18n';
 import { outdent } from 'outdent';
-
-// const applyText = (canvas: Canvas, text: string) => {
-//     const context = canvas.getContext('2d');
-//     let fontSize = 70;
-
-//     do {
-//         context.font = `${fontSize -= 10}px sans-serif`;
-//     } while (context.measureText(text).width > canvas.width - 300);
-
-//     return context.font;
-// };
 
 const isPromiseLike = <T>(element: unknown): element is Promise<T> => {
     if (element === null) return false;
@@ -47,12 +33,7 @@ export class Feature {
     }
 
     @On({ event: 'ready' })
-    async ready() {
-        // Wait for the bot the connect and get it's user object
-        while (!client.user) {
-            await setTimeout(100);
-        }
-
+    ready([client]: ArgsOf<'ready'>) {
         const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
         const totalGuildCount = client.guilds.cache.size;
         const botVerified = client.user.verified;
