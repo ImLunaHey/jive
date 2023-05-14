@@ -1,7 +1,8 @@
-import type { Interaction, Message, Partials } from 'discord.js';
+import type { Interaction, Message, Partials, Client as DiscordClient } from 'discord.js';
 import { Client } from 'discordx';
 import { Logger } from '@app/logger';
 import { env } from '@app/env';
+import { outdent } from 'outdent';
 
 const clients = new Map<string, Client>();
 
@@ -22,7 +23,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
     const logger = new Logger({ service: 'discord-client' });
 
     // Create a discord.js client instance
-    const client = new Client({
+    const discordXClient = new Client({
         simpleCommand: {
             prefix: prefix ?? '$'
         },
@@ -31,7 +32,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         botGuilds: env.NODE_ENV === 'production' ? undefined : [client => client.guilds.cache.map(guild => guild.id)],
     });
 
-    client.once('ready', async () => {
+    discordXClient.once('ready', async (client: DiscordClient<true>) => {
         logger.info('Connected to discord', {
             username: client.user?.username,
         });
@@ -42,33 +43,51 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
 
         // init all application commands
         logger.info('Initializing all application commands');
-        await client.initApplicationCommands();
+        await discordXClient.initApplicationCommands();
 
+        const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
+        const totalGuildCount = client.guilds.cache.size;
+        const botVerified = client.user.verified;
+        const botPresence = client.user.presence.status;
+        const botStatus = client.user.presence.activities[0].name;
+
+        // Log bot info
+        console.info(outdent`
+            > Total members: ${totalMemberCount.toLocaleString()}
+            > Total guilds: ${totalGuildCount.toLocaleString()}
+            > Discord Verified: ${botVerified ? 'Yes' : 'No'}
+            > Presence: ${botPresence}
+            > Status: ${botStatus}`
+        );
         logger.info('Bot is ready', {
-            username: client.user?.username,
+            totalMemberCount,
+            totalGuildCount,
+            botVerified,
+            botPresence,
+            botStatus,
         });
     });
 
-    client.on('interactionCreate', (interaction: Interaction) => {
+    discordXClient.on('interactionCreate', (interaction: Interaction) => {
         try {
-            client.executeInteraction(interaction);
+            discordXClient.executeInteraction(interaction);
         } catch (error: unknown) {
             logger.error('Interaction error', { error });
         }
     });
 
-    client.on('messageCreate', async (message: Message) => {
-        await client.executeCommand(message);
+    discordXClient.on('messageCreate', async (message: Message) => {
+        await discordXClient.executeCommand(message);
     });
 
-    client.on('error', (error: Error) => {
+    discordXClient.on('error', (error: Error) => {
         logger.error('Client error', { error });
     });
 
     // Save the client for later
-    clients.set(name, client);
+    clients.set(name, discordXClient);
 
     // Give them the newly created client
-    return client;
+    return discordXClient;
 };
 

@@ -32,31 +32,6 @@ export class Feature {
         this.logger.info('Initialised');
     }
 
-    @On({ event: 'ready' })
-    ready([client]: ArgsOf<'ready'>) {
-        const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
-        const totalGuildCount = client.guilds.cache.size;
-        const botVerified = client.user.verified;
-        const botPresence = client.user.presence.status;
-        const botStatus = client.user.presence.activities[0].name;
-
-        // Log bot info
-        this.logger.info('Bot ready', {
-            totalMemberCount,
-            totalGuildCount,
-            botVerified,
-            botPresence,
-            botStatus,
-        });
-        console.info(outdent`
-            > Total members: ${totalMemberCount.toLocaleString()}
-            > Total guilds: ${totalGuildCount.toLocaleString()}
-            > Discord Verified: ${botVerified ? 'Yes' : 'No'}
-            > Presence: ${botPresence}
-            > Status: ${botStatus}`
-        );
-    }
-
     @Slash({
         name: 'reload',
         description: 'Reload the bot',
