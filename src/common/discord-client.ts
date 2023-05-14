@@ -48,7 +48,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
 
             const totalMemberCount = client.guilds.cache.reduce((userCount, guild) => userCount + guild.memberCount, 0);
             const totalGuildCount = client.guilds.cache.size;
-            const botVerified = client.user.verified;
+            const botVerified = client.user.flags?.has('VerifiedBot');
             const botPresence = client.user.presence.status;
             const botStatus = client.user.presence.activities[0]?.name;
 
