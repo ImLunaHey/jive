@@ -77,6 +77,7 @@ export class Feature {
 
         // If this isn't the next number then tell the user and reset it
         if (currentNumber !== (this.count + 1)) {
+            await message.react('❌');
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
@@ -89,6 +90,7 @@ export class Feature {
 
         // If the user counted twice tell them and reset it
         if (this.lastMember === message.author.id) {
+            await message.react('❌');
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
@@ -104,5 +106,14 @@ export class Feature {
 
         // Set the last member to count
         this.lastMember = message.author.id;
+
+        // React the the message so the user knows it was correct
+        await message.react('✅');
+
+        // Log current count
+        this.logger.info('Current count', {
+            guildId: message.guild?.id,
+            count: this.count,
+        });
     }
 }
