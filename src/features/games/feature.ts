@@ -10,7 +10,7 @@ const threadId = '1107637618235150376';
 export class Feature {
     private logger = new Logger({ service: 'Games' });
     private count: number;
-    private lastMember: string;
+    private lastMember?: string;
 
     constructor() {
         this.logger.info('Initialised');
@@ -85,6 +85,7 @@ export class Feature {
                 }]
             });
             this.count = 1;
+            this.lastMember = undefined;
             return;
         }
 
@@ -98,6 +99,7 @@ export class Feature {
                 }]
             });
             this.count = 1;
+            this.lastMember = undefined;
             return;
         }
 
