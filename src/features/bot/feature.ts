@@ -27,6 +27,9 @@ export class Feature {
         // Only respond to mentions
         if (!client.user || !message.mentions.has(client.user.id)) return;
 
+        // Don't respond if @here or @everyone is used
+        if (message.mentions.everyone) return;
+
         // Get random meme from reddit.com/r/meme/hot
         const post = await redditService.getRandomRedditPost(2, 'random', 'meme', 100);
         const hasUrl = post?.url !== undefined;
