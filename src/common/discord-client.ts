@@ -3,6 +3,7 @@ import { Client } from 'discordx';
 import { Logger } from '@app/logger';
 import { env } from '@app/env';
 import { outdent } from 'outdent';
+import exitHook from 'exit-hook';
 
 const clients = new Map<string, Client>();
 
@@ -90,6 +91,16 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
 
     // Save the client for later
     clients.set(name, discordXClient);
+
+    // On shutdown
+    exitHook(() => {
+        // Disconnect from discord's gateway
+        discordXClient.destroy();
+        logger.info('Disconnected from discord');
+
+        // Stop the app
+        logger.info('Exiting');
+    });
 
     // Give them the newly created client
     return discordXClient;
