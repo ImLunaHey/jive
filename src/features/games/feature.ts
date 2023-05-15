@@ -16,12 +16,12 @@ export class Feature {
         this.logger.info('Initialised');
     }
 
-    parseNumber(string: string): number {
+    parseNumber(string: string): number | null {
         try {
-            return Number(wordsToNumbers(string.trim()) ?? '1');
+            return Number(wordsToNumbers(string.trim()));
         } catch { }
 
-        return 1;
+        return null;
     }
 
     findNextNumber(array: number[]) {
@@ -75,6 +75,9 @@ export class Feature {
         // Get the current number
         const currentNumber = this.parseNumber(message.content);
 
+        // Bail if this wasn't a number message
+        if (!currentNumber) return;
+
         // If this isn't the next number then tell the user and reset it
         if (currentNumber !== (this.count + 1)) {
             await message.react('❌');
@@ -84,8 +87,7 @@ export class Feature {
                     description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by missing numbers.`
                 }]
             });
-            this.count = 1;
-            this.lastMember = undefined;
+            this.count = 0;
             return;
         }
 
@@ -98,8 +100,7 @@ export class Feature {
                     description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by commenting twice in a row.`
                 }]
             });
-            this.count = 1;
-            this.lastMember = undefined;
+            this.count = 0;
             return;
         }
 
