@@ -84,7 +84,7 @@ export class Feature {
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
-                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by missing numbers.`
+                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by missing numbers. Next number is \`1\`.`
                 }]
             });
             this.count = 0;
@@ -97,7 +97,7 @@ export class Feature {
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
-                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by commenting twice in a row.`
+                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by commenting twice in a row. Next number is \`1\`.`
                 }]
             });
             this.count = 0;
