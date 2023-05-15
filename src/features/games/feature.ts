@@ -53,12 +53,20 @@ export class Feature {
 
         // Set the current count
         this.count = nextNumber - 1;
+        this.logger.info('Fetched starting count', {
+            count: this.count,
+        });
     }
 
     @On({
         event: 'messageCreate',
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
+        console.log('messageCreate', message.channel.id, message.thread?.id);
+
+        // Bail if we're not in the games channel
+        if (message.channel.id !== '1100983365689159760') return;
+
         // Bail if we're not in the counting thread
         if (message.thread?.id !== '1107624766061432832') return;
 
