@@ -4,7 +4,7 @@ import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
 import type { ForumChannel } from 'discord.js';
 
-const threadId = '1107636499412951122';
+const threadId = '1107637618235150376';
 
 @Discord()
 export class Feature {
