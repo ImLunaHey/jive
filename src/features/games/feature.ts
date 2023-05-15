@@ -1,5 +1,5 @@
 import '@total-typescript/ts-reset';
-import { ArgsOf, Discord, On } from 'discordx';
+import { type ArgsOf, Discord, On } from 'discordx';
 import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
 import type { ForumChannel } from 'discord.js';
