@@ -49,8 +49,11 @@ export class Feature {
 
         // Find the streak we're currently on
         const nextNumber = this.findNextNumber([
-            ...messages?.map(message => this.parseNumber(message.content)).filter(Boolean) ?? [0],
-        ]);
+            ...messages
+                .filter(message => !message.author.bot)
+                .map(message => this.parseNumber(message.content))
+                .filter(Boolean),
+        ]) ?? 1;
 
         // Set the current count
         this.count = nextNumber - 1;
@@ -63,6 +66,9 @@ export class Feature {
         event: 'messageCreate',
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
+        // Skip bot messages
+        if (message.author.bot) return;
+
         // Bail if we're not in the counting thread
         if (message.channel.id !== threadId) return;
 
