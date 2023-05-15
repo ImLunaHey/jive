@@ -41,7 +41,7 @@ FROM base AS release
 # copy production node_modules
 COPY --from=dependencies /app/prod_node_modules ./node_modules
 # copy app dist
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist /app/dist
 # copy app extras
 COPY tsconfig.json squirrelly.js /app/
 COPY patches /app/patches
@@ -49,4 +49,4 @@ COPY locales /app/locales
 COPY assets /app/assets
 # expose port and define CMD
 EXPOSE 3000
-CMD node dist/index.js
+CMD node /app/dist/main.cjs
