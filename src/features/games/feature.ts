@@ -40,7 +40,7 @@ export class Feature {
     async ready([client]: ArgsOf<'ready'>) {
         // Get the counting thread
         const guild = await client.guilds.fetch('927461441051701280');
-        const channel = await guild.channels.fetch('1100983365689159760') as ForumChannel;
+        const channel = await guild.channels.fetch('1107624766061432832') as ForumChannel;
 
         // Get the last 20 messages
         const messages = await channel?.messages.fetch();
