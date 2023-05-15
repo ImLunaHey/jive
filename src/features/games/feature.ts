@@ -4,6 +4,8 @@ import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
 import type { ForumChannel } from 'discord.js';
 
+const threadId = '1107636499412951122';
+
 @Discord()
 export class Feature {
     private logger = new Logger({ service: 'Games' });
@@ -40,7 +42,7 @@ export class Feature {
     async ready([client]: ArgsOf<'ready'>) {
         // Get the counting thread
         const guild = await client.guilds.fetch('927461441051701280');
-        const channel = await guild.channels.fetch('1107624766061432832') as ForumChannel;
+        const channel = await guild.channels.fetch(threadId) as ForumChannel;
 
         // Get the last 20 messages
         const messages = await channel?.messages.fetch();
@@ -62,7 +64,7 @@ export class Feature {
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
         // Bail if we're not in the counting thread
-        if (message.channel.id !== '1107624766061432832') return;
+        if (message.channel.id !== threadId) return;
 
         // Get the current number
         const currentNumber = this.parseNumber(message.content);
