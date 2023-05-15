@@ -83,7 +83,7 @@ export class Feature {
                     description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by missing numbers.`
                 }]
             });
-            this.count = 0;
+            this.count = 1;
             return;
         }
 
@@ -95,7 +95,7 @@ export class Feature {
                     description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by commenting twice in a row.`
                 }]
             });
-            this.count = 0;
+            this.count = 1;
             return;
         }
 
