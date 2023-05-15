@@ -24,6 +24,9 @@ export class Feature {
         event: 'messageCreate'
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
+        // Don't respond to bots at all
+        if (message.author.bot) return;
+
         // Only respond to mentions
         if (!client.user || !message.mentions.has(client.user.id)) return;
 
