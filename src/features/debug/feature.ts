@@ -6,7 +6,6 @@ import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
 // import { createCanvas, loadImage } from '@napi-rs/canvas';
 // import type { Canvas } from '@napi-rs/canvas';
 import { t } from '@app/common/i18n';
-import { outdent } from 'outdent';
 
 const isPromiseLike = <T>(element: unknown): element is Promise<T> => {
     if (element === null) return false;
