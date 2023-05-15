@@ -41,10 +41,9 @@ export class Feature {
         // Get the counting thread
         const guild = await client.guilds.fetch('927461441051701280');
         const channel = await guild.channels.fetch('1100983365689159760') as ForumChannel;
-        const thread = await channel.threads.fetch('1107624766061432832');
 
         // Get the last 20 messages
-        const messages = await thread?.messages.fetch();
+        const messages = await channel?.messages.fetch();
 
         // Find the streak we're currently on
         const nextNumber = this.findNextNumber([
@@ -62,13 +61,8 @@ export class Feature {
         event: 'messageCreate',
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
-        console.log('messageCreate', message.channel.id, message.thread?.id);
-
-        // Bail if we're not in the games channel
-        if (message.channel.id !== '1100983365689159760') return;
-
         // Bail if we're not in the counting thread
-        if (message.thread?.id !== '1107624766061432832') return;
+        if (message.channel.id !== '1107624766061432832') return;
 
         // Get the current number
         const currentNumber = this.parseNumber(message.content);
