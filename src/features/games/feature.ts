@@ -2,7 +2,7 @@ import '@total-typescript/ts-reset';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
-import type { ForumChannel } from 'discord.js';
+import { Colors, ForumChannel } from 'discord.js';
 
 const threadId = '1107637618235150376';
 
@@ -109,6 +109,18 @@ export class Feature {
 
         // Set the last member to count
         this.lastMember = message.author.id;
+
+        // Check if this was a multiple of 100
+        if (this.count >= 100 && (this.count % 100 === 0)) {
+            // Tell the users of the achievement
+            await message.channel.send({
+                embeds: [{
+                    title: 'Goal hit!',
+                    description: `Next goal is ${((this.count / 100) + 1) * 100}`,
+                    color: Colors.Green,
+                }]
+            });
+        }
 
         // React the the message so the user knows it was correct
         await message.react('✅');
