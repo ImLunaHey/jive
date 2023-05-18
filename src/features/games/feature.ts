@@ -29,7 +29,7 @@ export class Feature {
             .transaction()
             .execute(async trx => {
                 const highestCount = await db
-                    .selectFrom('guild_member_counting')
+                    .selectFrom('guild_counting')
                     .select('highestCount')
                     .where('guildId', '=', guildId)
                     .executeTakeFirst()
