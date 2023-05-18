@@ -283,6 +283,27 @@ export type Welcome = {
     removeRoles: string[];
 };
 
+type GuildCounting = {
+    // Which guild this is
+    guildId: string;
+    // The highest count this guild has gotten
+    highestCount: number;
+    // The current count
+    currentCount: number;
+    // The last member to post a number
+    lastMemberId: string | null;
+    // The last member to break the count
+    lastResetTimestamp: Date | null;
+    // When the count was last broken
+    lastResetMemberId: string | null;
+}
+
+type GuildMemberCounting = {
+    guildId: string;
+    memberId: string;
+    highestCount: number;
+}
+
 export type Database = {
     attacks: Attack;
     audit_logs: AuditLog;
@@ -294,10 +315,12 @@ export type Database = {
     dynamic_channels: DynamicChannel;
     encounters: Encounter;
     extra_messages: ExtraMessage;
-    guild_members: GuildMember;
+    guild_counting: GuildCounting;
+    guild_member_counting: GuildMemberCounting;
     guild_member_stats: GuildMemberStat;
-    guilds: Guild;
+    guild_members: GuildMember;
     guild_stats: GuildStat;
+    guilds: Guild;
     initiatives: Initiative;
     invite_tracking: InviteTracking;
     invites: Invite;

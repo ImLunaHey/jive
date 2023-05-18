@@ -2,15 +2,14 @@ import '@total-typescript/ts-reset';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
-import { Colors, ForumChannel } from 'discord.js';
+import { Colors } from 'discord.js';
+import { db } from '@app/common/database';
 
 const threadId = '1107637618235150376';
 
 @Discord()
 export class Feature {
     private logger = new Logger({ service: 'Games' });
-    private count: number;
-    private lastMember?: string;
 
     constructor() {
         this.logger.info('Initialised');
@@ -24,48 +23,50 @@ export class Feature {
         return null;
     }
 
-    findNextNumber(array: number[]) {
-        let current = array[0]; // Assume the first number is the current number
-        for (let i = 1; i < array.length; i++) {
-            if (array[i] !== current + 1) { // Check if the number is not the next number in sequence
-                current = array[i]; // Restart counting from the current number
-            } else {
-                current += 1; // Move to the next number in sequence
-            }
-        }
-        return current;
-    }
+    async resetCount(guildId: string, memberId: string, count: number) {
+        // Reset current count to 0 and update highest score if it changed
+        await db
+            .transaction()
+            .execute(async trx => {
+                const highestCount = await db
+                    .selectFrom('guild_member_counting')
+                    .select('highestCount')
+                    .where('guildId', '=', guildId)
+                    .executeTakeFirst()
+                    .then(_ => _?.highestCount ?? 0);
 
-    @On({
-        event: 'ready',
-    })
-    async ready([client]: ArgsOf<'ready'>) {
-        // Get the counting thread
-        const guild = await client.guilds.fetch('927461441051701280');
-        const channel = await guild.channels.fetch(threadId) as ForumChannel;
-
-        // Get the last 20 messages
-        const messages = await channel?.messages.fetch();
-
-        // Find the streak we're currently on
-        const nextNumber = this.findNextNumber([
-            ...messages
-                .filter(message => !message.author.bot)
-                .map(message => this.parseNumber(message.content))
-                .filter(Boolean),
-        ]) ?? 1;
-
-        // Set the current count
-        this.count = nextNumber - 1;
-        this.logger.info('Fetched starting count', {
-            count: this.count,
-        });
+                await trx
+                    .insertInto('guild_counting')
+                    .values({
+                        guildId,
+                        currentCount: 0,
+                        highestCount: Math.max(highestCount, count),
+                        lastResetMemberId: memberId,
+                        lastResetTimestamp: new Date(),
+                    })
+                    .onDuplicateKeyUpdate({
+                        currentCount: 0,
+                        highestCount: Math.max(highestCount, count),
+                        lastResetMemberId: memberId,
+                        lastResetTimestamp: new Date(),
+                    })
+                    .execute();
+            });
     }
 
     @On({
         event: 'messageCreate',
     })
     async messageCreate([message]: ArgsOf<'messageCreate'>) {
+        const guildId = message.guild?.id;
+        const memberId = message.author.id;
+
+        // Skip DM messages
+        if (!guildId) return;
+
+        // Skip messages not from members
+        if (!memberId) return;
+
         // Skip bot messages
         if (message.author.bot) return;
 
@@ -78,45 +79,73 @@ export class Feature {
         // Bail if this wasn't a number message
         if (!currentNumber) return;
 
+        // Get the current count for this guild
+        const { count, highestCount, lastMemberId } = await db
+            .selectFrom('guild_counting')
+            .select('currentCount')
+            .select('highestCount')
+            .select('lastMemberId')
+            .where('guildId', '=', guildId)
+            .executeTakeFirst()
+            .then(_ => ({
+                count: _?.currentCount ?? 0,
+                highestCount: _?.highestCount ?? 0,
+                lastMemberId: _?.lastMemberId,
+            }));
+
         // If this isn't the next number then tell the user and reset it
-        if (currentNumber !== (this.count + 1)) {
+        if (currentNumber !== (count + 1)) {
             await message.react('❌');
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
-                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by missing numbers. Next number is \`1\`.`
+                    description: `Last count was ${count} before <@${message.author.id}> caused it to reset by missing numbers. Next number is \`1\`.`
                 }]
             });
-            this.count = 0;
+
+            // Reset the count for this guild
+            await this.resetCount(guildId, memberId, count);
             return;
         }
 
         // If the user counted twice tell them and reset it
-        if (this.lastMember === message.author.id) {
+        if (lastMemberId === memberId) {
             await message.react('❌');
             await message.reply({
                 embeds: [{
                     title: 'Count reset!',
-                    description: `Last count was ${this.count} before <@${message.author.id}> caused it to reset by commenting twice in a row. Next number is \`1\`.`
+                    description: `Last count was ${count} before <@${memberId}> caused it to reset by commenting twice in a row. Next number is \`1\`.`
                 }]
             });
-            this.count = 0;
+
+            // Reset the count for this guild
+            await this.resetCount(guildId, memberId, count);
             return;
         }
 
         // Update the count
-        this.count++;
-
-        // Set the last member to count
-        this.lastMember = message.author.id;
+        await db
+            .insertInto('guild_counting')
+            .values(eb => ({
+                guildId,
+                currentCount: eb.bxp('currentCount', '+', 1),
+                highestCount: Math.max(highestCount, count),
+                lastMemberId: memberId,
+            }))
+            .onDuplicateKeyUpdate(eb => ({
+                currentCount: eb.bxp('currentCount', '+', 1),
+                highestCount: Math.max(highestCount, count),
+                lastMemberId: memberId,
+            }))
+            .execute();
 
         // Check if this was a multiple of 100
-        if (this.count >= 100 && (this.count % 100 === 0)) {
+        if (count >= 100 && (count % 100 === 0)) {
             // Tell the users of the achievement
             await message.channel.send({
                 embeds: [{
                     title: 'Goal hit!',
-                    description: `Next goal is ${((this.count / 100) + 1) * 100}`,
+                    description: `Next goal is ${((count / 100) + 1) * 100}`,
                     color: Colors.Green,
                 }]
             });
@@ -127,8 +156,8 @@ export class Feature {
 
         // Log current count
         this.logger.info('Current count', {
-            guildId: message.guild?.id,
-            count: this.count,
+            guildId,
+            count,
         });
     }
 }
