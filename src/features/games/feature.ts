@@ -41,12 +41,14 @@ export class Feature {
                         guildId,
                         currentCount: 0,
                         highestCount: Math.max(highestCount, count),
+                        lastMemberId: memberId,
                         lastResetMemberId: memberId,
                         lastResetTimestamp: new Date(),
                     })
                     .onDuplicateKeyUpdate({
                         currentCount: 0,
                         highestCount: Math.max(highestCount, count),
+                        lastMemberId: memberId,
                         lastResetMemberId: memberId,
                         lastResetTimestamp: new Date(),
                     })
