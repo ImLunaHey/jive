@@ -129,12 +129,12 @@ export class Feature {
             .values(eb => ({
                 guildId,
                 currentCount: eb.bxp('currentCount', '+', 1),
-                highestCount: Math.max(highestCount, count),
+                highestCount: Math.max(highestCount, count + 1),
                 lastMemberId: memberId,
             }))
             .onDuplicateKeyUpdate(eb => ({
                 currentCount: eb.bxp('currentCount', '+', 1),
-                highestCount: Math.max(highestCount, count),
+                highestCount: Math.max(highestCount, count + 1),
                 lastMemberId: memberId,
             }))
             .execute();
