@@ -241,6 +241,11 @@ export class Feature {
             })
             .execute();
 
+        this.logger.info('Member opted-into stats collection', {
+            guildId: interaction.guild.id,
+            memberId: interaction.user.id,
+        });
+
         // Tell the user that we've enabled stats for them.
         await interaction.editReply({
             embeds: [{
@@ -343,19 +348,24 @@ export class Feature {
         // Show the bot thinking
         if (!interaction.deferred) await interaction.deferUpdate();
 
-        // Mark that this user opted into stats collection
+        // Mark that this user opted out stats collection
         await db
             .insertInto('guild_members')
             .values({
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
-                statsOptedIn: true,
+                statsOptedIn: false,
                 joinedTimestamp: new Date().getTime() / 1_000,
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: false,
             })
             .execute();
+
+        this.logger.info('Member opted-out of stats collection', {
+            guildId: interaction.guild.id,
+            memberId: interaction.user.id,
+        });
 
         // Delete all existing stats about the user
         await db
