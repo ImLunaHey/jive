@@ -38,7 +38,7 @@ export class Logger {
 
     constructor(options: Options) {
         this.logger = createLogger({
-            level: 'info',
+            level: 'silly',
             format: format.combine(
                 format.errors({ stack: true }),
                 format.json()
@@ -61,7 +61,10 @@ export class Logger {
 
         // Use Axiom for logging if a token is provided
         if (process.env.AXIOM_TOKEN) {
-            this.logger.add(new AxiomTransport());
+            this.logger.add(new AxiomTransport({
+                handleExceptions: true,
+                handleRejections: true,
+            }));
         }
 
         // Add the console logger if we're not running tests and there are no transports
