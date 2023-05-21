@@ -100,16 +100,16 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
-        try {
-            // Make sure the user is in the guild
-            const member = await interaction.guild?.members.fetch(user);
-            if (!member) {
-                await interaction.editReply({
-                    content: 'Failed to find the specified user.'
-                });
-                return;
-            }
+        // Make sure the user is in the guild
+        const member = await interaction.guild?.members.fetch(user);
+        if (!member) {
+            await interaction.editReply({
+                content: 'Failed to find the specified user.'
+            });
+            return;
+        }
 
+        try {
             // Save this to the db
             await db
                 .insertInto('moderation')
@@ -123,17 +123,26 @@ export class Feature {
                 })
                 .execute();
 
-            // Send a message to the user that they were warned
-            await member.send({
-                content: `You were warned in ${interaction.guild.name} for ${reason}.`
-            });
+            try {
+                // Send a message to the user that they were warned
+                await member.send({
+                    content: `You were warned in ${interaction.guild.name} for ${reason}.`
+                });
+            } catch (error: unknown) {
+                // User likely has DMs disabled
+                this.logger.error('Failed to send user a warning DM', {
+                    guildId,
+                    memberId: member.id,
+                    error,
+                });
+            }
 
             // Send a message to the moderator that the user was warned
             await interaction.editReply({
                 content: `Warned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            this.logger.error('Failed to warn user', { error });
+            this.logger.error('Failed to warn user', { error, guildId, memberId: member.id, });
             await interaction.editReply({
                 content: 'Failed to warn user, please let a member of staff know.'
             });
@@ -172,16 +181,16 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
-        try {
-            // Make sure the user is in the guild
-            const member = await interaction.guild?.members.fetch(user);
-            if (!member) {
-                await interaction.editReply({
-                    content: 'Failed to find the specified user.'
-                });
-                return;
-            }
+        // Make sure the user is in the guild
+        const member = await interaction.guild?.members.fetch(user);
+        if (!member) {
+            await interaction.editReply({
+                content: 'Failed to find the specified user.'
+            });
+            return;
+        }
 
+        try {
             // Save this to the db
             await db
                 .insertInto('moderation')
@@ -203,7 +212,7 @@ export class Feature {
                 content: `Successfully kicked <@${member.user.id}>.`
             });
         } catch (error: unknown) {
-            this.logger.error('Failed to kick user', { error });
+            this.logger.error('Failed to kick user', { error, guildId, memberId: member.id });
             await interaction.editReply({
                 content: 'Failed to kick user, please let a member of staff know.'
             });
@@ -248,16 +257,16 @@ export class Feature {
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
-        try {
-            // Make sure the user is in the guild
-            const member = await interaction.guild?.members.fetch(user);
-            if (!member) {
-                await interaction.editReply({
-                    content: 'Failed to find the specified user.'
-                });
-                return;
-            }
+        // Make sure the user is in the guild
+        const member = await interaction.guild?.members.fetch(user);
+        if (!member) {
+            await interaction.editReply({
+                content: 'Failed to find the specified user.'
+            });
+            return;
+        }
 
+        try {
             // Save this to the db
             await db
                 .insertInto('moderation')
@@ -280,7 +289,7 @@ export class Feature {
                 content: `Banned ${member.user.tag}.`
             });
         } catch (error: unknown) {
-            this.logger.error('Failed to ban user', { error });
+            this.logger.error('Failed to ban user', { error, guildId, memberId: member.id });
             await interaction.editReply({
                 content: 'Failed to ban user, please let a member of staff know.'
             });
