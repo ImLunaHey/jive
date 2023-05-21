@@ -229,17 +229,17 @@ export class Feature {
             required: true
         }) reason: ModerationReason,
         @SlashOption({
-            name: 'custom_reason',
-            description: 'If you selected "CUSTOM" as the reason, use this field',
-            type: ApplicationCommandOptionType.String,
-            required: false,
-        }) customReason: string | undefined,
-        @SlashOption({
             name: 'delete-messages',
             description: 'Whether to delete the users messages',
             type: ApplicationCommandOptionType.Boolean,
             required: true
         }) deleteMessages: boolean,
+        @SlashOption({
+            name: 'custom_reason',
+            description: 'If you selected "CUSTOM" as the reason, use this field',
+            type: ApplicationCommandOptionType.String,
+            required: false,
+        }) customReason: string | undefined,
         interaction: CommandInteraction
     ) {
         const guildId = interaction.guild?.id;
