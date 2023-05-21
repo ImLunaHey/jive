@@ -24,7 +24,7 @@ RUN npm install
 # ---- Test ----
 FROM dependencies AS test
 COPY src ./src
-COPY tsconfig.json squirrelly.js jest.config.cjs .eslintrc.json .env.test .
+COPY tsconfig.json squirrelly.js jest.config.cjs .eslintrc.json .env.test /app/
 RUN npm run lint
 # RUN npm run test
 
@@ -32,7 +32,7 @@ RUN npm run lint
 # ---- Build ----
 FROM dependencies AS build
 COPY src ./src
-COPY tsconfig.json squirrelly.js jest.config.cjs .eslintrc.json .env.test .
+COPY tsconfig.json squirrelly.js jest.config.cjs .eslintrc.json .env.test /app/
 RUN npm run build
 
 #

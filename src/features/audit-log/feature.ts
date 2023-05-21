@@ -1376,7 +1376,7 @@ export class Feature {
         const auditLogs = await this.getAuditLogs(firstMessage.guild);
 
         // Create the embed
-        // TODO: #2:1h/dev Fix the rest of the embed
+        // TODO: Fix the rest of the embed
         const embed = new EmbedBuilder({
             // author: {
             //     name: firstMessage.author.username,

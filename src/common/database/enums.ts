@@ -146,3 +146,16 @@ export const EntityTypes = [
     'GUILD_MEMBER',
 ] as const;
 export type EntityType = typeof EntityTypes[number];
+
+export const ModerationActions = [
+    'WARN',
+    'KICK',
+    'BAN'
+] as const;
+export type ModerationAction = typeof ModerationActions[number];
+
+export const ModerationReasons = [
+    'SPAM',
+    'CUSTOM'
+] as const;
+export type ModerationReason = typeof ModerationReasons[number];

@@ -3,7 +3,7 @@ import { fetch } from 'undici';
 import { CamelCasePlugin, Kysely } from 'kysely';
 import type { ColumnType, RawBuilder } from 'kysely';
 import { env } from '@app/env';
-import type { Action, EntityType, Feature, ItemSubType, ItemType, Location, Rarity, Slot } from '@app/common/database/enums';
+import type { Action, EntityType, Feature, ItemSubType, ItemType, Location, ModerationAction, ModerationReason, Rarity, Slot } from '@app/common/database/enums';
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -304,6 +304,34 @@ type GuildMemberCounting = {
     highestCount: number;
 }
 
+export type Moderation = {
+    /**
+     * The thing that happened
+     */
+    action: ModerationAction;
+    /**
+     * Why it happened
+     */
+    reason: ModerationReason;
+    /**
+     * If reason is set to "CUSTOM" use this
+     */
+    custom_reason?: string;
+    /**
+     * Who actioned this
+     */
+    moderator_id: string;
+    /**
+     * Who did the thing
+     */
+    member_id: string;
+}
+
+// /warn user:notch reason: yeah?
+// /timeout user:notch reason: no?
+// /kick user:notch reason: he sucks
+// /ban user:notch reason: he still sucks
+
 export type Database = {
     attacks: Attack;
     audit_logs: AuditLog;
@@ -327,6 +355,7 @@ export type Database = {
     item_templates: ItemTemplate;
     items: Item;
     leveling: Leveling;
+    moderation: Moderation;
     purchases: Purchase;
     rate_limits: RateLimit;
     reminders: Reminder;
