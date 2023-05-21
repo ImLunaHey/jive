@@ -1,6 +1,8 @@
+import { db } from '@app/common/database';
+import { ModerationReason, ModerationReasons } from '@app/common/database/enums';
 import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
-import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
+import { ApplicationCommandOptionType, CommandInteraction, User } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 
 @Discord()
@@ -71,16 +73,29 @@ export class Feature {
             description: 'The user to warn',
             type: ApplicationCommandOptionType.User,
             required: true
-        }) user: string,
+        }) user: User,
         @SlashOption({
             name: 'reason',
             description: 'The reason for warning the user',
             type: ApplicationCommandOptionType.String,
+            async autocomplete(interaction) {
+                await interaction.respond(ModerationReasons.map(reason => ({
+                    name: reason,
+                    value: reason,
+                })));
+            },
             required: true
-        }) reason: string,
+        }) reason: ModerationReason,
+        @SlashOption({
+            name: 'custom_reason',
+            description: 'If you selected "CUSTOM" as the reason, use this field',
+            type: ApplicationCommandOptionType.String,
+            required: false,
+        }) customReason: string | undefined,
         interaction: CommandInteraction
     ) {
-        if (!interaction.guild) return;
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
 
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
@@ -95,7 +110,18 @@ export class Feature {
                 return;
             }
 
-            // TODO: Add warning to database
+            // Save this to the db
+            await db
+                .insertInto('moderation')
+                .values({
+                    guildId,
+                    action: 'WARN',
+                    memberId: user.id,
+                    moderatorId: interaction.user.id,
+                    reason,
+                    customReason,
+                })
+                .execute();
 
             // Send a message to the user that they were warned
             await member.send({
@@ -125,15 +151,24 @@ export class Feature {
             description: 'The user to kick',
             type: ApplicationCommandOptionType.User,
             required: true
-        }) user: string,
+        }) user: User,
         @SlashOption({
             name: 'reason',
             description: 'The reason for kicking the user',
             type: ApplicationCommandOptionType.String,
             required: true
-        }) reason: string,
+        }) reason: ModerationReason,
+        @SlashOption({
+            name: 'custom_reason',
+            description: 'If you selected "CUSTOM" as the reason, use this field',
+            type: ApplicationCommandOptionType.String,
+            required: false,
+        }) customReason: string | undefined,
         interaction: CommandInteraction
     ) {
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
@@ -147,9 +182,18 @@ export class Feature {
                 return;
             }
 
-            // TODO: Add kick to database
-            // This can be used by the auditlog to enrich the auditlog message
-            // Kicked wasi#7226.
+            // Save this to the db
+            await db
+                .insertInto('moderation')
+                .values({
+                    guildId,
+                    action: 'KICK',
+                    memberId: user.id,
+                    moderatorId: interaction.user.id,
+                    reason,
+                    customReason,
+                })
+                .execute();
 
             // Kick the user
             await member.kick(reason);
@@ -177,13 +221,19 @@ export class Feature {
             description: 'The user to ban',
             type: ApplicationCommandOptionType.User,
             required: true
-        }) user: string,
+        }) user: User,
         @SlashOption({
             name: 'reason',
             description: 'The reason for banning the user',
             type: ApplicationCommandOptionType.String,
             required: true
-        }) reason: string,
+        }) reason: ModerationReason,
+        @SlashOption({
+            name: 'custom_reason',
+            description: 'If you selected "CUSTOM" as the reason, use this field',
+            type: ApplicationCommandOptionType.String,
+            required: false,
+        }) customReason: string | undefined,
         @SlashOption({
             name: 'delete-messages',
             description: 'Whether to delete the users messages',
@@ -192,6 +242,9 @@ export class Feature {
         }) deleteMessages: boolean,
         interaction: CommandInteraction
     ) {
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
         // Show the bot thinking
         await interaction.deferReply({ ephemeral: true });
 
@@ -204,6 +257,19 @@ export class Feature {
                 });
                 return;
             }
+
+            // Save this to the db
+            await db
+                .insertInto('moderation')
+                .values({
+                    guildId,
+                    action: 'BAN',
+                    memberId: user.id,
+                    moderatorId: interaction.user.id,
+                    reason,
+                    customReason,
+                })
+                .execute();
 
             // Ban the user
             // If deleteMessages is true, delete the users messages from the last 7 days

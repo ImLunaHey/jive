@@ -10,4 +10,6 @@ export default {
     'debug.messages.ping.title': 'Pong!',
     'debug.messages.ping.loading': 'Checking the ping...',
     'debug.messages.ping.latency': 'Message latency is {messageLatency}ms. API Latency is {apiLatency}ms',
+    'moderation.reasons.spam': 'Spam',
+    'moderation.reasons.custom': 'Custom',
 } as const;

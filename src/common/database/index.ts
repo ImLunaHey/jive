@@ -316,15 +316,19 @@ export type Moderation = {
     /**
      * If reason is set to "CUSTOM" use this
      */
-    custom_reason?: string;
+    customReason?: string;
     /**
      * Who actioned this
      */
-    moderator_id: string;
+    moderatorId: string;
     /**
      * Who did the thing
      */
-    member_id: string;
+    memberId: string;
+    /**
+     * Which guild this was in
+     */
+    guildId: string;
 }
 
 // /warn user:notch reason: yeah?
