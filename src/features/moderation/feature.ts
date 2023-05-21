@@ -1,5 +1,5 @@
 import { db } from '@app/common/database';
-import { ModerationReason, ModerationReasons } from '@app/common/database/enums';
+import { type ModerationReason, ModerationReasons } from '@app/common/database/enums';
 import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
 import { ApplicationCommandOptionType, CommandInteraction, User } from 'discord.js';
