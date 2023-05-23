@@ -1133,6 +1133,9 @@ export class Feature {
             }
         }
 
+        // Don't post a message if no fields were updated
+        if (fields.length === 0) return;
+
         // Create the embed
         const embed = new EmbedBuilder({
             title: 'Channel Updated',
