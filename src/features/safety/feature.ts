@@ -60,6 +60,7 @@ export class Feature {
                 '8569adcbd36c70a7578c017bf5604ea5',
                 'f7f2e9361e8a54ce6e72580ac7b967af',
                 '6c5996770c985bcd6e5b68131ff2ba04',
+                'c82b3fa769ed6e6ffdea579381ed5f5c,'
             ].find(item => member.displayAvatarURL().includes(item)) !== undefined;
             return basicDefault || mobileDefault;
         });
