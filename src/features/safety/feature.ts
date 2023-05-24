@@ -59,6 +59,7 @@ export class Feature {
                 '79ee349b6511e2000af8a32fb8a6974e',
                 '8569adcbd36c70a7578c017bf5604ea5',
                 'f7f2e9361e8a54ce6e72580ac7b967af',
+                '6c5996770c985bcd6e5b68131ff2ba04',
             ].find(item => member.displayAvatarURL().includes(item)) !== undefined;
             return basicDefault || mobileDefault;
         });
