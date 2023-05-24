@@ -43,6 +43,9 @@ export class Jobs {
         const activeRole = guild.roles.cache.get('1108725214835126342');
         if (!activeRole) return;
 
+        // The top 10% of the server are considered "active"
+        const limit = Math.max(10, Math.floor(guild.memberCount * 0.10));
+
         // Get all of the members who should have it
         const activeMembers = await db
             .selectFrom('guild_member_stats')
@@ -52,7 +55,7 @@ export class Jobs {
             .where('guildId', '=', guild.id)
             .groupBy('memberId')
             .orderBy('totalCount', 'desc')
-            .limit(10)
+            .limit(limit)
             .execute()
             .then(members => members.map(member => member.memberId));
 
