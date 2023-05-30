@@ -2,8 +2,57 @@
   "overrides": [
     {
       "extends": [
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:unicorn/all"
       ],
+      "rules": {
+        "unicorn/no-null": "off",
+        "@typescript-eslint/consistent-type-imports": [
+          "warn",
+          {
+            "prefer": "type-imports",
+            "fixStyle": "separate-type-imports"
+          }
+        ],
+        "@typescript-eslint/no-explicit-any": [
+          "error",
+          {
+            "fixToUnknown": true
+          }
+        ],
+        "unicorn/no-keyword-prefix": "off",
+        "unicorn/numeric-separators-style": [
+          "error",
+          {
+            "onlyIfContainsSeparator": false,
+            "hexadecimal": {
+              "minimumDigits": 0,
+              "groupLength": 2
+            },
+            "binary": {
+              "minimumDigits": 0,
+              "groupLength": 4
+            },
+            "octal": {
+              "minimumDigits": 0,
+              "groupLength": 4
+            },
+            "number": {
+              "minimumDigits": 0,
+              "groupLength": 3
+            }
+          }
+        ],
+        "unicorn/no-array-push-push": "off",
+        "unicorn/template-indent": [
+          "warn",
+          {
+            "indent": 4
+          }
+        ],
+        "unicorn/no-unsafe-regex": "off",
+        "unicorn/no-array-reduce": "off"
+      },
       "files": [
         "*.ts",
         "*.tsx"
@@ -24,13 +73,14 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "@typescript-eslint/consistent-type-imports": "warn",
     "quotes": [
       "error",
       "single",
       {
         "avoidEscape": true
       }
-    ]
-  }
+    ],
+    "accessor-pairs": "error"
+  },
+  "root": true
 }

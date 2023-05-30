@@ -1,4 +1,4 @@
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { type ModerationReason, ModerationReasons } from '@app/common/database/enums';
 import { Logger } from '@app/logger';
 import type { TextChannel } from 'discord.js';
@@ -46,7 +46,7 @@ export class Feature {
 
             // Discord only allows you to delete 100 at a time
             const chunks = Math.max(1, amount / 100);
-            for (let i = 0; i <= chunks; i++) {
+            for (let index = 0; index <= chunks; index++) {
                 const messages = await (interaction.channel as TextChannel).messages.fetch({ limit: Math.min(amount, 100) });
                 const filteredMessages = keepPinned ? messages.filter(message => !message.pinned) : messages;
                 await (interaction.channel as TextChannel).bulkDelete(filteredMessages, true);
@@ -110,8 +110,8 @@ export class Feature {
         }
 
         try {
-            // Save this to the db
-            await db
+            // Save this to the database
+            await database
                 .insertInto('moderation')
                 .values({
                     guildId,
@@ -191,8 +191,8 @@ export class Feature {
         }
 
         try {
-            // Save this to the db
-            await db
+            // Save this to the database
+            await database
                 .insertInto('moderation')
                 .values({
                     guildId,
@@ -267,8 +267,8 @@ export class Feature {
         }
 
         try {
-            // Save this to the db
-            await db
+            // Save this to the database
+            await database
                 .insertInto('moderation')
                 .values({
                     guildId,
@@ -282,7 +282,7 @@ export class Feature {
 
             // Ban the user
             // If deleteMessages is true, delete the users messages from the last 7 days
-            await member.ban({ reason, deleteMessageSeconds: deleteMessages ? 604800 : 0 });
+            await member.ban({ reason, deleteMessageSeconds: deleteMessages ? 604_800 : 0 });
 
             // Send a message to the moderator that the user was banned
             await interaction.editReply({

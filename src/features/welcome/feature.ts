@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { replaceVariablesForMember } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
@@ -50,22 +50,22 @@ export class Feature {
         }
 
         // If DM is set send the welcome message if there is one
-        if (settings.joinDm) {
+        if (settings.joinDm && settings.joinMessage) {
             // Send the welcome message
-            if (settings.joinMessage) await member.send({
+            await member.send({
                 content: await replaceVariablesForMember(settings.joinMessage, member),
             });
         }
 
         // Add the roles
-        if (settings.addRoles.length >= 1) {
+        if (settings.addRoles.length > 0) {
             for (const role of settings.addRoles) {
                 await member.roles.add(role);
             }
         }
 
         // Remove the roles
-        if (settings.removeRoles.length >= 1) {
+        if (settings.removeRoles.length > 0) {
             for (const role of settings.removeRoles) {
                 await member.roles.remove(role);
             }
@@ -78,7 +78,7 @@ export class Feature {
         if (!await isFeatureEnabled('WELCOME', member.guild.id)) return;
 
         // Get settings
-        const settings = await db
+        const settings = await database
             .selectFrom('welcomes')
             .select('waitUntilGate')
             .select('joinChannelId')
@@ -106,7 +106,7 @@ export class Feature {
         if (!await isFeatureEnabled('WELCOME', newMember.guild.id)) return;
 
         // Get settings
-        const settings = await db
+        const settings = await database
             .selectFrom('welcomes')
             .select('waitUntilGate')
             .select('joinChannelId')

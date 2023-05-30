@@ -31,9 +31,9 @@ export const emojiBar = (progress: number, options?: {
     const bar = [];
     const full = Math.round(size * (progress / maxValue > 1 ? 1 : progress / maxValue));
     const empty = size - full > 0 ? size - full : 0;
-    for (let i = 1; i <= full; i++) bar.push(bars.full.bar);
-    for (let i = 1; i <= empty; i++) bar.push(bars.empty.bar);
+    for (let index = 1; index <= full; index++) bar.push(bars.full.bar);
+    for (let index = 1; index <= empty; index++) bar.push(bars.empty.bar);
     bar[0] = bar[0] == bars.full.bar ? bars.full.start : bars.empty.start;
-    bar[bar.length - 1] = bar[bar.length - 1] == bars.full.bar ? bars.full.end : bars.empty.end;
+    bar[bar.length - 1] = bar.at(-1) === bars.full.bar ? bars.full.end : bars.empty.end;
     return bar.join('');
 };

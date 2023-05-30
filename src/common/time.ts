@@ -2,14 +2,14 @@ export const timeLength = (date: Date): string => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
 
-    const minuteMs = 60 * 1000;
+    const minuteMs = 60 * 1_000;
     const hourMs = 60 * minuteMs;
     const dayMs = 24 * hourMs;
     const weekMs = 7 * dayMs;
     const yearMs = 365 * dayMs;
 
     if (diffMs < minuteMs) {
-        const seconds = Math.round(diffMs / 1000);
+        const seconds = Math.round(diffMs / 1_000);
         return `${seconds} second${seconds === 1 ? '' : 's'}`;
     } else if (diffMs < hourMs) {
         const minutes = Math.round(diffMs / minuteMs);

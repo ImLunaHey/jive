@@ -2,7 +2,7 @@ import { Logger } from '@app/logger';
 import { Cron, Expression } from '@reflet/cron';
 import { service } from '@app/features/stats/service';
 import { client } from '@app/client';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 // Time in ms
 const ONE_MINUTE = 1_000 * 60;
@@ -13,9 +13,9 @@ const ONE_MONTH = (ONE_DAY * 365) / 12;
 
 // Generate a date before the time period selected
 const timePeriod = (period: 'day' | 'week' | 'month' | 'total' = 'day') => ({
-    day: new Date(new Date().getTime() - ONE_DAY),
-    week: new Date(new Date().getTime() - ONE_WEEK),
-    month: new Date(new Date().getTime() - ONE_MONTH),
+    day: new Date(Date.now() - ONE_DAY),
+    week: new Date(Date.now() - ONE_WEEK),
+    month: new Date(Date.now() - ONE_MONTH),
     total: new Date(0),
 }[period]);
 
@@ -44,13 +44,13 @@ export class Jobs {
         if (!activeRole) return;
 
         // The top 10% of the server are considered "active"
-        const limit = Math.max(10, Math.floor(guild.memberCount * 0.10));
+        const limit = Math.max(10, Math.floor(guild.memberCount * 0.1));
 
         // Get all of the members who should have it
-        const activeMembers = await db
+        const activeMembers = await database
             .selectFrom('guild_member_stats')
             .select('memberId')
-            .select(db.fn.sum<number>('count').as('totalCount'))
+            .select(database.fn.sum<number>('count').as('totalCount'))
             .where('date', '>=', timePeriod('week'))
             .where('guildId', '=', guild.id)
             .groupBy('memberId')

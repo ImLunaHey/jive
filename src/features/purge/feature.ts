@@ -7,7 +7,7 @@ import { ButtonComponent, Discord, Slash, SlashChoice, SlashOption } from 'disco
 const filters = {
     NO_ROLES: {
         name: 'Members with no roles',
-        filter: (member: GuildMember) => {
+        handler: (member: GuildMember) => {
             // The member should have 1 role which is @everyone
             return member.roles.cache.size === 1;
         }
@@ -15,7 +15,7 @@ const filters = {
 
 } satisfies Record<string, {
     name: string,
-    filter: (member: GuildMember) => boolean;
+    handler: (member: GuildMember) => boolean;
 }>;
 
 @Discord()
@@ -84,7 +84,7 @@ export class Feature {
         await interaction.guild.members.fetch();
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].handler(member));
 
         // Return a message with a button to approve/deny the purge
         await interaction.editReply({
@@ -119,7 +119,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-start(?:\s+\[([\w-]+)\])?$/
+        id: /^purge-start(?:\s+\[([\w-]+)])?$/
     })
     async start(
         interaction: ButtonInteraction,
@@ -134,10 +134,10 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the filter from the button ID
-        const filter = interaction.customId.match(/^purge-start(?:\s+\[([\w-]+)\])?$/)?.[1] as keyof typeof filters;
+        const filter = interaction.customId.match(/^purge-start(?:\s+\[([\w-]+)])?$/)?.[1] as keyof typeof filters;
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].handler(member));
 
         const membersToPurge = members.size;
         let membersPurged = 0;
@@ -153,7 +153,7 @@ export class Feature {
 
                 await member.kick();
                 membersPurged++;
-            } catch { }
+            } catch {}
 
             // Update the count every 100 members and at the end
             if (membersPurged % 100 === 0 || membersPurged === membersToPurge) {
@@ -179,7 +179,8 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^purge-list-members(?:\s+\[([\w-]+)\])?(?:\s+\[([\d]+)\])?$/
+        // eslint-disable-next-line unicorn/no-unsafe-regex
+        id: /^purge-list-members(?:\s+\[([\w-]+)])?(?:\s+\[(\d+)])?$/
     })
     async listMembers(
         interaction: ButtonInteraction,
@@ -194,7 +195,7 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Get the data from the buttonID
-        const buttonData = interaction.customId.match(/^purge-list-members(?:\s+\[([\w-]+)\])?(?:\s+\[([\d]+)\])?$/);
+        const buttonData = interaction.customId.match(/^purge-list-members(?:\s+\[([\w-]+)])?(?:\s+\[(\d+)])?$/);
         if (!buttonData) return;
 
         // Get the filter from the button ID
@@ -204,7 +205,7 @@ export class Feature {
         const offset = Number(buttonData[2]);
 
         // Get all the users who match the filter
-        const members = interaction.guild.members.cache.filter(member => filters[filter].filter(member));
+        const members = interaction.guild.members.cache.filter(member => filters[filter].handler(member));
 
         // Get the current page number
         const page = offset / 100;

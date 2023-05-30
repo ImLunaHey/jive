@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { timeLength } from '@app/common/time';
 import { service } from '@app/features/stats/service';
 import { Logger } from '@app/logger';
@@ -17,9 +17,9 @@ const ONE_MONTH = (ONE_DAY * 365) / 12;
 
 // Generate a date before the time period selected
 const timePeriod = (period: 'day' | 'week' | 'month' | 'total' = 'day') => ({
-    day: new Date(new Date().getTime() - ONE_DAY),
-    week: new Date(new Date().getTime() - ONE_WEEK),
-    month: new Date(new Date().getTime() - ONE_MONTH),
+    day: new Date(Date.now() - ONE_DAY),
+    week: new Date(Date.now() - ONE_WEEK),
+    month: new Date(Date.now() - ONE_MONTH),
     total: new Date(0),
 }[period]);
 
@@ -44,9 +44,9 @@ export class Feature {
 
         // Loop through all the guilds we have
         for (const [, guild] of client.guilds.cache) {
-            const guildMembers = await db
+            const guildMembers = await database
                 .selectFrom('guild_members')
-                .select(db.fn.count<number>('id').as('memberCount'))
+                .select(database.fn.count<number>('id').as('memberCount'))
                 .where('guildId', '=', guild.id)
                 .executeTakeFirst();
 
@@ -62,15 +62,15 @@ export class Feature {
 
             // For each guild member record their joined timestamp
             for (const [, member] of guild.members.cache)
-                await db
+                await database
                     .insertInto('guild_members')
                     .values({
                         id: member.id,
                         guildId: member.guild.id,
-                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? new Date().getTime()) / 1_000),
+                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? Date.now()) / 1_000),
                     })
                     .onDuplicateKeyUpdate({
-                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? new Date().getTime()) / 1_000),
+                        joinedTimestamp: Math.floor((member.joinedTimestamp ?? Date.now()) / 1_000),
                     })
                     .execute();
         }
@@ -98,15 +98,15 @@ export class Feature {
         [member]: ArgsOf<'guildMemberAdd'>
     ) {
         // Record when a member joins
-        await db
+        await database
             .insertInto('guild_members')
             .values({
                 id: member.id,
                 guildId: member.guild.id,
-                joinedTimestamp: new Date().getTime() / 1_000,
+                joinedTimestamp: Date.now() / 1_000,
             })
             .onDuplicateKeyUpdate({
-                joinedTimestamp: new Date().getTime() / 1_000,
+                joinedTimestamp: Date.now() / 1_000,
             })
             .execute();
     }
@@ -118,7 +118,7 @@ export class Feature {
         [guildMember]: ArgsOf<'guildMemberRemove'>
     ) {
         // Get the member
-        const member = await db
+        const member = await database
             .selectFrom('guild_members')
             .select('joinedTimestamp')
             .where('guildId', '=', guildMember.guild.id)
@@ -132,7 +132,7 @@ export class Feature {
         const joinedTimestamp = new Date(member.joinedTimestamp * 1_000);
 
         // Check how long they were here in seconds
-        const diffInMilliseconds = new Date().getTime() - joinedTimestamp.getTime();
+        const diffInMilliseconds = Date.now() - joinedTimestamp.getTime();
 
         this.logger.info('Member left the server', {
             memberId: guildMember.id,
@@ -145,7 +145,7 @@ export class Feature {
         if (diffInMilliseconds <= 0) return;
 
         // Get the current fastest leave time
-        const guildStats = await db
+        const guildStats = await database
             .selectFrom('guild_stats')
             .select('fastestLeave')
             .where('guildId', '=', guildMember.guild.id)
@@ -163,7 +163,7 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Account Created',
-                        value: `<t:${Math.floor(guildMember.user.createdTimestamp / 1000)}:R>`,
+                        value: `<t:${Math.floor(guildMember.user.createdTimestamp / 1_000)}:R>`,
                         inline: true,
                     }, {
                         name: 'Time here',
@@ -175,7 +175,7 @@ export class Feature {
             });
 
             // Update the database
-            await db
+            await database
                 .insertInto('guild_stats')
                 .values({
                     guildId: guildMember.guild.id,
@@ -228,13 +228,13 @@ export class Feature {
         }
 
         // Mark that this user opted into stats collection
-        await db
+        await database
             .insertInto('guild_members')
             .values({
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: true,
-                joinedTimestamp: new Date().getTime() / 1_000,
+                joinedTimestamp: Date.now() / 1_000,
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: true,
@@ -329,8 +329,8 @@ export class Feature {
             embeds: [{
                 title: 'Stats collection',
                 description: outdent`
-                        You hit \`no\`. 📊
-                    `,
+                    You hit \`no\`. 📊
+                `,
             }],
             components: [],
         });
@@ -349,13 +349,13 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferUpdate();
 
         // Mark that this user opted out stats collection
-        await db
+        await database
             .insertInto('guild_members')
             .values({
                 id: interaction.user.id,
                 guildId: interaction.guild.id,
                 statsOptedIn: false,
-                joinedTimestamp: new Date().getTime() / 1_000,
+                joinedTimestamp: Date.now() / 1_000,
             })
             .onDuplicateKeyUpdate({
                 statsOptedIn: false,
@@ -368,7 +368,7 @@ export class Feature {
         });
 
         // Delete all existing stats about the user
-        await db
+        await database
             .deleteFrom('guild_member_stats')
             .where('memberId', '=', interaction.user.id)
             .execute();
@@ -442,10 +442,10 @@ export class Feature {
         const embeds = [];
 
         // Get the most active channels from the period selected
-        const mostActiveChannels = await db
+        const mostActiveChannels = await database
             .selectFrom('channel_stats')
             .select('channelId')
-            .select(db.fn.sum<number>('count').as('totalCount'))
+            .select(database.fn.sum<number>('count').as('totalCount'))
             .where('date', '>=', timePeriod(period))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('channelId')
@@ -475,10 +475,10 @@ export class Feature {
         });
 
         // Get the most active members from the period selected
-        const mostActiveMembers = await db
+        const mostActiveMembers = await database
             .selectFrom('guild_member_stats')
             .select('memberId')
-            .select(db.fn.sum<number>('count').as('totalCount'))
+            .select(database.fn.sum<number>('count').as('totalCount'))
             .where('date', '>=', timePeriod(period))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('memberId')
@@ -498,7 +498,7 @@ export class Feature {
         // Only show this if the user asks
         if (showOldestMembers) {
             // Get the members who have been in this guild the longest
-            const oldestMembers = await db
+            const oldestMembers = await database
                 .selectFrom('guild_members')
                 .select('id')
                 .select('joinedTimestamp')

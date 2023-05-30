@@ -1,13 +1,13 @@
 import type { Kysely } from 'kysely';
 
-export const up = async (db: Kysely<unknown>) => {
+export const up = async (database: Kysely<unknown>) => {
     // Update guild_members
-    await db.schema
+    await database.schema
         .alterTable('guild_members')
         .addColumn('joined_timestamp', 'timestamp')
         .execute();
 };
 
-export const down = async (db: Kysely<unknown>) => {
-    await db.schema.alterTable('guild_members').dropColumn('joined_timestamp').execute();
+export const down = async (database: Kysely<unknown>) => {
+    await database.schema.alterTable('guild_members').dropColumn('joined_timestamp').execute();
 };

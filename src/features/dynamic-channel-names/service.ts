@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { replaceVariablesForGuild } from '@app/common/replace-variables';
 import { sleep } from '@app/common/sleep';
 import { Logger } from '@app/logger';
@@ -17,7 +17,7 @@ class DynamicChannelNamesService {
         while (!client.readyAt) await sleep(1_000);
 
         // Get the dynamicChannel settings for every guild that it enabled
-        const dynamicChannels = await db
+        const dynamicChannels = await database
             .selectFrom('dynamic_channels')
             .select('guildId')
             .select('channelId')
@@ -37,7 +37,7 @@ class DynamicChannelNamesService {
 
             // Don't update the name if it's the same
             const newName = await replaceVariablesForGuild(dynamicChannel.template, guild);
-            if ((channel.type === ChannelType.GuildVoice ? channel.name : channel.name.replace(/\-/g, ' ')) === newName) continue;
+            if ((channel.type === ChannelType.GuildVoice ? channel.name : channel.name.replaceAll('-', ' ')) === newName) continue;
 
             // Update the channel name
             this.logger.info('Updating channel name', {

@@ -13,7 +13,7 @@ const logStats = () => {
             external: memoryData.external, // -> V8 external memory`,
         };
         logger.info('Memory usage', { memoryUsage });
-    } catch { }
+    } catch {}
 };
 
 // Log stats on startup
@@ -24,10 +24,13 @@ setInterval(() => {
     logStats();
 }, 60_000);
 
-start().catch((error: unknown) => {
+// eslint-disable-next-line unicorn/prefer-top-level-await
+start().catch(error => {
     if (!(error instanceof Error)) throw new Error(`Unknown error "${String(error)}"`);
     logger.error('Failed to load bot', {
         error,
     });
+
+    // eslint-disable-next-line unicorn/no-process-exit
     process.exit(1);
 });

@@ -2,7 +2,7 @@ import { createTimer } from '@app/common/timer';
 import { Logger } from '@app/logger';
 import type { Collection, Guild, GuildMember, MessageCreateOptions } from 'discord.js';
 import { Colors } from 'discord.js';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 import { NodeVM } from 'vm2';
 
 // This is the compiled version of the Squirrelly library, which is used to render the templates.

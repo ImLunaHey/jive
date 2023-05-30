@@ -9,7 +9,7 @@ import { client } from '@app/client';
 import { store } from '@app/store';
 import mee6LevelsApi from 'mee6-levels-api';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { emojiBar } from '@app/common/emoji-bar';
 
 @Discord()
@@ -23,7 +23,7 @@ export class Feature {
     @On({ event: 'ready' })
     async ready(): Promise<void> {
         // Fetch each guild that has this feature enabled
-        const guilds = await db
+        const guilds = await database
             .selectFrom('leveling')
             .select('guildId as id')
             .where('enabled', '=', true)
@@ -32,19 +32,18 @@ export class Feature {
         for (const guild of guilds) {
             // Get all the users who are currently in voice channels
             await client.guilds.cache.get(guild.id)?.channels.fetch();
-            client.guilds.cache.get(guild.id)?.channels.cache
-                .filter((channel) => channel.type === ChannelType.GuildVoice)
-                .forEach((channel) => {
-                    (channel as VoiceChannel).members.forEach((member) => {
+            const channels = client.guilds.cache.get(guild.id)?.channels.cache.filter((channel) => channel.type === ChannelType.GuildVoice).values() ?? [];
+            for (const channel of channels) {
+                    for (const member of (channel as VoiceChannel).members.values()) {
                         this.logger.info('Adding member to the usersInVC set', {
                             guildId: member.guild.id,
                             memberId: member.id,
                         });
                         const usersInVC = store.getState().usersInVC.get(member.guild.id)
-                        if (!usersInVC) store.setState({ usersInVC: new Map([[member.guild.id, new Set(member.id)]]) });
-                        else usersInVC.delete(member.id);
-                    });
-                });
+                        if (usersInVC) usersInVC.delete(member.id);
+                        else store.setState({ usersInVC: new Map([[member.guild.id, new Set(member.id)]]) });
+                    }
+                }
         }
     }
 
@@ -67,8 +66,8 @@ export class Feature {
         // NOTE: This name sucks
         // Add the user to the usersWhoChattedThisMinute set
         const usersWhoChattedThisMinute = store.getState().usersWhoChattedThisMinute.get(message.guild.id)
-        if (!usersWhoChattedThisMinute) store.setState({ usersWhoChattedThisMinute: new Map([[message.guild.id, new Set(message.author.id)]]) });
-        else usersWhoChattedThisMinute.add(message.author.id);
+        if (usersWhoChattedThisMinute) usersWhoChattedThisMinute.add(message.author.id);
+        else store.setState({ usersWhoChattedThisMinute: new Map([[message.guild.id, new Set(message.author.id)]]) });
     }
 
     @On({ event: 'voiceStateUpdate' })
@@ -79,16 +78,16 @@ export class Feature {
         if (oldState.channelId === null && newState.channelId !== null) {
             // Add the user to the usersInVC set
             const usersInVC = store.getState().usersInVC.get(newState.guild.id)
-            if (!usersInVC) store.setState({ usersInVC: new Map([[newState.guild.id, new Set(newState.id)]]) });
-            else usersInVC.add(newState.id);
+            if (usersInVC) usersInVC.add(newState.id);
+            else store.setState({ usersInVC: new Map([[newState.guild.id, new Set(newState.id)]]) });
         }
 
         // Check if the user has left a voice channel
         if (oldState.channelId !== null && newState.channelId === null) {
             // Remove the user from the usersInVC set
             const usersInVC = store.getState().usersInVC.get(newState.guild.id)
-            if (!usersInVC) store.setState({ usersInVC: new Map([[newState.guild.id, new Set(newState.id)]]) });
-            else usersInVC.delete(newState.id);
+            if (usersInVC) usersInVC.delete(newState.id);
+            else store.setState({ usersInVC: new Map([[newState.guild.id, new Set(newState.id)]]) });
         }
     }
 
@@ -112,7 +111,7 @@ export class Feature {
         await interaction.deferReply({ ephemeral: false });
 
         // Get the user's details
-        const user = await db
+        const user = await database
             .selectFrom('guild_members')
             .select('xp')
             .where('id', '=', guildMember?.id ?? interaction.user.id)
@@ -201,7 +200,7 @@ export class Feature {
             if (!memberId) return;
 
             // Get the user's xp
-            const user = await db
+            const user = await database
                 .selectFrom('guild_members')
                 .select('xp')
                 .where('id', '=', memberId)
@@ -244,7 +243,7 @@ export class Feature {
 
         try {
             // Get the top 10 users
-            const users = await db
+            const users = await database
                 .selectFrom('guild_members')
                 .select('id')
                 .select('xp')
@@ -320,13 +319,13 @@ export class Feature {
             });
 
             for (const user of leaderboard) {
-                await db
+                await database
                     .insertInto('guild_members')
                     .values({
                         id: user.id,
                         guildId: interaction.guild.id,
                         xp: user.xp.totalXp,
-                        joinedTimestamp: new Date().getTime() / 1_000,
+                        joinedTimestamp: Date.now() / 1_000,
                     })
                     .onDuplicateKeyUpdate({
                         xp: user.xp.totalXp

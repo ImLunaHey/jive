@@ -1,6 +1,6 @@
 import { Logger } from '@app/logger';
 import { Cron, Expression } from '@reflet/cron';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { sql } from 'kysely';
 import { client } from '@app/client';
 
@@ -15,7 +15,7 @@ export class Jobs {
     @Cron(Expression.EVERY_30_SECONDS)
     async checkForReminders() {
         // Get all the reminders that've gone off
-        const reminders = await db
+        const reminders = await database
             .selectFrom('reminders')
             .select('id')
             .select('guildId')
@@ -25,7 +25,7 @@ export class Jobs {
             .execute();
 
         // Clear these reminders
-        await db
+        await database
             .deleteFrom('reminders')
             .where('id', 'in', reminders.map(reminder => reminder.id))
             .execute();

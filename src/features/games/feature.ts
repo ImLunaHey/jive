@@ -3,7 +3,7 @@ import { type ArgsOf, Discord, On } from 'discordx';
 import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';
 import { Colors } from 'discord.js';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 const threadId = '1107637618235150376';
 
@@ -18,17 +18,17 @@ export class Feature {
     parseNumber(string: string): number | null {
         try {
             return Number(wordsToNumbers(string.trim()));
-        } catch { }
+        } catch {}
 
         return null;
     }
 
     async resetCount(guildId: string, memberId: string, count: number) {
         // Reset current count to 0 and update highest score if it changed
-        await db
+        await database
             .transaction()
             .execute(async trx => {
-                const highestCount = await db
+                const highestCount = await database
                     .selectFrom('guild_counting')
                     .select('highestCount')
                     .where('guildId', '=', guildId)
@@ -82,7 +82,7 @@ export class Feature {
         if (!currentNumber) return;
 
         // Get the current count for this guild
-        const { count, highestCount, lastMemberId } = await db
+        const { count, highestCount, lastMemberId } = await database
             .selectFrom('guild_counting')
             .select('currentCount')
             .select('highestCount')
@@ -126,7 +126,7 @@ export class Feature {
         }
 
         // Update the count
-        await db
+        await database
             .insertInto('guild_counting')
             .values(eb => ({
                 guildId,

@@ -64,7 +64,7 @@ class Service {
         const post = redditPosts[Math.floor(Math.random() * redditPosts.length)];
 
         // If we didn't get a post, return undefined
-        if (!post) return undefined;
+        if (!post) return;
         return post;
     }
 }

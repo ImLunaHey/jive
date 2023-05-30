@@ -1,4 +1,4 @@
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { Logger } from '@app/logger';
 import { type ArgsOf, Discord, On } from 'discordx';
 
@@ -13,13 +13,13 @@ export class Feature {
     @On({ event: 'ready' })
     async ready() {
         // Fetch all auto-delete settings
-        const autoDeleteChannels = await db
+        const autoDeleteChannels = await database
             .selectFrom('auto_deletes')
             .select('id')
             .execute();
 
         // Check if there are any auto-delete settings
-        if (!autoDeleteChannels.length) return;
+        if (autoDeleteChannels.length === 0) return;
 
         // TODO: Add startup cleaning
     }

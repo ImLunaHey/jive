@@ -2,23 +2,23 @@ import { EntityTypes, ItemSubTypes, ItemTypes, Locations, Rarities, Slots } from
 import type { Kysely } from 'kysely';
 import { sql } from 'kysely';
 
-export const up = async (db: Kysely<unknown>) => {
+export const up = async (database: Kysely<unknown>) => {
     // Attack
-    await db.schema
+    await database.schema
         .createTable('attacks')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
         .addColumn('time', 'timestamp')
         .addColumn('encounter_id', 'varchar(36)', (col) => col.notNull())
         .addColumn('attacker_id', 'varchar(36)', (col) => col.notNull())
-        .addColumn('attackerType', sql`enum(${sql.join(EntityTypes.map(arg => sql.lit(arg)))})`)
+        .addColumn('attackerType', sql`enum(${sql.join(EntityTypes.map(entityType => sql.lit(entityType)))})`)
         .addColumn('defender_id', 'varchar(36)', (col) => col.notNull())
-        .addColumn('defenderType', sql`enum(${sql.join(EntityTypes.map(arg => sql.lit(arg)))})`)
+        .addColumn('defenderType', sql`enum(${sql.join(EntityTypes.map(entityType => sql.lit(entityType)))})`)
         .addColumn('damage', 'integer')
         .execute();
 
     // AuditLog
-    await db.schema
+    await database.schema
         .createTable('audit_logs')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -34,7 +34,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // AutoDelete
-    await db.schema
+    await database.schema
         .createTable('auto_deletes')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -49,7 +49,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Creature
-    await db.schema
+    await database.schema
         .createTable('creatures')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -62,15 +62,15 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // CreatureTemplate
-    await db.schema
+    await database.schema
         .createTable('creature_templates')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
         .addColumn('name', 'varchar(1000)')
         .addColumn('emoji', 'varchar(50)')
         .addColumn('description', 'text')
-        .addColumn('location', sql`enum(${sql.join(Locations.map(arg => sql.lit(arg)))})`)
-        .addColumn('rarity', sql`enum(${sql.join(Rarities.map(arg => sql.lit(arg)))})`)
+        .addColumn('location', sql`enum(${sql.join(Locations.map(location => sql.lit(location)))})`)
+        .addColumn('rarity', sql`enum(${sql.join(Rarities.map(rarity => sql.lit(rarity)))})`)
         .addColumn('image_url', 'varchar(1000)', col => col.defaultTo(null))
         .addColumn('health', 'integer', col => col.notNull())
         .addColumn('attack', 'integer', col => col.notNull())
@@ -79,7 +79,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // CustomCommand
-    await db.schema
+    await database.schema
         .createTable('custom_commands')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -97,7 +97,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // DynamicChannel
-    await db.schema
+    await database.schema
         .createTable('dynamic_channels')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -109,11 +109,11 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Encounter
-    await db.schema
+    await database.schema
         .createTable('encounters')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
-        .addColumn('location', sql`enum(${sql.join(Locations.map(arg => sql.lit(arg)))})`)
+        .addColumn('location', sql`enum(${sql.join(Locations.map(location => sql.lit(location)))})`)
         .addColumn('guild_id', 'varchar(36)')
         .addColumn('guild_member_ids', 'json', (col) => col.defaultTo('[]'))
         .addColumn('creature_ids', 'json', (col) => col.defaultTo('[]'))
@@ -123,7 +123,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Guild
-    await db.schema
+    await database.schema
         .createTable('guilds')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -132,7 +132,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // GuildMember
-    await db.schema
+    await database.schema
         .createTable('guild_members')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -140,7 +140,7 @@ export const up = async (db: Kysely<unknown>) => {
         .addColumn('xp', 'integer', (col) => col.defaultTo(null))
         .addColumn('coins', 'integer', (col) => col.defaultTo(null))
         .addColumn('health', 'integer', (col) => col.defaultTo(null))
-        .addColumn('location', sql`enum(${sql.join(Locations.map(arg => sql.lit(arg)))})`, (col) => col.defaultTo('TOWN'))
+        .addColumn('location', sql`enum(${sql.join(Locations.map(location => sql.lit(location)))})`, (col) => col.defaultTo('TOWN'))
         .addColumn('strength', 'integer', (col) => col.defaultTo(null))
         .addColumn('dexterity', 'integer', (col) => col.defaultTo(null))
         .addColumn('constitution', 'integer', (col) => col.defaultTo(null))
@@ -166,7 +166,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Initiative
-    await db.schema
+    await database.schema
         .createTable('initiatives')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -174,11 +174,11 @@ export const up = async (db: Kysely<unknown>) => {
         .addColumn('roll', 'integer', (col) => col.notNull())
         .addColumn('order', 'integer', (col) => col.notNull())
         .addColumn('entity_id', 'varchar(36)', (col) => col.notNull())
-        .addColumn('entity_type', sql`enum(${sql.join(Object.values(EntityTypes).map(arg => sql.lit(arg)))})`, col => col.notNull())
+        .addColumn('entity_type', sql`enum(${sql.join(Object.values(EntityTypes).map(entityType => sql.lit(entityType)))})`, col => col.notNull())
         .execute();
 
     // Invite
-    await db.schema
+    await database.schema
         .createTable('invites')
         .ifNotExists()
         .addColumn('code', 'varchar(50)', col => col.primaryKey().notNull())
@@ -187,7 +187,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // InviteTracking
-    await db.schema
+    await database.schema
         .createTable('invite_tracking')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -198,14 +198,14 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Item
-    await db.schema
+    await database.schema
         .createTable('items')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
         .addColumn('name', 'varchar(255)', col => col.notNull())
         .addColumn('emoji', 'varchar(255)', col => col.notNull())
         .addColumn('description', 'text', col => col.notNull())
-        .addColumn('rarity', sql`enum(${sql.join(Object.values(Rarities).map(arg => sql.lit(arg)))})`)
+        .addColumn('rarity', sql`enum(${sql.join(Object.values(Rarities).map(rarity => sql.lit(rarity)))})`)
         .addColumn('price', 'integer', col => col.notNull())
         .addColumn('quantity', 'integer', col => col.defaultTo(null))
         .addColumn('cool_down', 'integer', col => col.defaultTo(null))
@@ -217,13 +217,13 @@ export const up = async (db: Kysely<unknown>) => {
         .addColumn('owner_id', 'varchar(36)', col => col.notNull())
         .addColumn('equipped', 'boolean', col => col.defaultTo(false))
         .addColumn('template_id', 'varchar(36)', col => col.notNull())
-        .addColumn('type', sql`enum(${sql.join(Object.values(ItemTypes).map(arg => sql.lit(arg)))})`)
-        .addColumn('sub_type', sql`enum(${sql.join(Object.values(ItemSubTypes).map(arg => sql.lit(arg)))})`)
-        .addColumn('slot', sql`enum(${sql.join(Object.values(Slots).map(arg => sql.lit(arg)))})`, col => col.defaultTo(null))
+        .addColumn('type', sql`enum(${sql.join(Object.values(ItemTypes).map(itemType => sql.lit(itemType)))})`)
+        .addColumn('sub_type', sql`enum(${sql.join(Object.values(ItemSubTypes).map(itemSubType => sql.lit(itemSubType)))})`)
+        .addColumn('slot', sql`enum(${sql.join(Object.values(Slots).map(slot => sql.lit(slot)))})`, col => col.defaultTo(null))
         .execute();
 
     // Leveling
-    await db.schema
+    await database.schema
         .createTable('leveling')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -234,7 +234,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Purchase
-    await db.schema
+    await database.schema
         .createTable('purchases')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -245,7 +245,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // RateLimit
-    await db.schema
+    await database.schema
         .createTable('rate_limits')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -256,7 +256,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Settings
-    await db.schema
+    await database.schema
         .createTable('settings')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -265,17 +265,17 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Shop
-    await db.schema
+    await database.schema
         .createTable('shops')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
         .addColumn('name', 'varchar(255)', col => col.notNull())
         .addColumn('description', 'text', col => col.notNull())
-        .addColumn('location', sql`enum(${sql.join(Locations.map(arg => sql.lit(arg)))})`)
+        .addColumn('location', sql`enum(${sql.join(Locations.map(location => sql.lit(location)))})`)
         .execute();
 
     // Starboard
-    await db.schema
+    await database.schema
         .createTable('starboards')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -288,7 +288,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Welcome
-    await db.schema
+    await database.schema
         .createTable('welcomes')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -307,19 +307,19 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 };
 
-export const down = async (db: Kysely<unknown>) => {
-    await db.schema.dropTable('attacks').execute();
-    await db.schema.dropTable('audit_logs').execute();
-    await db.schema.dropTable('auto_deletes').execute();
-    await db.schema.dropTable('creatures').execute();
-    await db.schema.dropTable('creature_templates').execute();
-    await db.schema.dropTable('custom_commands').execute();
-    await db.schema.dropTable('dynamic_channels').execute();
-    await db.schema.dropTable('encounters').execute();
-    await db.schema.dropTable('guilds').execute();
-    await db.schema.dropTable('guild_members').execute();
-    await db.schema.dropTable('initiatives').execute();
-    await db.schema.dropTable('invites').execute();
-    await db.schema.dropTable('invite_tracking').execute();
-    await db.schema.dropTable('items').execute();
+export const down = async (database: Kysely<unknown>) => {
+    await database.schema.dropTable('attacks').execute();
+    await database.schema.dropTable('audit_logs').execute();
+    await database.schema.dropTable('auto_deletes').execute();
+    await database.schema.dropTable('creatures').execute();
+    await database.schema.dropTable('creature_templates').execute();
+    await database.schema.dropTable('custom_commands').execute();
+    await database.schema.dropTable('dynamic_channels').execute();
+    await database.schema.dropTable('encounters').execute();
+    await database.schema.dropTable('guilds').execute();
+    await database.schema.dropTable('guild_members').execute();
+    await database.schema.dropTable('initiatives').execute();
+    await database.schema.dropTable('invites').execute();
+    await database.schema.dropTable('invite_tracking').execute();
+    await database.schema.dropTable('items').execute();
 };

@@ -1,5 +1,5 @@
-import { resolve as resolvePath } from 'path';
-import { readFileSync } from 'fs';
+import { resolve as resolvePath } from 'node:path';
+import { readFileSync } from 'node:fs';
 import baseLanguage from '@app/common/base-language';
 import { Logger } from '@app/logger';
 
@@ -50,7 +50,7 @@ const i18n = {
 const loadLanguage = (language: typeof knownLanguages[number] = defaultLanguage) => {
     const filePath = resolvePath('locales/', `${language}.json`);
     logger.info('Loading language from disk', { language, filePath });
-    const file = readFileSync(filePath, 'utf-8');
+    const file = readFileSync(filePath, 'utf8');
     const loadedLanguage = JSON.parse(file) as Partial<typeof baseLanguage>;
     i18n[language] = loadedLanguage;
     return loadedLanguage;
@@ -64,7 +64,7 @@ const getLanguage = (language: typeof knownLanguages[number] = defaultLanguage) 
             values: values ?? loadLanguage(language),
             source: values ? 'memory' as const : 'disk' as const,
         };
-    } catch { }
+    } catch {}
 
     logger.info('Failed to load language falling back to default', { language });
     return {
@@ -74,13 +74,13 @@ const getLanguage = (language: typeof knownLanguages[number] = defaultLanguage) 
     };
 };
 
-type ParserError<E extends string> = { error: true } & E
-type ParseParams<T extends string, Params extends string = never> = string extends T ? ParserError<'T must be a literal type'> : T extends `${string}{${infer Param}}${infer Rest}` ? ParseParams<Rest, Params | Param> : Params
-type ToObj<P extends string> = { [k in P]: string }
+type ParserError<E extends string> = { error: true } & E;
+type ParseParameters<T extends string, Parameters_ extends string = never> = string extends T ? ParserError<'T must be a literal type'> : T extends `${string}{${infer Parameter}}${infer Rest}` ? ParseParameters<Rest, Parameters_ | Parameter> : Parameters_;
+type ToObject<P extends string> = { [k in P]: string };
 type Placeholders = Record<string, string>;
-const replacePlaceholders = <const T extends string>(string: T, placeholders: Placeholders): T => string.replace(/{(.*?)}/g, (match: string, key: string) => placeholders[key.trim()] || match) as T;
+const replacePlaceholders = <const T extends string>(string: T, placeholders: Placeholders): T => string.replaceAll(/{(.*?)}/g, (match: string, key: string) => placeholders[key.trim()] || match) as T;
 
-export const t = <K extends keyof typeof baseLanguage>(key: K, params: ToObj<ParseParams<typeof baseLanguage[K]>>, language: typeof knownLanguages[number] = defaultLanguage) => {
+export const t = <K extends keyof typeof baseLanguage>(key: K, parameters: ToObject<ParseParameters<typeof baseLanguage[K]>>, language: typeof knownLanguages[number] = defaultLanguage) => {
     // Check if the language is loaded
     // If not then load it
     const { loadedLanguage, values, source } = getLanguage(language);
@@ -96,5 +96,5 @@ export const t = <K extends keyof typeof baseLanguage>(key: K, params: ToObj<Par
         logger.info('Missing key', { loadedLanguage, key });
     }
 
-    return typeof value === 'string' ? replacePlaceholders(value, params) : value;
+    return typeof value === 'string' ? replacePlaceholders(value, parameters) : value;
 };

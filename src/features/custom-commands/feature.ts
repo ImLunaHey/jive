@@ -4,7 +4,7 @@ import type { TextChannel } from 'discord.js';
 import { ChannelType } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { replaceVariablesForMember, templateResultToMessage } from '@app/common/replace-variables';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 @Discord()
 export class Feature {
@@ -31,7 +31,7 @@ export class Feature {
         if (!message.member) return;
 
         // Check if this is the custom commands channel and if if this is a valid custom commands message
-        const customCommand = await db
+        const customCommand = await database
             .selectFrom('custom_commands')
             .select('id')
             .select('responseMessage')
@@ -71,19 +71,19 @@ export class Feature {
         });
 
         // Add the roles
-        if (customCommand.addRoles.length) {
+        if (customCommand.addRoles.length > 0) {
             const member = await message.guild.members.fetch(message.author.id);
             await member.roles.add(customCommand.addRoles);
         }
 
         // Remove the roles
-        if (customCommand.removeRoles.length) {
+        if (customCommand.removeRoles.length > 0) {
             const member = await message.guild.members.fetch(message.author.id);
             await member.roles.remove(customCommand.removeRoles);
         }
 
         // Fetch any extra messages that need to be sent
-        const extraMessages = await db
+        const extraMessages = await database
             .selectFrom('extra_messages')
             .select('message')
             .select('channelId')
@@ -91,7 +91,7 @@ export class Feature {
             .execute();
 
         // Send extra messages
-        if (extraMessages.length) {
+        if (extraMessages.length > 0) {
             for (const extraMessage of extraMessages) {
                 if (!extraMessage.message) continue;
                 const channel = await message.guild.channels.fetch(extraMessage.channelId ?? message.channel.id) as TextChannel;

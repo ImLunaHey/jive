@@ -1,11 +1,11 @@
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { Logger } from '@app/logger';
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js';
 import { Discord, Slash, SlashOption } from 'discordx';
 import * as sd from 'simple-duration';
 
 const parseTime = (input?: string) => {
-    if (!input) return { name: '5m', value: String(new Date().getTime() + ((60 * 1_000) * 5)) };
+    if (!input) return { name: '5m', value: String(Date.now() + ((60 * 1_000) * 5)) };
 
     try {
         const time = sd.parse(input);
@@ -13,9 +13,9 @@ const parseTime = (input?: string) => {
             name: sd.stringify(time),
             value: String(time),
         };
-    } catch { }
+    } catch {}
 
-    return { name: '5m', value: String(new Date().getTime() + ((60 * 1_000) * 5)) };
+    return { name: '5m', value: String(Date.now() + ((60 * 1_000) * 5)) };
 }
 
 @Discord()
@@ -59,7 +59,7 @@ export class Feature {
         if (!interaction.deferred) await interaction.deferReply({ ephemeral: true, });
 
         // Save reminder to database
-        await db
+        await database
             .insertInto('reminders')
             .values({
                 memberId: interaction.user.id,

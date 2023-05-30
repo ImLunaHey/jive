@@ -1,6 +1,6 @@
 import { client } from '@app/client';
 import { channelTypeToName } from '@app/common/channel-type-to-name';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { hexToColour } from '@app/common/hex-to-colour';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
 import { timeLength } from '@app/common/time';
@@ -64,7 +64,7 @@ export class Feature {
     }
 
     getAuditLogs(guild: Guild | InviteGuild) {
-        return db
+        return database
             .selectFrom('audit_logs')
             .selectAll()
             .where('guildId', '=', guild.id)
@@ -88,15 +88,15 @@ export class Feature {
             description: `📤 <@${member.id}> **left the server**`,
             fields: [{
                 name: 'Account Created',
-                value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                value: `<t:${Math.floor(member.user.createdTimestamp / 1_000)}:R>`,
                 inline: true,
             }, {
                 name: 'Joined Server',
-                value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown',
+                value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1_000)}:R>` : 'Unknown',
                 inline: true,
             }, {
                 name: 'Left Server',
-                value: `<t:${Math.floor(new Date().getTime() / 1000)}:R>`,
+                value: `<t:${Math.floor(Date.now() / 1_000)}:R>`,
                 inline: true,
             }, {
                 name: 'Time here',
@@ -107,7 +107,7 @@ export class Feature {
                 value: member.roles.cache.size > 1 ? member.roles.cache.filter(role => role.id !== member.guild.id).map(role => `<@&${role.id}>`).join(' ') : 'None',
             }],
             thumbnail: {
-                url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
+                url: member.user.avatarURL({ size: 4_096 }) ?? member.user.defaultAvatarURL,
             },
             color: Colors.Red,
             footer: {
@@ -152,10 +152,10 @@ export class Feature {
             description: `📥 <@${member.id}> **joined the server**`,
             fields: [{
                 name: 'Account Created',
-                value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+                value: `<t:${Math.floor(member.user.createdTimestamp / 1_000)}:R>`,
             }],
             thumbnail: {
-                url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
+                url: member.user.avatarURL({ size: 4_096 }) ?? member.user.defaultAvatarURL,
             },
             color: Colors.Green,
             footer: {
@@ -201,7 +201,7 @@ export class Feature {
             },
             description: `📥 <@${ban.user.id}> **banned**`,
             thumbnail: {
-                url: ban.user.avatarURL({ size: 4096 }) ?? ban.user.defaultAvatarURL,
+                url: ban.user.avatarURL({ size: 4_096 }) ?? ban.user.defaultAvatarURL,
             },
             color: Colors.Red,
             footer: {
@@ -246,18 +246,19 @@ export class Feature {
         clearTimeout(queue.timeout);
 
         // Merge all the new changes
-        addedRoles.forEach(roleId => {
+        for (const roleId of addedRoles) {
             // Mark this role as added
             queue.added.add(roleId);
             // If it was previously removed clear that
             queue.removed.delete(roleId);
-        });
-        removedRoles.forEach(roleId => {
+        }
+
+        for (const roleId of removedRoles) {
             // Mark this role as removed
             queue.removed.add(roleId);
             // If it was previously added clear that
             queue.added.delete(roleId);
-        });
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         queue.timeout = setTimeout(async () => {
@@ -283,7 +284,7 @@ export class Feature {
             const fields: EmbedField[] = [];
 
             // Check if roles were removed
-            if (queue.removed.size >= 1) {
+            if (queue.removed.size > 0) {
                 fields.push({
                     name: 'Removed Roles',
                     value: `${[...queue.removed.values()].map(id => `<@&${id}>`).join(', ')}`,
@@ -292,7 +293,7 @@ export class Feature {
             }
 
             // Check if roles were added
-            if (queue.added.size >= 1) {
+            if (queue.added.size > 0) {
                 fields.push({
                     name: 'Added Roles',
                     value: `${[...queue.added.values()].map(id => `<@&${id}>`).join(', ')}`,
@@ -309,7 +310,7 @@ export class Feature {
                 description: `📥 <@${member.user.id}> **updated**`,
                 fields,
                 thumbnail: {
-                    url: member.user.avatarURL({ size: 4096 }) ?? member.user.defaultAvatarURL,
+                    url: member.user.avatarURL({ size: 4_096 }) ?? member.user.defaultAvatarURL,
                 },
                 color: Colors.Green,
                 footer: {
@@ -361,9 +362,9 @@ export class Feature {
         // Check if the roles changed
         // Since multiple roles can be added/removed quickly we queue this message
         // If a new event comes in before 5s is up we will cancel the old message and queue a new one with the merges results of all the updates
-        if (oldMember.roles.cache.filter(filterOutEveryoneRole).size !== newMember.roles.cache.filter(filterOutEveryoneRole).size) {
-            const addedRoleIds = newMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !oldMember.roles.cache.has(role.id)).map(role => role.id);
-            const removedRoleIds = oldMember.roles.cache.filter(filterOutEveryoneRole).filter(role => !newMember.roles.cache.has(role.id)).map(role => role.id);
+        if (oldMember.roles.cache.filter(role => filterOutEveryoneRole(role)).size !== newMember.roles.cache.filter(role => filterOutEveryoneRole(role)).size) {
+            const addedRoleIds = newMember.roles.cache.filter(role => filterOutEveryoneRole(role)).filter(role => !oldMember.roles.cache.has(role.id)).map(role => role.id);
+            const removedRoleIds = oldMember.roles.cache.filter(role => filterOutEveryoneRole(role)).filter(role => !newMember.roles.cache.has(role.id)).map(role => role.id);
             this.queueRolesChangeMessage(newMember.guild.id, newMember.user.id, addedRoleIds, removedRoleIds);
         }
 
@@ -371,7 +372,7 @@ export class Feature {
         if (oldMember.user.avatar !== newMember.user.avatar) {
             fields.push({
                 name: 'Avatar',
-                value: `[Old](${oldMember.user.avatarURL({ size: 4096 }) ?? oldMember.user.defaultAvatarURL}) ➔ [New](${newMember.user.avatarURL({ size: 4096 }) ?? newMember.user.defaultAvatarURL})`,
+                value: `[Old](${oldMember.user.avatarURL({ size: 4_096 }) ?? oldMember.user.defaultAvatarURL}) ➔ [New](${newMember.user.avatarURL({ size: 4_096 }) ?? newMember.user.defaultAvatarURL})`,
                 inline: true,
             });
         }
@@ -406,7 +407,7 @@ export class Feature {
             description: `📥 <@${newMember.user.id}> **updated**`,
             fields,
             thumbnail: {
-                url: newMember.user.avatarURL({ size: 4096 }) ?? newMember.user.defaultAvatarURL,
+                url: newMember.user.avatarURL({ size: 4_096 }) ?? newMember.user.defaultAvatarURL,
             },
             color: Colors.Green,
             footer: {
@@ -625,7 +626,7 @@ export class Feature {
                 inline: true,
             }, {
                 name: 'Created At',
-                value: `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`,
+                value: `<t:${Math.floor(role.createdAt.getTime() / 1_000)}:R>`,
                 inline: true,
             }],
             color: hexToColour(role.hexColor),
@@ -687,11 +688,11 @@ export class Feature {
                 inline: true,
             }, {
                 name: 'Created At',
-                value: `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`,
+                value: `<t:${Math.floor(role.createdAt.getTime() / 1_000)}:R>`,
                 inline: true,
             }, {
                 name: 'Deleted At',
-                value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
+                value: `<t:${Math.floor(Date.now() / 1_000)}:R>`,
                 inline: true,
             }],
             color: hexToColour(role.hexColor),
@@ -826,34 +827,23 @@ export class Feature {
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(emoji.guild);
 
-        const fields: EmbedField[] = [];
-
-        // Emoji name
-        fields.push({
-            name: 'Name',
-            value: emoji.name,
-            inline: true,
-        });
-
-        // Emoji animated
-        fields.push({
-            name: 'Animated',
-            value: emoji.animated ? 'Yes ✅' : 'No ❌',
-            inline: true,
-        });
-
-        // Emoji created at
-        fields.push({
-            name: 'Created At',
-            value: `<t:${Math.floor(emoji.createdAt.getTime() / 1000)}:R>`,
-            inline: true,
-        });
-
         // Create the embed
         const embed = new EmbedBuilder({
             title: 'Emoji Created',
             description: `**${emoji.name}**`,
-            fields,
+            fields: [{
+                name: 'Name',
+                value: emoji.name,
+                inline: true,
+            }, {
+                name: 'Animated',
+                value: emoji.animated ? 'Yes ✅' : 'No ❌',
+                inline: true,
+            }, {
+                name: 'Created At',
+                value: `<t:${Math.floor(emoji.createdAt.getTime() / 1_000)}:R>`,
+                inline: true,
+            }],
             color: Colors.Green,
             footer: {
                 text: `Emoji ID: ${emoji.id}`,
@@ -884,34 +874,23 @@ export class Feature {
         // Get the audit logs
         const auditLogs = await this.getAuditLogs(emoji.guild);
 
-        const fields: EmbedField[] = [];
-
-        // Emoji name
-        fields.push({
-            name: 'Name',
-            value: emoji.name,
-            inline: true,
-        });
-
-        // Emoji animated
-        fields.push({
-            name: 'Animated',
-            value: emoji.animated ? 'Yes ✅' : 'No ❌',
-            inline: true,
-        });
-
-        // Emoji created at
-        fields.push({
-            name: 'Created At',
-            value: `<t:${Math.floor(emoji.createdAt.getTime() / 1000)}:R>`,
-            inline: true,
-        });
-
         // Create the embed
         const embed = new EmbedBuilder({
             title: 'Emoji Deleted',
             description: `**${emoji.name}**`,
-            fields,
+            fields: [{
+                name: 'Name',
+                value: emoji.name,
+                inline: true,
+            }, {
+                name: 'Animated',
+                value: emoji.animated ? 'Yes ✅' : 'No ❌',
+                inline: true,
+            }, {
+                name: 'Created At',
+                value: `<t:${Math.floor(emoji.createdAt.getTime() / 1_000)}:R>`,
+                inline: true,
+            }],
             color: Colors.Red,
             footer: {
                 text: `Emoji ID: ${emoji.id}`,

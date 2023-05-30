@@ -1,5 +1,5 @@
-import { inspect } from 'util';
-import { env } from '@app/env';
+import { inspect } from 'node:util';
+import { environment } from '@app/environment';
 import { Logger } from '@app/logger';
 import { ActionRowBuilder, CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { type ArgsOf, Discord, Guard, Guild, On, Slash } from 'discordx';
@@ -20,7 +20,7 @@ const replaceAll = (string: string, search: string, replace: string) => {
     }
 
     // If a string
-    return string.replace(new RegExp(search, 'g'), replace);
+    return string.replaceAll(search, replace);
 };
 
 @Discord()
@@ -37,12 +37,12 @@ export class Feature {
         defaultMemberPermissions: 'Administrator',
     })
     @Guard(async (interaction: CommandInteraction, _client, next) => {
-        if (interaction.user?.id === env.OWNER_ID) await next();
+        if (interaction.user?.id === environment.OWNER_ID) await next();
     })
-    @Guild(env.OWNER_GUILD_ID)
+    @Guild(environment.OWNER_GUILD_ID)
     async reload(interaction: CommandInteraction) {
         // Check if the user is the owner
-        if (interaction.user.id !== env.OWNER_ID) {
+        if (interaction.user.id !== environment.OWNER_ID) {
             await interaction.reply({
                 content: 'You are not the owner of the bot.',
                 ephemeral: true,
@@ -57,6 +57,7 @@ export class Feature {
         });
 
         // Reload the bot
+        // eslint-disable-next-line unicorn/no-process-exit
         process.exit(0);
     }
 
@@ -147,12 +148,12 @@ export class Feature {
         description: 'Evaluate code',
         defaultMemberPermissions: 'Administrator',
     })
-    @Guild(env.OWNER_GUILD_ID)
+    @Guild(environment.OWNER_GUILD_ID)
     async eval(
         interaction: CommandInteraction,
     ) {
         // Only let this run for the bot owner
-        if (interaction.user?.id !== env.OWNER_ID) return;
+        if (interaction.user?.id !== environment.OWNER_ID) return;
 
         // Create the modal
         const modal = new ModalBuilder()
@@ -193,12 +194,12 @@ export class Feature {
                 if (isPromiseLike(result)) result = await result;
                 if (typeof result !== 'string') result = inspect(result, { depth: 1 });
 
-                result = (result as string).replace(/`/g, '`' + String.fromCharCode(8203)).replace(/@/g, '@' + String.fromCharCode(8203));
-                result = replaceAll(result as string, env.BOT_TOKEN, '[REDACTED]');
+                result = (result as string).replaceAll('`', '`' + String.fromCodePoint(8_203)).replaceAll('@', '@' + String.fromCodePoint(8_203));
+                result = replaceAll(result as string, environment.BOT_TOKEN, '[REDACTED]');
 
                 // Check if the result is too long
-                if ((result as string).length > 2000) {
-                    result = (result as string).slice(0, 2000);
+                if ((result as string).length > 2_000) {
+                    result = (result as string).slice(0, 2_000);
                     result += '...';
                 }
 

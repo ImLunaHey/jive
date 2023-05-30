@@ -1,39 +1,40 @@
+/* eslint-disable unicorn/no-process-exit */
 import 'dotenv/config';
-import * as path from 'path';
-import { promises as fs } from 'fs';
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
 import {
-  Migrator,
-  FileMigrationProvider
+    Migrator,
+    FileMigrationProvider
 } from 'kysely';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 const migrateToLatest = async () => {
-  const migrator = new Migrator({
-    db,
-    provider: new FileMigrationProvider({
-      fs,
-      path,
-      migrationFolder: path.resolve('./src/migrations'),
-    })
-  });
+    const migrator = new Migrator({
+        db: database,
+        provider: new FileMigrationProvider({
+            fs,
+            path,
+            migrationFolder: path.resolve('./src/migrations'),
+        })
+    });
 
-  const { error, results } = await migrator.migrateToLatest();
+    const { error, results } = await migrator.migrateToLatest();
 
-  results?.forEach((it) => {
-    if (it.status === 'Success') {
-      console.log(`migration "${it.migrationName}" was executed successfully`)
-    } else if (it.status === 'Error') {
-      console.error(`failed to execute migration "${it.migrationName}"`)
+    if (results) for (const it of results) {
+        if (it.status === 'Success') {
+            console.log(`migration "${it.migrationName}" was executed successfully`)
+        } else if (it.status === 'Error') {
+            console.error(`failed to execute migration "${it.migrationName}"`)
+        }
     }
-  });
 
-  if (error) {
-    console.error('failed to migrate');
-    console.error(error);
-    process.exit(1);
-  }
+    if (error) {
+        console.error('failed to migrate');
+        console.error(error);
+        process.exit(1);
+    }
 
-  await db.destroy();
+    await database.destroy();
 }
 
 void migrateToLatest();

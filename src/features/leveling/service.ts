@@ -1,5 +1,5 @@
 import { client } from '@app/client';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import type { TextChannel } from 'discord.js';
 
 class Service {
@@ -43,20 +43,20 @@ class Service {
         if (!guild) return;
 
         // Get the user's xp
-        const user = await db
+        const user = await database
             .selectFrom('guild_members')
             .select('xp')
             .where('id', '=', userId)
             .executeTakeFirst();
 
         // Update the user's xp
-        await db
+        await database
             .insertInto('guild_members')
             .values({
                 id: userId,
                 guildId: guild.id,
                 xp,
-                joinedTimestamp: new Date().getTime() / 1_000,
+                joinedTimestamp: Date.now() / 1_000,
             })
             .onDuplicateKeyUpdate(eb => ({
                 xp: eb.bxp('xp', '+', xp)

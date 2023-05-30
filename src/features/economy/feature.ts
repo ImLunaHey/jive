@@ -49,9 +49,9 @@ import { Discord } from 'discordx';
 //     const filteredLocations = (selected ? Locations.filter(location => location.toLowerCase().startsWith(selected)) : Locations).slice(0, 25);
 //     const selectedLocations = await Promise.all(filteredLocations.map(async location => ({
 //         location,
-//         count: await db
+//         count: await database
 //             .selectFrom('creature_templates')
-//             .select(db.fn.count<number>('id').as('count'))
+//             .select(database.fn.count<number>('id').as('count'))
 //             .where('location', '=', location)
 //             .executeTakeFirst().then(_ => _?.count ?? 0)
 //     })));
@@ -91,7 +91,7 @@ export class Feature {
     //     await interaction.deferReply({ ephemeral: false });
 
     //     // Get the user's balance
-    //     const user = await db
+    //     const user = await database
     //         .selectFrom('guild_members')
     //         .select('coins')
     //         .where('id', '=', interaction.user.id)
@@ -114,7 +114,7 @@ export class Feature {
     //     const random = Math.floor(Math.random() * 100);
 
     //     // Otherwise, let them beg
-    //     await db
+    //     await database
     //         .updateTable('guild_members')
     //         .set(eb => ({
     //             coins: eb.bxp('coins', '+', random),
@@ -140,7 +140,7 @@ export class Feature {
     //     if (!interaction.member?.user.id) return;
 
     //     // Get the user's encounter
-    //     const encounter = await db
+    //     const encounter = await database
     //         .transaction()
     //         .execute(async trx => {
     //             const encounter = await trx
@@ -169,13 +169,13 @@ export class Feature {
     //     if (!encounter) return false;
 
     //     // Get the encounter's initiatives
-    //     const initiatives = await db
+    //     const initiatives = await database
     //         .selectFrom('initiatives')
     //         .where('encounterId', '=', encounter.id)
     //         .execute();
 
     //     // Get the encounter's creates
-    //     const creatures = await db
+    //     const creatures = await database
     //         .selectFrom('creatures')
     //         .select('name')
     //         .select('health')
@@ -262,7 +262,7 @@ export class Feature {
     //     if (await this.isExploring(interaction)) return;
 
     //     // Get the user
-    //     const user = await db
+    //     const user = await database
     //         .selectFrom('guild_members')
     //         .select('location')
     //         .where('id', '=', interaction.user.id)
@@ -271,7 +271,7 @@ export class Feature {
     //     if (!user) return;
 
     //     // Grab a list of creatures that can be encountered in this area
-    //     const creatures = await db
+    //     const creatures = await database
     //         .selectFrom('creature_templates')
     //         .select('id')
     //         .select('health')
@@ -299,7 +299,7 @@ export class Feature {
 
     //     // Save the encounter
     //     const encounterId = randomUUID();
-    //     await db
+    //     await database
     //         .insertInto('encounters')
     //         .values({
     //             id: encounterId,
@@ -314,7 +314,7 @@ export class Feature {
     //         .execute();
 
     //     // Create the creatures for this encounter
-    //     await db
+    //     await database
     //         .insertInto('creatures')
     //         .values(encounterCreatures.map(createTemplate => ({
     //             health: createTemplate.health,
@@ -328,7 +328,7 @@ export class Feature {
     //         .execute();
 
     //     // Fetch the newly created encounter
-    //     const encounter = await db
+    //     const encounter = await database
     //         .selectFrom('encounters')
     //         .select('turn')
     //         .select('guildMembers')
@@ -337,7 +337,7 @@ export class Feature {
     //         .executeTakeFirstOrThrow();
 
     //     // Fetch the initiatives
-    //     const initiatives = await db
+    //     const initiatives = await database
     //         .selectFrom('initiatives')
     //         .execute();
 
@@ -1656,7 +1656,7 @@ export class Feature {
     //     await interaction.deferReply({ ephemeral: false });
 
     //     // Get the user
-    //     const user = await db
+    //     const user = await database
     //         .selectFrom('guild_members')
     //         .select('encounterId')
     //         .select('location')
@@ -1704,7 +1704,7 @@ export class Feature {
     //     }
 
     //     // Update the user's location
-    //     await db
+    //     await database
     //         .updateTable('guild_members')
     //         .set({
     //             location: locationName,
@@ -1734,7 +1734,7 @@ export class Feature {
     //         type: ApplicationCommandOptionType.String,
     //         async autocomplete(interaction) {
     //             const name = interaction.options.getString('name');
-    //             const creatures = await db
+    //             const creatures = await database
     //                 .selectFrom('creature_templates')
     //                 .select('id')
     //                 .select('name')
@@ -1777,7 +1777,7 @@ export class Feature {
     //     }
 
     //     // Get the creature template(s)
-    //     const creatures = await db
+    //     const creatures = await database
     //         .selectFrom('creature_templates')
     //         .select('imageUrl')
     //         .select('name')
@@ -1908,7 +1908,7 @@ export class Feature {
     //     await interaction.deferReply({ ephemeral: false });
 
     //     // Check if the user has already claimed their daily
-    //     const daily = await db
+    //     const daily = await database
     //         .selectFrom('rate_limits')
     //         .select('lastReset')
     //         .where('id', '=', 'economy:daily')
@@ -1927,7 +1927,7 @@ export class Feature {
     //     }
 
     //     // Mark the daily as claimed for this user in this guild
-    //     await db
+    //     await database
     //         .insertInto('rate_limits')
     //         .values({
     //             id: 'economy:daily',
@@ -1939,7 +1939,7 @@ export class Feature {
     //         .execute();
 
     //     // Give them their daily coins
-    //     const balance = await db
+    //     const balance = await database
     //         .transaction()
     //         .execute(async trx => {
     //             // Give the coins to the user
@@ -2003,7 +2003,7 @@ export class Feature {
 
     //     try {
     //         // Get the user
-    //         const user = await db
+    //         const user = await database
     //             .selectFrom('guild_members')
     //             .select('coins')
     //             .where('id', '=', userId)
@@ -2027,7 +2027,7 @@ export class Feature {
     //         }
 
     //         // Transfer the coins
-    //         await db.transaction().execute(async trx => {
+    //         await database.transaction().execute(async trx => {
     //             // Remove the coins from person A
     //             await trx
     //                 .updateTable('guild_members')
@@ -2079,7 +2079,7 @@ export class Feature {
     //     if (!interaction.deferred) await interaction.deferReply({ ephemeral: false });
 
     //     // Get the user
-    //     const user = await db
+    //     const user = await database
     //         .selectFrom('guild_members')
     //         .select('location')
     //         .where('id', '=', interaction.member?.user.id)
@@ -2087,7 +2087,7 @@ export class Feature {
     //     if (!user) return;
 
     //     // Show a list of shops in the current location
-    //     const shops = await db
+    //     const shops = await database
     //         .selectFrom('shops')
     //         .select('id')
     //         .select('name')
@@ -2140,7 +2140,7 @@ export class Feature {
     //     if (!interaction.deferred) await interaction.deferUpdate();
 
     //     // Get the shop
-    //     const shop = await db
+    //     const shop = await database
     //         .selectFrom('shops')
     //         .select('id')
     //         .select('name')
@@ -2149,7 +2149,7 @@ export class Feature {
     //     if (!shop) return;
 
     //     // Get the items
-    //     const items = await db
+    //     const items = await database
     //         .selectFrom('item_templates')
     //         .select('name')
     //         .select('emoji')

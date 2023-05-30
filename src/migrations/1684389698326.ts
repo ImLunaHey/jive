@@ -1,9 +1,9 @@
 import type { Kysely } from 'kysely';
 import { sql } from 'kysely';
 
-export const up = async (db: Kysely<unknown>) => {
+export const up = async (database: Kysely<unknown>) => {
     // Insert member count
-    await db.schema
+    await database.schema
         .createTable('member_count')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -13,7 +13,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 
     // Insert server count
-    await db.schema
+    await database.schema
         .createTable('server_count')
         .ifNotExists()
         .addColumn('id', 'varchar(36)', (col) => col.defaultTo(sql`(uuid())`).primaryKey().notNull())
@@ -26,7 +26,7 @@ export const up = async (db: Kysely<unknown>) => {
         .execute();
 };
 
-export const down = async (db: Kysely<unknown>) => {
-    await db.schema.dropTable('member_count').execute();
-    await db.schema.dropTable('server_count').execute();
+export const down = async (database: Kysely<unknown>) => {
+    await database.schema.dropTable('member_count').execute();
+    await database.schema.dropTable('server_count').execute();
 };

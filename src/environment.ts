@@ -15,7 +15,7 @@ const schema = z.object({
     DATABASE_URL: z.string(),
 });
 
-const processEnv = {
+const processEnvironment = {
     NODE_ENV: process.env.NODE_ENV,
     LOG_LEVEL: process.env.LOG_LEVEL ?? 'info',
     BOT_TOKEN: process.env.BOT_TOKEN,
@@ -29,7 +29,7 @@ const processEnv = {
 // Don't touch the part below
 // --------------------------
 if (!!process.env.SKIP_ENV_VALIDATION == false) {
-    const parsed = schema.safeParse(processEnv);
+    const parsed = schema.safeParse(processEnvironment);
 
     if (parsed.success === false) {
         console.error(
@@ -39,12 +39,13 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
 
         // Only exit if we're not running tests
         if (process.env.NODE_ENV !== 'test') {
+            // eslint-disable-next-line unicorn/no-process-exit
             process.exit(1);
         }
     }
 }
 
-export const env = process.env as unknown as z.infer<typeof schema>;
+export const environment = process.env as unknown as z.infer<typeof schema>;
 // --------------------------
 // Don't touch the part above
 // --------------------------

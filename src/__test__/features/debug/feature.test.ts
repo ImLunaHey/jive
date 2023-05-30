@@ -3,9 +3,9 @@ import { expect, jest } from '@jest/globals';
 
 describe('Debug', () => {
     it('should return pong', async () => {
-        const DebugFeature = await import('@app/features/debug/feature').then(pkg => pkg.Feature);
+        const DebugFeature = await import('@app/features/debug/feature').then(package_ => package_.Feature);
         const edit = jest.fn();
-        const timestamp = new Date().getTime();
+        const timestamp = Date.now();
         const deferReply = jest.fn();
         const editReply = jest.fn(() => ({
             edit,

@@ -1,8 +1,8 @@
 import { IntentsBitField, Partials } from 'discord.js';
 import { createDiscordClient } from '@app/common/discord-client';
-import pkg from '../package.json';
+import package_ from '../package.json';
 
-const { name } = pkg;
+const { name } = package_;
 
 export const client = createDiscordClient(name, {
     intents: [

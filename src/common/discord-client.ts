@@ -1,7 +1,7 @@
 import type { Interaction, Message, Partials, Client as DiscordClient } from 'discord.js';
 import { Client } from 'discordx';
 import { Logger } from '@app/logger';
-import { env } from '@app/env';
+import { environment } from '@app/environment';
 import { outdent } from 'outdent';
 import exitHook from 'exit-hook';
 
@@ -30,7 +30,7 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
         },
         intents: intents ?? [],
         partials: partials ?? [],
-        botGuilds: env.NODE_ENV === 'production' ? undefined : [client => client.guilds.cache.map(guild => guild.id)],
+        botGuilds: environment.NODE_ENV === 'production' ? undefined : [client => client.guilds.cache.map(guild => guild.id)],
     });
 
     discordXClient.once('ready', async (client: DiscordClient<true>) => {
@@ -59,8 +59,8 @@ export const createDiscordClient = (name: string, { intents, partials, prefix }:
                 > Total guilds: ${totalGuildCount.toLocaleString()}
                 > Discord Verified: ${botVerified ? 'Yes' : 'No'}
                 > Presence: ${botPresence}
-                > Status: ${botStatus}`
-            );
+                > Status: ${botStatus}
+            `);
             logger.info('Bot is ready', {
                 totalMemberCount,
                 totalGuildCount,

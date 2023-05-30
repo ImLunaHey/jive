@@ -4,7 +4,7 @@ import { client } from '@app/client';
 import type { GuildMember } from 'discord.js';
 import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction } from 'discord.js';
 import { isFeatureEnabled } from '@app/common/is-feature-enabled';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 @Discord()
 export class Feature {
@@ -37,7 +37,7 @@ export class Feature {
                 if (!invite.inviter?.id) continue;
 
                 // Update the invite uses
-                await db
+                await database
                     .insertInto('invites')
                     .values({
                         code: invite.code,
@@ -56,7 +56,7 @@ export class Feature {
 
             // Update the invite uses
             if (vanityData.code) {
-                await db
+                await database
                     .insertInto('invites')
                     .ignore()
                     .values({
@@ -81,7 +81,7 @@ export class Feature {
         if (!newGuild.vanityURLCode) return;
 
         // Update the invite uses
-        await db
+        await database
             .insertInto('invites')
             .ignore()
             .values({
@@ -98,7 +98,7 @@ export class Feature {
         if (!invite.guild?.id || !invite.inviter?.id) return;
 
         // Update the invite uses
-        await db
+        await database
             .insertInto('invites')
             .ignore()
             .values({
@@ -113,7 +113,7 @@ export class Feature {
     @On({ event: 'guildMemberAdd' })
     async guildMemberAdd([member]: ArgsOf<'guildMemberAdd'>): Promise<void> {
         // Fetch the invites before the user joined
-        const guildInvitesBeforeUserJoined = await db
+        const guildInvitesBeforeUserJoined = await database
             .selectFrom('invites')
             .select('code')
             .select('uses')
@@ -134,20 +134,20 @@ export class Feature {
 
         // Find the invite that was used
         const inviteUsed = guildInvitesNow.find(invite => invite.code === inviteCode) ?? await member.guild.fetchVanityData().then(newVanityData => {
-            if (!newVanityData.code) return undefined;
+            if (!newVanityData.code) return;
             const oldVanityData = guildInvitesBeforeUserJoined.find(invite => invite.code === newVanityData.code);
             if (oldVanityData && newVanityData.uses !== oldVanityData?.uses) return {
                 code: newVanityData.code,
                 uses: newVanityData.uses,
                 inviter: member.guild.members.cache.get(member.guild.ownerId),
             };
-            return undefined;
+            return;
         });
 
         this.logger.info('Got invite data', { guildInvitesBeforeUserJoined, guildInvitesNow: guildInvitesNow.map(_ => ({ uses: _.uses, code: _.code })), inviteUsed });
 
         // Get the invite tracking settings
-        const inviteTracking = await db
+        const inviteTracking = await database
             .selectFrom('invite_tracking')
             .select('channelId')
             .where('guildId', '=', member.guild.id)
@@ -171,7 +171,7 @@ export class Feature {
         }
 
         // Update the invite uses
-        await db
+        await database
             .insertInto('invites')
             .ignore()
             .values({
@@ -189,21 +189,21 @@ export class Feature {
         const inviter = inviteUsed.inviter.id ? `<@${inviteUsed.inviter?.id}>` : 'unknown';
 
         // Get the total count of invites for this user
-        const totalInvites = await db
+        const totalInvites = await database
             .selectFrom('invites')
-            .select(db.fn.sum<number>('uses').as('uses'))
+            .select(database.fn.sum<number>('uses').as('uses'))
             .where('memberId', '=', inviteUsed.inviter?.id)
             .executeTakeFirst();
 
         // Record who invited this member
         if (inviteUsed.inviter?.id) {
-            await db
+            await database
                 .insertInto('guild_members')
                 .values({
                     id: member.user.id,
                     guildId: member.guild.id,
                     invitedBy: inviteUsed.inviter.id,
-                    joinedTimestamp: Math.floor(new Date().getTime() / 1_000),
+                    joinedTimestamp: Math.floor(Date.now() / 1_000),
                 })
                 .onDuplicateKeyUpdate({
                     invitedBy: inviteUsed.inviter.id,
@@ -271,20 +271,20 @@ export class Feature {
         if (!memberId) return;
 
         // Get invite count for member
-        const totalInviteCount = await db
+        const totalInviteCount = await database
             .selectFrom('invites')
-            .select(db.fn.sum<number>('uses').as('uses'))
+            .select(database.fn.sum<number>('uses').as('uses'))
             .where('memberId', '=', memberId)
             .executeTakeFirst()
             .then(invites => invites?.uses ?? 0);
 
-        const now = new Date().getTime();
+        const now = Date.now();
         const oneDay = 24 * 60 * 60 * 1_000;
 
         // Get last 30d of invites for member
-        const invitesInLast30Days = await db
+        const invitesInLast30Days = await database
             .selectFrom('guild_members')
-            .select(db.fn.count<number>('id').as('count'))
+            .select(database.fn.count<number>('id').as('count'))
             .where('invitedBy', '=', memberId)
             .where('joinedTimestamp', '>=', Math.floor((now - (oneDay * 30)) / 1_000))
             .executeTakeFirst()
@@ -292,19 +292,19 @@ export class Feature {
 
         // Get last 24h of invites for member
         // If invitesInLast30Days is 0 then we skip this query
-        const invitesInLast24Hours = invitesInLast30Days >= 1 ? await db
+        const invitesInLast24Hours = invitesInLast30Days >= 1 ? await database
             .selectFrom('guild_members')
-            .select(db.fn.count<number>('id').as('count'))
+            .select(database.fn.count<number>('id').as('count'))
             .where('invitedBy', '=', memberId)
             .where('joinedTimestamp', '>=', Math.floor((now - oneDay) / 1_000))
             .executeTakeFirst()
             .then(members => members?.count ?? 0) : 0;
 
         // Get the invite count for each member in the last 24 hours.
-        const inviteCounts = await db
+        const inviteCounts = await database
             .selectFrom('guild_members')
             .select('invitedBy')
-            .select(db.fn.count<number>('id').as('count'))
+            .select(database.fn.count<number>('id').as('count'))
             .where('joinedTimestamp', '>=', Math.floor((now - oneDay) / 1_000))
             .where('guildId', '=', interaction.guild.id)
             .groupBy('invitedBy')

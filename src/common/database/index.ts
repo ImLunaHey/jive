@@ -2,7 +2,7 @@ import { PlanetScaleDialect } from 'kysely-planetscale';
 import { fetch } from 'undici';
 import { CamelCasePlugin, Kysely } from 'kysely';
 import type { ColumnType, RawBuilder } from 'kysely';
-import { env } from '@app/env';
+import { environment } from '@app/environment';
 import type { Action, EntityType, Feature, ItemSubType, ItemType, Location, ModerationAction, ModerationReason, Rarity, Slot } from '@app/common/database/enums';
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
@@ -369,9 +369,9 @@ export type Database = {
     welcomes: Welcome;
 };
 
-export const db = new Kysely<Database>({
+export const database = new Kysely<Database>({
     dialect: new PlanetScaleDialect({
-        url: env.DATABASE_URL,
+        url: environment.DATABASE_URL,
         fetch,
     }),
     plugins: [

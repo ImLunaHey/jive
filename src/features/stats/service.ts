@@ -1,4 +1,4 @@
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { Logger } from '@app/logger';
 import type { Message } from 'discord.js';
 
@@ -25,7 +25,7 @@ class Service {
      * Is a guild member opted into stats collection?
      */
     async isMemberOptedIn(guildId: string, memberId: string) {
-        const guildMember = await db
+        const guildMember = await database
             .selectFrom('guild_members')
             .select('statsOptedIn')
             .where('id', '=', memberId)
@@ -123,7 +123,7 @@ class Service {
             const stats = structuredClone(this.channelStats);
             this.channelStats = [];
             for (const data of stats) {
-                await db
+                await database
                     .insertInto('channel_stats')
                     .values({
                         guildId: data.guildId,
@@ -154,7 +154,7 @@ class Service {
             const stats = structuredClone(this.memberStats);
             this.memberStats = [];
             for (const data of stats) {
-                await db
+                await database
                     .insertInto('guild_member_stats')
                     .values({
                         guildId: data.guildId,

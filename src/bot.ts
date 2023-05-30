@@ -1,17 +1,17 @@
 import 'reflect-metadata';
 import { Logger } from '@app/logger';
-import { env } from '@app/env';
-import pkg from '../package.json';
+import { environment } from '@app/environment';
+import package_ from '../package.json';
 import { client } from '@app/client';
 
-const { name } = pkg;
+const { name } = package_;
 
 export const start = async () => {
     const logger = new Logger({ service: 'bot' });
     logger.info('Starting bot', {
         name,
-        env: env.NODE_ENV,
-        logLevel: env.LOG_LEVEL,
+        env: environment.NODE_ENV,
+        logLevel: environment.LOG_LEVEL,
     });
 
     // Load all the events, commands and api
@@ -38,5 +38,5 @@ export const start = async () => {
     await import('./features/welcome');
 
     // Connect to the discord gateway
-    await client.login(env.BOT_TOKEN);
+    await client.login(environment.BOT_TOKEN);
 };

@@ -5,7 +5,7 @@ import { ApplicationCommandOptionType, ChannelType, Colors, CommandInteraction }
 import { Discord, Slash, SlashOption } from 'discordx';
 import { z } from 'zod';
 
-const SubredditName = z.string().regex(/^[a-zA-Z0-9_]+$/).min(3).max(21);
+const SubredditName = z.string().regex(/^\w+$/).min(3).max(21);
 
 @Discord()
 export class Feature {
@@ -100,26 +100,27 @@ export class Feature {
             return;
         }
 
+        // Check if channel is NSFW
+        const channelIsNSFW = (
+            interaction.channel.type === ChannelType.GuildText && !interaction.channel.nsfw ||
+            interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw ||
+            interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
+        );
+
         // If this is a nsfw post
-        if (!ephemeral && post?.over_18) {
-            // Check if the channel is nsfw
-            if (interaction.channel.type === ChannelType.GuildText && !interaction.channel.nsfw ||
-                interaction.channel.type === ChannelType.PublicThread && !interaction.channel.parent?.nsfw ||
-                interaction.channel.type === ChannelType.PrivateThread && !interaction.channel.parent?.nsfw
-            ) {
-                this.logger.error(`${interaction.channel.type} ${interaction.channel.id} is not a NSFW channel`);
+        if (!ephemeral && post?.over_18 && channelIsNSFW) {
+            this.logger.error(`${interaction.channel.type} ${interaction.channel.id} is not a NSFW channel`);
 
-                // Reply with an error
-                await interaction.editReply({
-                    embeds: [{
-                        title: 'This is **NOT** a NSFW channel',
-                        description: 'Please use this command in a NSFW channel',
-                        color: Colors.Red,
-                    }]
-                });
+            // Reply with an error
+            await interaction.editReply({
+                embeds: [{
+                    title: 'This is **NOT** a NSFW channel',
+                    description: 'Please use this command in a NSFW channel',
+                    color: Colors.Red,
+                }]
+            });
 
-                return;
-            }
+            return;
         }
 
         // Log the post

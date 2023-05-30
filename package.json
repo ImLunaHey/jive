@@ -7,7 +7,7 @@
     "start": "node dist/main.cjs",
     "test": "dotenv -e .env.test -- npx jest --detectOpenHandles",
     "coverage": "npm run test -- --coverage",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
     "create:migration": "touch \"./src/migrations/$(node -e 'console.log(new Date().getTime())').ts\""
   },
@@ -42,6 +42,7 @@
     "dotenv-cli": "^7.2.1",
     "error-serializer": "^5.1.0",
     "eslint": "^8.40.0",
+    "eslint-plugin-unicorn": "^47.0.0",
     "eta": "^2.1.2",
     "exit-hook": "^3.2.0",
     "handlebars": "^4.7.7",

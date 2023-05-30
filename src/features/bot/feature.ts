@@ -7,7 +7,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Colors, Comm
 import { PagesBuilder } from 'discord.js-pages';
 import type { Trigger } from 'discord.js-pages/lib/types';
 import { Discord, Slash, On, type ArgsOf } from 'discordx';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 import { json } from '@app/common/json';
 import { service as redditService } from '@app/features/reddit/service';
 
@@ -88,7 +88,7 @@ export class Feature {
             if (guild.channels.cache.size === 0) await guild.channels.fetch();
 
             // Sending setup message
-            const channel = [...guild.channels.cache.values()].filter(channel => channel.type === ChannelType.GuildText)[0] as TextChannel;
+            const channel = [...guild.channels.cache.values()].find(channel => channel.type === ChannelType.GuildText) as TextChannel;
             await channel.send({
                 content: 'Hi, please message <@784365843810222080> to help me get setup.',
             });
@@ -98,7 +98,7 @@ export class Feature {
 
         try {
             // Add basic info about guild to database
-            await db
+            await database
                 .insertInto('guilds')
                 .ignore()
                 .values({
@@ -182,7 +182,7 @@ export class Feature {
             const joinMessage = interaction.fields.getTextInputValue('joinMessage');
 
             // Update the database
-            await db
+            await database
                 .updateTable('welcomes')
                 .set({
                     joinMessage,
@@ -220,7 +220,7 @@ export class Feature {
         // Don't handle non-commands
         if (!interaction.isCommand()) return;
 
-        const getSettings = async () => db.transaction().execute(async trx => {
+        const getSettings = async () => database.transaction().execute(async trx => {
             const settings = await trx
                 .selectFrom('settings')
                 .select('featuresEnabled')
@@ -389,7 +389,7 @@ export class Feature {
                 const settings = await getSettings();
                 if (!settings) return new EmbedBuilder().setDescription('No settings found');
 
-                const welcome = await db
+                const welcome = await database
                     .selectFrom('welcomes')
                     .select('waitUntilGate')
                     .select('joinDm')
@@ -444,10 +444,10 @@ export class Feature {
                         inline: true,
                     }, {
                         name: 'Join message',
-                        value: welcome?.joinMessage ? welcome.joinMessage : 'None',
+                        value: welcome?.joinMessage ?? 'None',
                     }, {
                         name: 'Leave message',
-                        value: welcome?.leaveMessage ? welcome.leaveMessage : 'None',
+                        value: welcome?.leaveMessage ?? 'None',
                     }].filter(Boolean));
             },
         ]);
@@ -457,7 +457,7 @@ export class Feature {
                 name: `${id.toLowerCase()}-${enabled ? 'disable' : 'enable'}`,
                 async callback(interaction) {
                     // Get this guild's settings
-                    const settings = await db
+                    const settings = await database
                         .selectFrom('settings')
                         .select('featuresEnabled')
                         .where('guildId', '=', guild.id)
@@ -467,7 +467,7 @@ export class Feature {
                     const featuresEnabled = settings?.featuresEnabled ?? [];
 
                     // Update the database
-                    await db
+                    await database
                         .updateTable('settings')
                         .set({
                             featuresEnabled: json(enabled ? featuresEnabled.filter(featureId => featureId !== id) : [...featuresEnabled, id]),
@@ -507,14 +507,14 @@ export class Feature {
                     // @TODO: prevent the race condition
 
                     // Get the current welcome settings
-                    const welcome = await db
+                    const welcome = await database
                         .selectFrom('welcomes')
                         .select('waitUntilGate')
                         .where('guildId', '=', guild.id)
                         .executeTakeFirst();
 
                     // Update the database
-                    await db
+                    await database
                         .updateTable('welcomes')
                         .set({
                             waitUntilGate: !welcome?.waitUntilGate,
@@ -535,7 +535,7 @@ export class Feature {
                     if (interaction.channel.type !== ChannelType.GuildText) return;
 
                     // Get the welcome settings
-                    const welcome = await db
+                    const welcome = await database
                         .selectFrom('welcomes')
                         .select('joinMessage')
                         .where('guildId', '=', guild.id)
@@ -618,7 +618,7 @@ export class Feature {
                     });
 
                     // Update the database
-                    await db
+                    await database
                         .updateTable('welcomes')
                         .set({
                             joinChannelId: interaction.values[0],

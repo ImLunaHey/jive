@@ -190,7 +190,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^looking-for-interested-in \[(\d{18})\]$/
+        id: /^looking-for-interested-in \[(\d{18})]$/
     })
     @Guard(
         RateLimit(TIME_UNIT.seconds, 60, {
@@ -210,7 +210,7 @@ export class Feature {
         if (channel.type !== ChannelType.GuildText) return;
 
         // Get the ID from the button ID
-        const userId = interaction.customId.match(/^looking-for-interested-in \[(\d{18})\]$/)?.[1];
+        const userId = interaction.customId.match(/^looking-for-interested-in \[(\d{18})]$/)?.[1];
         if (!userId) return;
 
         // Get the user
@@ -239,7 +239,7 @@ export class Feature {
     }
 
     @ButtonComponent({
-        id: /^looking-for-delete \[(\d{18})\]$/
+        id: /^looking-for-delete \[(\d{18})]$/
     })
     async lookingForDelete(interaction: ButtonInteraction) {
         if (!interaction.guild) return;
@@ -252,7 +252,7 @@ export class Feature {
         if (channel.type !== ChannelType.GuildText) return;
 
         // Get the ID from the button ID
-        const userId = interaction.customId.match(/^looking-for-delete \[(\d{18})\]$/)?.[1];
+        const userId = interaction.customId.match(/^looking-for-delete \[(\d{18})]$/)?.[1];
         if (!userId) return;
 
         // Get the user

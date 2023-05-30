@@ -6,11 +6,12 @@ import { ChannelType, EmbedBuilder } from 'discord.js';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { outdent } from 'outdent';
 import { sleep } from '@app/common/sleep';
-import { db } from '@app/common/database';
+import { database } from '@app/common/database';
 
 const extension = (attachment: string) => {
     const imageLink = attachment.split('.');
-    const typeOfImage = imageLink[imageLink.length - 1];
+    const typeOfImage = imageLink.at(-1);
+    if (!typeOfImage) return null;
     const image = /(jpg|jpeg|png|gif)/gi.test(typeOfImage);
     if (!image) return null;
     return attachment;
@@ -78,7 +79,7 @@ export class Feature {
         if (!this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
-        const starboards = await db
+        const starboards = await database
             .selectFrom('starboards')
             .select('allowedReactions')
             .select('minimumReactions')
@@ -106,7 +107,7 @@ export class Feature {
             if ((reaction.count ?? 0) < starboard.minimumReactions) return;
 
             // Check if this is a valid emoji reaction
-            if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
+            if (reaction.emoji.name && starboard.allowedReactions.length > 0 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
 
             // Get the starboard channel
             const starChannel = reaction.message.guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
@@ -134,7 +135,7 @@ export class Feature {
 
             // If there's already a starboard message, edit it
             if (starboardMessage) {
-                const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) + 1;
+                const starCount = Number(starboardMessage.cleanContent.replaceAll('*', '').split('|')[0].split(' ')[1]) + 1;
                 const foundStar = starboardMessage.embeds[0];
                 const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : '';
                 const embed = new EmbedBuilder()
@@ -154,12 +155,12 @@ export class Feature {
                 const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : '';
                 const tenorGif = reaction.message.cleanContent?.startsWith('https://tenor.com/') ?? false;
                 const embed = new EmbedBuilder()
-                    .setColor(15844367)
+                    .setColor(15_844_367)
                     .setDescription(outdent`
-             **[Jump to message](${reaction.message.url})**
+                        **[Jump to message](${reaction.message.url})**
 
-             ${tenorGif ? '' : reaction.message.content}
-         `)
+                        ${tenorGif ? '' : reaction.message.content}
+                    `)
                     .setAuthor({
                         name: reaction.message.author.tag,
                         iconURL: reaction.message.author.displayAvatarURL(),
@@ -224,7 +225,7 @@ export class Feature {
         if (!this.isReactionValid(reaction, user)) return;
 
         // Skip if the starboard isn't setup
-        const starboards = await db
+        const starboards = await database
             .selectFrom('starboards')
             .select('allowedReactions')
             .select('starboardChannelId')
@@ -250,7 +251,7 @@ export class Feature {
         for (const starboard of starboards) {
 
             // Check if this is a valid emoji reaction
-            if (reaction.emoji.name && starboard.allowedReactions.length >= 1 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
+            if (reaction.emoji.name && starboard.allowedReactions.length > 0 && !starboard.allowedReactions.includes(reaction.emoji.name)) return;
 
             // Get the starboard channel
             const starboardChannel = guild.channels.cache.get(starboard.starboardChannelId) as TextChannel;
@@ -269,7 +270,7 @@ export class Feature {
 
             // If there's already a starboard message, edit it
             if (starboardMessage) {
-                const starCount = Number(starboardMessage.cleanContent.replace(/\*/g, '').split('|')[0].split(' ')[1]) - 1;
+                const starCount = Number(starboardMessage.cleanContent.replaceAll('*', '').split('|')[0].split(' ')[1]) - 1;
                 const foundStar = starboardMessage.embeds[0];
                 const image = reaction.message.attachments.size > 0 ? extension([...reaction.message.attachments.values()][0].url) : null;
                 const embed = new EmbedBuilder()
