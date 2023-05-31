@@ -6,15 +6,9 @@ import { Discord, Slash, SlashGroup, SlashOption } from 'discordx';
 
 @Discord()
 // Create a group
-@SlashGroup({ description: 'Manage permissions', name: 'permission' })
-// Create a sub group
-@SlashGroup({
-  description: 'User permissions',
-  name: 'user',
-  root: 'permission',
-})
+@SlashGroup({ description: 'Manage FAQs', name: 'faq' })
 // Assign all inherit slashes to the subgroup
-@SlashGroup('user', 'permission')
+@SlashGroup('faq')
 export class Feature {
     private logger = new Logger({ service: 'FAQ' });
 
