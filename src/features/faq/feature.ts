@@ -73,7 +73,7 @@ export class Feature {
             type: ApplicationCommandOptionType.String,
         }) question: string,
         @SlashOption({
-            name: 'question',
+            name: 'answer',
             description: 'The answer',
             required: true,
             type: ApplicationCommandOptionType.String,
