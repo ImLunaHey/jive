@@ -21,6 +21,7 @@ export const start = async () => {
     await import('./features/custom-commands');
     await import('./features/debug');
     await import('./features/dynamic-channel-names');
+    await import('./features/faq');
     // await import('./features/economy');
     await import('./features/games');
     await import('./features/invite-tracking');
