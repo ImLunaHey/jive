@@ -1,4 +1,3 @@
-import '@total-typescript/ts-reset';
 import { type ArgsOf, Discord, On } from 'discordx';
 import { Logger } from '@app/logger';
 import { wordsToNumbers } from 'words-to-numbers';

@@ -336,6 +336,13 @@ export type Moderation = {
 // /kick user:notch reason: he sucks
 // /ban user:notch reason: he still sucks
 
+type Faq = {
+    id: string;
+    question: string;
+    answer: string;
+    guildId: string;
+}
+
 export type Database = {
     attacks: Attack;
     audit_logs: AuditLog;
@@ -347,6 +354,7 @@ export type Database = {
     dynamic_channels: DynamicChannel;
     encounters: Encounter;
     extra_messages: ExtraMessage;
+    faqs: Faq;
     guild_counting: GuildCounting;
     guild_member_counting: GuildMemberCounting;
     guild_member_stats: GuildMemberStat;
